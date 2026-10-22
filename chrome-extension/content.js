@@ -1,10 +1,13 @@
-// Content script running on dhtn.dcs.vn and web pages (all frames)
-// STRICT MODE: ONLY monitors:
-// 1. "Văn bản đến > Chờ tiếp nhận"
-// 2. "Văn bản đi > Chờ cấp số"
+// Content script running on dhtn.dcs.vn and web pages
+// STRICT & ANTI-SPAM PROTECTED:
+// 1. Chỉ cửa sổ chính (Top window) mới được kích hoạt cảnh báo, iframe chỉ cung cấp dữ liệu.
+// 2. Không dùng MutationObserver kích hoạt gửi tin để tránh bão tin nhắn từ đồng hồ/ticker.
+// 3. Quét định kỳ nhẹ nhàng mỗi 10 giây.
 
 (function () {
-  // Helper to check if extension context is still valid (prevents "Extension context invalidated")
+  const TARGET_URL = "https://dhtn.dcs.vn/app-view/theme/admin-ex/pages/main.zul";
+  const isIframe = window !== window.top;
+
   function isContextValid() {
     try {
       return typeof chrome !== "undefined" && !!chrome.runtime && !!chrome.runtime.id;
@@ -23,274 +26,239 @@
         clearInterval(reloadTimer);
         reloadTimer = null;
       }
-      if (observer) {
-        observer.disconnect();
-        observer = null;
-      }
       return true;
     }
     return false;
   }
 
+  function isTargetReloadPage() {
+    try {
+      const cleanUrl = window.location.href.split("?")[0].split("#")[0];
+      return cleanUrl === TARGET_URL || cleanUrl.endsWith("/app-view/theme/admin-ex/pages/main.zul");
+    } catch (_) {
+      return false;
+    }
+  }
+
   let config = {
-    selector: ".count-number, [class*='count-number']",
     enabled: true,
-    cooldownSeconds: 3,
     autoReloadMinutes: 5,
-    watchDenTiepNhan: true, // Văn bản đến > Chờ tiếp nhận
-    watchDiCapSo: true      // Văn bản đi > Chờ cấp số
+    watchDenTiepNhan: true,
+    watchDiCapSo: true
   };
 
-  let lastSignature = "";
-  let lastAlertTime = 0;
-  let observer = null;
   let checkTimer = null;
   let reloadTimer = null;
-  const isIframe = window !== window.top;
 
-  // Load configuration from storage
   async function loadConfig() {
     if (cleanupIfInvalidated()) return;
     try {
       const stored = await chrome.storage.local.get([
-        "selector",
         "enabled",
-        "cooldownSeconds",
         "autoReloadMinutes",
         "watchDenTiepNhan",
         "watchDiCapSo"
       ]);
-      if (stored.selector !== undefined) config.selector = stored.selector;
       if (stored.enabled !== undefined) config.enabled = stored.enabled;
-      if (stored.cooldownSeconds !== undefined) config.cooldownSeconds = stored.cooldownSeconds;
       if (stored.autoReloadMinutes !== undefined) config.autoReloadMinutes = stored.autoReloadMinutes;
       if (stored.watchDenTiepNhan !== undefined) config.watchDenTiepNhan = stored.watchDenTiepNhan;
       if (stored.watchDiCapSo !== undefined) config.watchDiCapSo = stored.watchDiCapSo;
       setupAutoReload();
-    } catch (e) {
-      // Ignored if invalidated
-    }
+    } catch (_) {}
   }
 
-  // Deep scanner for elements across current document + child iframes + shadow roots
-  function queryAllElementsDeep() {
-    const list = [];
-    const seen = new Set();
+  // Find number count for target phrase
+  function findCountForKeyword(doc, keywords) {
+    let maxFound = -1;
 
-    function scan(doc, frameInfo) {
-      if (!doc) return;
-      try {
-        const selectors = [
-          ".count-number",
-          ".z-label.count-number",
-          "span.count-number",
-          "[class*='count-number']"
-        ];
-        
-        selectors.forEach((sel) => {
-          doc.querySelectorAll(sel).forEach((el) => {
-            if (!seen.has(el)) {
-              seen.add(el);
-              list.push({ el, doc, frameInfo });
+    try {
+      // 1. Text walker method
+      const walker = doc.createTreeWalker(doc.body || doc.documentElement, NodeFilter.SHOW_TEXT);
+      let node;
+      const matchingContainers = [];
+
+      while ((node = walker.nextNode())) {
+        const val = node.nodeValue.trim().toLowerCase();
+        for (const kw of keywords) {
+          if (val === kw || (val.includes(kw) && val.length < 60)) {
+            matchingContainers.push(node.parentElement);
+            break;
+          }
+        }
+      }
+
+      matchingContainers.forEach((el) => {
+        if (!el) return;
+        let curr = el;
+        for (let d = 0; d < 4; d++) {
+          if (!curr || !curr.parentElement) break;
+          curr = curr.parentElement;
+
+          const badgeEls = curr.querySelectorAll('.count-number, [class*="count-number"]');
+          badgeEls.forEach((b) => {
+            const m = (b.textContent || "").trim().match(/\d+/);
+            if (m) {
+              const n = parseInt(m[0], 10);
+              if (n > maxFound) maxFound = n;
             }
           });
-        });
 
-        // Scan shadow DOMs
-        doc.querySelectorAll("*").forEach((el) => {
-          if (el.shadowRoot) {
-            scan(el.shadowRoot, frameInfo + " > shadow");
+          const numEls = curr.querySelectorAll('span, div, b, strong, p');
+          numEls.forEach((ch) => {
+            if (ch === el) return;
+            const t = (ch.textContent || "").trim();
+            if (/^\d+$/.test(t)) {
+              const n = parseInt(t, 10);
+              if (n > maxFound) maxFound = n;
+            }
+          });
+        }
+      });
+
+      // 2. Class search
+      const badgeEls = doc.querySelectorAll('.count-number, .z-label.count-number, [class*="count-number"]');
+      badgeEls.forEach((b) => {
+        const text = (b.textContent || "").trim();
+        const m = text.match(/\d+/);
+        if (!m) return;
+        const num = parseInt(m[0], 10);
+
+        let ctx = "";
+        let p = b.parentElement;
+        for (let d = 0; d < 6 && p; d++) {
+          ctx += " " + (p.textContent || "");
+          p = p.parentElement;
+        }
+        ctx = ctx.toLowerCase();
+
+        for (const kw of keywords) {
+          if (ctx.includes(kw)) {
+            if (num > maxFound) maxFound = num;
+            break;
           }
+        }
+      });
+    } catch (_) {}
+
+    return maxFound;
+  }
+
+  // Deep scan
+  function inspectAllFrames() {
+    let maxDen = -1; // Văn bản đến > Chờ tiếp nhận
+    let maxDi = -1;  // Văn bản đi > Chờ cấp số
+
+    const kwDen = ["chờ tiếp nhận", "cho tiep nhan", "tiếp nhận"];
+    const kwDi = ["chờ cấp số", "cho cap so", "cấp số"];
+
+    function scanDoc(doc) {
+      if (!doc) return;
+      try {
+        const d = findCountForKeyword(doc, kwDen);
+        if (d > maxDen) maxDen = d;
+
+        const s = findCountForKeyword(doc, kwDi);
+        if (s > maxDi) maxDi = s;
+
+        doc.querySelectorAll("*").forEach((el) => {
+          if (el.shadowRoot) scanDoc(el.shadowRoot);
         });
 
-        // Scan child iframes
-        doc.querySelectorAll("iframe, frame").forEach((ifr, i) => {
+        doc.querySelectorAll("iframe, frame").forEach((ifr) => {
           try {
             const iDoc = ifr.contentDocument || ifr.contentWindow?.document;
-            if (iDoc) {
-              scan(iDoc, frameInfo + ` > iframe[${i}]`);
-            }
+            if (iDoc) scanDoc(iDoc);
           } catch (_) {}
         });
       } catch (_) {}
     }
 
-    scan(document, isIframe ? "iframe" : "top");
-    return list;
-  }
-
-  // Strictly identify: "Văn bản đến > Chờ tiếp nhận" OR "Văn bản đi > Chờ cấp số"
-  function identifyCounter(el) {
-    if (!el) return null;
-
-    let contextParts = [];
-
-    const selfTitle = el.getAttribute("title") || el.getAttribute("aria-label") || "";
-    if (selfTitle) contextParts.push(selfTitle);
-
-    let prev = el.previousElementSibling;
-    while (prev) {
-      const t = prev.textContent.trim();
-      if (t) contextParts.push(t);
-      prev = prev.previousElementSibling;
-    }
-
-    let next = el.nextElementSibling;
-    while (next) {
-      const t = next.textContent.trim();
-      if (t) contextParts.push(t);
-      next = next.nextElementSibling;
-    }
-
-    let curr = el.parentElement;
-    let depth = 0;
-    while (curr && depth < 8) {
-      const labelEl = curr.querySelector(
-        '.expand-sub-menu-name-text, .expand-menu-name-text, .collapse-sub-menu-name-text, .collapse-menu-name-text, .card-title, .box-title, h1, h2, h3, h4, h5, .header-title'
-      );
-      if (labelEl && labelEl !== el && labelEl.textContent.trim()) {
-        contextParts.push(labelEl.textContent.trim());
-      }
-
-      const text = curr.textContent || "";
-      if (text.includes("tiếp nhận") || text.includes("ti?p nh?n") ||
-          text.includes("cấp số") || text.includes("c?p s?") ||
-          text.includes("VĂN BẢN") || text.includes("Văn bản")) {
-        contextParts.push(text);
-      }
-
-      curr = curr.parentElement;
-      depth++;
-    }
-
-    const fullText = contextParts.join(" ").toLowerCase();
-
-    // 1. "Văn bản đến > Chờ tiếp nhận"
-    const hasTiepNhan = fullText.includes("chờ tiếp nhận") || fullText.includes("cho tiep nhan") || fullText.includes("tiếp nhận");
-    if (hasTiepNhan) {
-      return {
-        type: "den_tiep_nhan",
-        title: "Văn bản đến > Chờ tiếp nhận",
-        matched: config.watchDenTiepNhan !== false
-      };
-    }
-
-    // 2. "Văn bản đi > Chờ cấp số"
-    const hasCapSo = fullText.includes("chờ cấp số") || fullText.includes("cho cap so") || fullText.includes("cấp số");
-    if (hasCapSo) {
-      return {
-        type: "di_cap_so",
-        title: "Văn bản đi > Chờ cấp số",
-        matched: config.watchDiCapSo !== false
-      };
-    }
-
-    // STRICT: Bỏ qua tất cả các mục khác ngoài 2 mục trên
-    return null;
-  }
-
-  // Inspect elements on page
-  function inspectElements() {
-    if (!config.enabled) return { found: false, items: [], nonZeroItems: [] };
-
-    const matches = queryAllElementsDeep();
-    if (matches.length === 0) {
-      return { found: false, items: [], nonZeroItems: [] };
-    }
+    scanDoc(document);
 
     const items = [];
     const nonZeroItems = [];
-    const seenTitles = new Set();
 
-    matches.forEach(({ el, frameInfo }, index) => {
-      const val = (el.textContent || el.innerText || "").trim();
-      if (val !== "") {
-        const info = identifyCounter(el);
-        if (info && !seenTitles.has(info.title)) {
-          seenTitles.add(info.title);
-          const itemData = {
-            type: info.type,
-            title: info.title,
-            count: val,
-            isMonitored: info.matched,
-            frame: frameInfo,
-            html: el.outerHTML,
-            index
-          };
-          items.push(itemData);
-
-          if (info.matched && val !== "0") {
-            nonZeroItems.push(itemData);
-          }
-        }
+    // 1. Chờ tiếp nhận (Văn bản đến)
+    if (maxDen >= 0) {
+      const itemDen = {
+        type: "den_tiep_nhan",
+        title: "Văn bản đến > Chờ tiếp nhận",
+        count: String(maxDen),
+        isMonitored: config.watchDenTiepNhan !== false
+      };
+      items.push(itemDen);
+      if (itemDen.isMonitored && maxDen > 0) {
+        nonZeroItems.push(itemDen);
       }
-    });
+    }
+
+    // 2. Chờ cấp số (Văn bản đi)
+    if (maxDi >= 0) {
+      const itemDi = {
+        type: "di_cap_so",
+        title: "Văn bản đi > Chờ cấp số",
+        count: String(maxDi),
+        isMonitored: config.watchDiCapSo !== false
+      };
+      items.push(itemDi);
+      if (itemDi.isMonitored && maxDi > 0) {
+        nonZeroItems.push(itemDi);
+      }
+    }
 
     return {
       found: items.length > 0,
       items,
       nonZeroItems,
-      isIframe
+      curDen: maxDen >= 0 ? maxDen : 0,
+      curDi: maxDi >= 0 ? maxDi : 0
     };
   }
 
-  // Check and alert
+  // Checking routine
   function checkAndNotify() {
     if (cleanupIfInvalidated()) return;
     if (!config.enabled) return;
 
-    const { found, items, nonZeroItems } = inspectElements();
+    const res = inspectAllFrames();
 
-    // Report state to background for popup
-    if (isContextValid()) {
-      try {
-        chrome.runtime.sendMessage({
-          action: "report_tab_state",
-          found,
-          items,
-          nonZeroItems,
-          url: window.location.href,
-          isIframe
-        }).catch(() => {});
-      } catch (_) {}
-    }
+    if (!isContextValid()) return;
 
-    if (!found || nonZeroItems.length === 0) {
-      if (lastSignature !== "") {
-        lastSignature = "";
-      }
+    // Báo trạng thái để popup hiển thị
+    try {
+      chrome.runtime.sendMessage({
+        action: "report_tab_state",
+        found: res.found,
+        items: res.items,
+        nonZeroItems: res.nonZeroItems,
+        url: window.location.href,
+        isIframe
+      }).catch(() => {});
+    } catch (_) {}
+
+    // TUYỆT ĐỐI CHỈ CỬA SỔ CHÍNH (TOP WINDOW) MỚI ĐƯỢC GỬI ALERT
+    if (isIframe) {
       return;
     }
 
-    const currentSignature = nonZeroItems.map((it) => `${it.title}:${it.count}`).join("|");
-    const now = Date.now();
-    const cooldownMs = (config.cooldownSeconds || 3) * 1000;
-
-    if (currentSignature !== lastSignature && (now - lastAlertTime > cooldownMs)) {
-      lastSignature = currentSignature;
-      lastAlertTime = now;
-
-      if (!isContextValid()) return;
-
-      try {
-        chrome.runtime.sendMessage(
-          {
-            action: "send_alert",
-            items: nonZeroItems,
-            count: currentSignature
-          },
-          (response) => {
-            if (chrome.runtime.lastError) return;
-            if (response && response.success) {
-              console.log("[DHTN Monitor] ✅ Đã gửi Telegram thành công!");
-            }
-          }
-        );
-      } catch (_) {}
-    }
+    // Gửi yêu cầu kiểm tra đến background
+    try {
+      chrome.runtime.sendMessage(
+        {
+          action: "send_alert",
+          curDen: res.curDen,
+          curDi: res.curDi,
+          items: res.nonZeroItems
+        },
+        () => {
+          // Xử lý callback nếu cần
+          if (chrome.runtime.lastError) {}
+        }
+      );
+    } catch (_) {}
   }
 
-  // Setup auto reload
+  // Tự động F5 duy nhất trang main.zul
   function setupAutoReload() {
     if (isIframe) return;
     if (reloadTimer) {
@@ -298,53 +266,25 @@
       reloadTimer = null;
     }
 
+    if (!isTargetReloadPage()) return;
+
     const minutes = parseInt(config.autoReloadMinutes, 10);
     if (minutes && minutes > 0) {
       const ms = minutes * 60 * 1000;
       reloadTimer = setInterval(() => {
         if (cleanupIfInvalidated()) return;
+        if (!isTargetReloadPage()) return;
+
         const active = document.activeElement;
         const isTyping = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable);
-        if (!isTyping) {
+        const hasModal = document.querySelector(".z-window-modal, .z-messagebox-window");
+
+        if (!isTyping && !hasModal) {
+          console.log("[DHTN Monitor] Tự động F5 trang main.zul...");
           window.location.reload();
         }
       }, ms);
     }
-  }
-
-  let debounceTimeout = null;
-  function triggerCheckDebounced() {
-    if (debounceTimeout) clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => {
-      if (!cleanupIfInvalidated()) {
-        checkAndNotify();
-      }
-    }, 300);
-  }
-
-  // Observer
-  function setupObserver() {
-    if (observer) {
-      observer.disconnect();
-      observer = null;
-    }
-
-    observer = new MutationObserver(() => {
-      triggerCheckDebounced();
-    });
-
-    observer.observe(document.body || document.documentElement, {
-      childList: true,
-      subtree: true,
-      characterData: true
-    });
-
-    if (checkTimer) clearInterval(checkTimer);
-    checkTimer = setInterval(() => {
-      if (!cleanupIfInvalidated()) {
-        checkAndNotify();
-      }
-    }, 2500);
   }
 
   // Storage listener
@@ -353,31 +293,27 @@
       chrome.storage.onChanged.addListener((changes, areaName) => {
         if (cleanupIfInvalidated()) return;
         if (areaName === "local") {
-          if (changes.selector) config.selector = changes.selector.newValue;
           if (changes.enabled) config.enabled = changes.enabled.newValue;
-          if (changes.cooldownSeconds) config.cooldownSeconds = changes.cooldownSeconds.newValue;
           if (changes.watchDenTiepNhan) config.watchDenTiepNhan = changes.watchDenTiepNhan.newValue;
           if (changes.watchDiCapSo) config.watchDiCapSo = changes.watchDiCapSo.newValue;
           if (changes.autoReloadMinutes) {
             config.autoReloadMinutes = changes.autoReloadMinutes.newValue;
             setupAutoReload();
           }
-          checkAndNotify();
         }
       });
     } catch (_) {}
   }
 
-  // Popup inspection listener
+  // Popup inspect
   if (isContextValid()) {
     try {
       chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (cleanupIfInvalidated()) return;
         if (request.action === "inspect_page") {
-          const res = inspectElements();
+          const res = inspectAllFrames();
           sendResponse({
             ...res,
-            lastSignature,
             config
           });
           return true;
@@ -386,10 +322,18 @@
     } catch (_) {}
   }
 
-  // Init
+  // Khởi động
   loadConfig().then(() => {
     if (cleanupIfInvalidated()) return;
-    setupObserver();
-    setTimeout(checkAndNotify, 1000);
+    // Chạy kiểm tra định kỳ mỗi 10 giây (hoàn toàn tĩnh lặng, không dùng MutationObserver)
+    if (checkTimer) clearInterval(checkTimer);
+    checkTimer = setInterval(() => {
+      if (!cleanupIfInvalidated()) {
+        checkAndNotify();
+      }
+    }, 10000);
+
+    // Chạy lần đầu sau 2 giây
+    setTimeout(checkAndNotify, 2000);
   });
 })();

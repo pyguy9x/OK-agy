@@ -1,0 +1,30 @@
+.vercel
+.env
+.env*
+.aider*
+token.txt
+token0.txt
+*.log
+chat_log*.txt
+log.txt
+Danh-Sach-Token.xlsx
+*.xlsx
+backup-ui-*/
+backup_md_*/
+docs/AGENTS*.md
+docs/CONTEXT*.md
+.headroom/
+.ast-bro/
+.opencode/
+.cache/
+
+# Python uv
+.venv/
+__pycache__/
+
+# Log
+*.log
+!.opencode/plugins/notify-done/
+# File
+zalo-credentials.json
+firebase-credentials.json

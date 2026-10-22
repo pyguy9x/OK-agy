@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quản trị dữ liệu nộp Đảng phí</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK (compat for simplicity) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  --son: #b3141c; --son-d: #8c0f16; --son-dd: #650a10;
+  --ngoc: #1e7a4c; --ngoc-bg: #e3f1e8;
+  --cam: #d97706; --cam-bg: #fef3c7;
+  --xanh: #2563eb;
+  --vang: #c9a227; --vang-bg: #fbf4dc;
+  --ink: #1c1d1f; --ink-2: #374151; --muted: #6b7280;
+  --rule: #e5e7eb; --giay: #f5f6f8; --paper: #fff;
+  --r: 10px; --r-s: 6px;
+  --sans: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--giay); color: var(--ink); font-size: 14px; min-height: 100vh; }
+
+/* Header */
+.hdr { background: linear-gradient(135deg, var(--son-dd), var(--son)); color: #fff; padding: 0 20px; position: sticky; top: 0; z-index: 100; border-bottom: 2px solid var(--vang); }
+.hdr-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; gap: 16px; }
+.hdr-title { font-size: 16px; font-weight: 700; letter-spacing: 0.01em; }
+.hdr-title small { font-weight: 500; font-size: 12px; opacity: 0.8; display: block; margin-top: 1px; }
+.hdr-right { display: flex; align-items: center; gap: 10px; }
+
+/* Status pill */
+.status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.status-pill.ok { background: rgba(16,185,129,0.15); color: #059669; border: 1px solid rgba(16,185,129,0.3); }
+.status-pill.err { background: rgba(239,68,68,0.15); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
+.status-pill.loading { background: rgba(245,158,11,0.15); color: #d97706; border: 1px solid rgba(245,158,11,0.3); }
+.sdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.status-pill.ok .sdot { background: #10b981; }
+.status-pill.err .sdot { background: #ef4444; }
+.status-pill.loading .sdot { background: #f59e0b; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--r-s); font-size: 13px; font-weight: 600; border: 1px solid var(--rule); background: #fff; color: var(--ink-2); cursor: pointer; transition: all 0.15s; font-family: var(--sans); white-space: nowrap; }
+.btn:hover { background: var(--giay); border-color: #cbd5e1; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.primary { background: var(--son); color: #fff; border-color: var(--son); }
+.btn.primary:hover { background: var(--son-d); }
+.btn.green { background: var(--ngoc); color: #fff; border-color: var(--ngoc); }
+.btn.green:hover { background: #145836; }
+.btn.gold { background: var(--vang); color: #fff; border-color: var(--vang); }
+.btn.gold:hover { background: #a37f17; }
+.btn.danger { background: #ef4444; color: #fff; border-color: #ef4444; }
+.btn.danger:hover { background: #dc2626; }
+.btn.sm { padding: 5px 9px; font-size: 12px; }
+
+/* Wrap */
+.wrap { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+/* Cards */
+.card { background: #fff; border: 1px solid var(--rule); border-radius: var(--r); padding: 20px; margin-bottom: 18px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+.card-head h2 { font-size: 16px; font-weight: 700; color: var(--son-d); }
+.card-head p { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.card-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Setup Guide */
+.guide { background: var(--vang-bg); border: 1px solid #d4b847; border-left: 4px solid var(--vang); border-radius: var(--r-s); padding: 14px 16px; margin-bottom: 18px; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.guide b { color: var(--ink); }
+.guide code { background: rgba(0,0,0,0.06); padding: 2px 5px; border-radius: 3px; font-size: 12px; }
+
+/* Config row */
+.config-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.config-field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.config-field input, .config-field select { width: 100%; padding: 8px 10px; border: 1px solid var(--rule); border-radius: var(--r-s); font-size: 13.5px; font-family: var(--sans); outline: none; }
+.config-field input:focus { border-color: var(--son); box-shadow: 0 0 0 2px rgba(179,20,28,0.1); }
+
+/* Table */
+.tbl-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--r); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: #f8fafc; position: sticky; top: 56px; z-index: 10; }
+th { padding: 10px 6px; font-size: 11.5px; font-weight: 700; color: var(--ink-2); text-align: center; border-bottom: 2px solid var(--rule); white-space: nowrap; }
+th.left { text-align: left; padding-left: 10px; }
+tbody tr { border-bottom: 1px solid #f1f3f5; transition: background 0.1s; }
+tbody tr:hover { background: #f9fafb; }
+tbody tr.group-header { background: #fef2f2; }
+tbody tr.group-header td { font-weight: 700; color: var(--son-d); padding: 8px 10px; font-size: 13px; }
+td { padding: 4px 3px; text-align: center; vertical-align: middle; }
+td.left { text-align: left; padding-left: 6px; }
+
+/* Inline inputs */
+td input[type="text"], td input[type="number"] { width: 100%; padding: 6px 6px; border: 1px solid transparent; border-radius: 4px; font-size: 13px; font-family: var(--sans); text-align: center; background: transparent; outline: none; transition: all 0.15s; }
+td input[type="text"] { text-align: left; min-width: 180px; }
+td input[type="number"] { width: 65px; }
+td input:focus { border-color: var(--son); background: #fff; box-shadow: 0 0 0 2px rgba(179,20,28,0.08); }
+td input:hover { border-color: var(--rule); background: #fafbfc; }
+td input.changed { background: #fef9e7; border-color: #e9cf7a; }
+
+td select { padding: 5px 4px; border: 1px solid transparent; border-radius: 4px; font-size: 12px; background: transparent; cursor: pointer; outline: none; font-family: var(--sans); }
+td select:focus { border-color: var(--son); }
+
+/* Rate display */
+.rate-display { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.rate-display.r100 { background: var(--ngoc-bg); color: var(--ngoc); }
+.rate-display.rmed { background: var(--cam-bg); color: #92400e; }
+.rate-display.rlow { background: #fef2f2; color: #b91c1c; }
+.rate-display.rzero { background: #f1f5f9; color: #64748b; }
+
+/* Row actions */
+.row-del { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 16px; padding: 4px 6px; border-radius: 4px; transition: all 0.15s; }
+.row-del:hover { color: #ef4444; background: #fef2f2; }
+
+/* Toast */
+.toast { position: fixed; bottom: 20px; right: 20px; background: #1c1d1f; color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 3000; transform: translateY(80px); opacity: 0; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); display: flex; align-items: center; gap: 8px; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { background: #991b1b; }
+
+/* Dirty indicator */
+.dirty-bar { background: var(--cam-bg); border: 1px solid #fbbf24; padding: 10px 16px; border-radius: var(--r-s); margin-bottom: 14px; display: none; align-items: center; justify-content: space-between; font-size: 13px; color: #92400e; font-weight: 600; }
+.dirty-bar.show { display: flex; }
+
+/* Stats bar */
+.stats-bar { display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 0; font-size: 13px; color: var(--muted); border-top: 1px solid var(--rule); margin-top: 12px; }
+.stats-bar b { color: var(--ink); }
+
+/* Responsive */
+@media(max-width:768px) {
+  .config-row { grid-template-columns: 1fr; }
+  .hdr-inner { flex-wrap: wrap; height: auto; padding: 10px 0; }
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-title">
+      ✎ QUẢN TRỊ DỮ LIỆU NỘP ĐẢNG PHÍ
+      <small>Nhập và cập nhật số liệu → Đồng bộ real-time lên Dashboard</small>
+    </div>
+    <div class="hdr-right">
+      <span class="status-pill loading" id="fbStatus"><span class="sdot"></span><span id="fbStatusText">Đang kết nối Firebase...</span></span>
+      <a href="index.html" class="btn sm" target="_blank">📊 Mở Dashboard</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- Setup Guide (shown first time) -->
+  <div class="guide" id="setupGuide">
+    ⚙️ <b>Hướng dẫn cài đặt Firestore (chỉ cần làm 1 lần):</b><br>
+    1. Vào <a href="https://console.firebase.google.com/project/layso-vt/firestore" target="_blank" style="color:var(--son)"><b>Firebase Console → Firestore Database</b></a><br>
+    2. Bấm <b>"Create database"</b> → chọn region <code>asia-southeast1</code> → bấm <b>Next</b><br>
+    3. Chọn <b>"Start in test mode"</b> → bấm <b>Create</b><br>
+    4. Quay lại trang này, bấm nút <b>"🔄 Kiểm tra kết nối"</b> phía dưới.<br>
+    5. Lần đầu bấm <b>"📥 Nạp dữ liệu mặc định"</b> để đẩy 50 đơn vị lên Firebase.<br>
+    <div style="margin-top:8px">
+      <button class="btn sm gold" onclick="testConnection()">🔄 Kiểm tra kết nối</button>
+      <button class="btn sm" onclick="document.getElementById('setupGuide').style.display='none'">Ẩn hướng dẫn</button>
+    </div>
+  </div>
+
+  <!-- Unsaved changes bar -->
+  <div class="dirty-bar" id="dirtyBar">
+    ⚠️ Bạn có thay đổi chưa lưu lên Firebase!
+    <div>
+      <button class="btn sm green" onclick="saveToFirebase()">💾 Lưu ngay</button>
+      <button class="btn sm" onclick="loadFromFirebase()">↩ Hoàn tác</button>
+    </div>
+  </div>
+
+  <!-- Config -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>⚙️ Thông tin chung</h2>
+        <p>Ngày chốt số liệu và tiêu đề hiển thị trên Dashboard</p>
+      </div>
+    </div>
+    <div class="config-row">
+      <div class="config-field">
+        <label>Ngày giờ cập nhật:</label>
+        <input type="text" id="cfgDate" value="20h ngày 20/10/2026" oninput="markDirty()">
+      </div>
+      <div class="config-field">
+        <label>Tiêu đề báo cáo:</label>
+        <input type="text" id="cfgTitle" value="TIẾN ĐỘ TRIỂN KHAI NỘP ĐẢNG PHÍ TRÊN DỊCH VỤ CÔNG" oninput="markDirty()">
+      </div>
+      <div class="config-field">
+        <label>Tên Đảng bộ:</label>
+        <input type="text" id="cfgOrg" value="Đảng bộ xã Mậu A - Huyện Văn Yên" oninput="markDirty()">
+      </div>
+      <div class="config-field">
+        <label>🏆 Xếp hạng tỉnh:</label>
+        <input type="text" id="cfgProvRank" value="45/103" placeholder="45/103" oninput="markDirty()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Main data table -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>📋 Danh sách đơn vị trực thuộc</h2>
+        <p>Chỉnh sửa trực tiếp trong bảng, tỷ lệ tự động tính. Bấm <b>Lưu lên Firebase</b> khi xong.</p>
+      </div>
+      <div class="card-acts">
+        <button class="btn sm" onclick="addUnit('ĐẢNG BỘ, CHI BỘ CƠ QUAN')">+ Thêm đơn vị Cơ quan</button>
+        <button class="btn sm" onclick="addUnit('CHI BỘ THÔN')">+ Thêm Chi bộ Thôn</button>
+        <button class="btn sm gold" onclick="seedDefault()">📥 Nạp dữ liệu mặc định</button>
+        <button class="btn sm" onclick="loadFromFirebase()">🔄 Tải từ Firebase</button>
+        <button class="btn green" onclick="saveToFirebase()">💾 Lưu lên Firebase</button>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th style="width:40px">STT</th>
+            <th class="left" style="min-width:200px">Tên chi bộ / đảng bộ</th>
+            <th style="width:85px">Khối</th>
+            <th style="width:65px">Tổng ĐV</th>
+            <th style="width:65px">Miễn giảm</th>
+            <th style="width:65px">Chưa duyệt</th>
+            <th style="width:65px">Duyệt, chưa nộp</th>
+            <th style="width:65px">Đã nộp</th>
+            <th style="width:65px">Chưa kê khai</th>
+            <th style="width:80px">Tỷ lệ HT</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="11" style="padding:30px; color:var(--muted); text-align:center;">Đang tải dữ liệu...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<script>
+// ==========================================
+// FIREBASE INIT
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyAv4jc13Dl2PS6gSF-zBfShyXfQov8k-9U",
+  authDomain: "layso-vt.firebaseapp.com",
+  projectId: "layso-vt",
+  storageBucket: "layso-vt.firebasestorage.app",
+  messagingSenderId: "275767284853",
+  appId: "1:275767284853:web:938fa41f7320a4fc94143c"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const DOC_REF = db.collection('dangphi').doc('current');
+
+// ==========================================
+// STATE
+// ==========================================
+let units = [];
+let isDirty = false;
+
+// Default seed data (from Excel CV 1085)
+const SEED_DATA = [{"stt": 1, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ Trung tâm GDNN - GDTX Văn Yên", "total_dv": 39, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 39, "not_declared": 0, "rate": 1.0}, {"stt": 2, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ Trung tâm Y tế Khu vực Văn Yên", "total_dv": 119, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 119, "not_declared": 0, "rate": 1.0}, {"stt": 3, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ BQLDA đầu tư xây dựng xã Mậu A", "total_dv": 11, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 11, "not_declared": 0, "rate": 1.0}, {"stt": 4, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ phòng Kinh tế, Hạ tầng", "total_dv": 6, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 6, "not_declared": 0, "rate": 1.0}, {"stt": 5, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Trường THPT Nguyễn Lương Bằng", "total_dv": 30, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 30, "not_declared": 0, "rate": 1.0}, {"stt": 6, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Mặt trận Tổ quốc", "total_dv": 13, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 13, "not_declared": 0, "rate": 1.0}, {"stt": 7, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Ban Xây dựng Đảng", "total_dv": 12, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 12, "not_declared": 0, "rate": 1.0}, {"stt": 8, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Trạm Y Tế Mậu A", "total_dv": 26, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 26, "not_declared": 0, "rate": 1.0}, {"stt": 9, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ VNPT Văn Yên", "total_dv": 7, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 7, "not_declared": 0, "rate": 1.0}, {"stt": 10, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Văn phòng HĐND và UBND", "total_dv": 17, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 17, "not_declared": 0, "rate": 1.0}, {"stt": 11, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Văn phòng ĐKĐĐ khu vực Văn Yên", "total_dv": 9, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 9, "not_declared": 0, "rate": 1.0}, {"stt": 12, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Văn phòng Đảng ủy", "total_dv": 9, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 9, "not_declared": 0, "rate": 1.0}, {"stt": 13, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ phòng Nông nghiệp và Môi trường", "total_dv": 8, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 8, "not_declared": 0, "rate": 1.0}, {"stt": 14, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ phòng Văn hóa - Xã hội", "total_dv": 14, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 14, "not_declared": 0, "rate": 1.0}, {"stt": 15, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ phòng giao dịch NHCSXH Văn Yên", "total_dv": 7, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 7, "not_declared": 0, "rate": 1.0}, {"stt": 16, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Trung tâm Phục vụ Hành chính công", "total_dv": 5, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 5, "not_declared": 0, "rate": 1.0}, {"stt": 17, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Trường PTDT Nội trú THCS và THPT VY", "total_dv": 23, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 23, "not_declared": 0, "rate": 1.0}, {"stt": 18, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Ủy ban Kiểm tra", "total_dv": 5, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 5, "not_declared": 0, "rate": 1.0}, {"stt": 19, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ Trường THPT Chu Văn An", "total_dv": 63, "exempt": 0, "pending_review": 1, "approved_unpaid": 0, "approved_paid": 62, "not_declared": 0, "rate": 0.9841}, {"stt": 20, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ trường Trung học cơ sở Mậu A 1", "total_dv": 64, "exempt": 0, "pending_review": 2, "approved_unpaid": 5, "approved_paid": 51, "not_declared": 6, "rate": 0.7969}, {"stt": 21, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ trường Trung học cơ sở Mậu A 2", "total_dv": 50, "exempt": 0, "pending_review": 1, "approved_unpaid": 9, "approved_paid": 29, "not_declared": 10, "rate": 0.58}, {"stt": 22, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ trường Tiểu học Mậu A 1", "total_dv": 101, "exempt": 0, "pending_review": 15, "approved_unpaid": 16, "approved_paid": 55, "not_declared": 15, "rate": 0.5445}, {"stt": 23, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Đội Quản Lý Thị Trường số 3", "total_dv": 10, "exempt": 0, "pending_review": 0, "approved_unpaid": 3, "approved_paid": 5, "not_declared": 2, "rate": 0.5}, {"stt": 24, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ trường Mầm non Mậu A 1", "total_dv": 77, "exempt": 0, "pending_review": 7, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 69, "rate": 0.0}, {"stt": 25, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ trường Mầm non Mậu A 2", "total_dv": 74, "exempt": 0, "pending_review": 2, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 71, "rate": 0.0}, {"stt": 26, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Đảng bộ trường Tiểu học Mậu A 2", "total_dv": 58, "exempt": 0, "pending_review": 8, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 52, "rate": 0.0}, {"stt": 27, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Hợp tác xã Huỳnh Phát", "total_dv": 4, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 4, "rate": 0.0}, {"stt": 28, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Trung tâm Dịch vụ tổng hợp xã Mậu A", "total_dv": 17, "exempt": 0, "pending_review": 5, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 12, "rate": 0.0}, {"stt": 29, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ Trường Mầm non Ban Mai", "total_dv": 9, "exempt": 0, "pending_review": 3, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 6, "rate": 0.0}, {"stt": 30, "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN", "name": "Chi bộ điện lực Văn Yên", "total_dv": 26, "exempt": 0, "pending_review": 4, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 22, "rate": 0.0}, {"stt": 1, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Mậu A 1", "total_dv": 195, "exempt": 16, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 179, "not_declared": 0, "rate": 1.0}, {"stt": 2, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Yên Hưng", "total_dv": 80, "exempt": 9, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 71, "not_declared": 0, "rate": 1.0}, {"stt": 3, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn An Thịnh 2", "total_dv": 23, "exempt": 2, "pending_review": 1, "approved_unpaid": 0, "approved_paid": 18, "not_declared": 2, "rate": 0.8696}, {"stt": 4, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Yên Thái 2", "total_dv": 65, "exempt": 8, "pending_review": 1, "approved_unpaid": 5, "approved_paid": 9, "not_declared": 51, "rate": 0.2615}, {"stt": 5, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Mậu A 6", "total_dv": 69, "exempt": 0, "pending_review": 0, "approved_unpaid": 19, "approved_paid": 14, "not_declared": 35, "rate": 0.2029}, {"stt": 6, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Mậu A 3", "total_dv": 161, "exempt": 20, "pending_review": 8, "approved_unpaid": 5, "approved_paid": 8, "not_declared": 120, "rate": 0.1739}, {"stt": 7, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Mậu A 4", "total_dv": 93, "exempt": 11, "pending_review": 0, "approved_unpaid": 51, "approved_paid": 1, "not_declared": 30, "rate": 0.129}, {"stt": 8, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Mậu A 5", "total_dv": 176, "exempt": 0, "pending_review": 1, "approved_unpaid": 34, "approved_paid": 10, "not_declared": 138, "rate": 0.0568}, {"stt": 9, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn An Thịnh 1", "total_dv": 49, "exempt": 0, "pending_review": 1, "approved_unpaid": 0, "approved_paid": 1, "not_declared": 48, "rate": 0.0204}, {"stt": 10, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn An Thịnh 3", "total_dv": 76, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 1, "not_declared": 75, "rate": 0.0132}, {"stt": 11, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn An Thịnh 4", "total_dv": 39, "exempt": 12, "pending_review": 51, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 12, "rate": 0.0}, {"stt": 12, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn An Thịnh 5", "total_dv": 39, "exempt": 0, "pending_review": 2, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 37, "rate": 0.0}, {"stt": 13, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn An Thịnh 6", "total_dv": 30, "exempt": 0, "pending_review": 1, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 31, "rate": 0.0}, {"stt": 14, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Mậu A 2", "total_dv": 159, "exempt": 0, "pending_review": 2, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 154, "rate": 0.0}, {"stt": 15, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Mậu Đông 1", "total_dv": 64, "exempt": 0, "pending_review": 1, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 65, "rate": 0.0}, {"stt": 16, "group": "CHI BỘ THÔN", "name": "Chi bộ Thôn Mậu Đông 2", "total_dv": 56, "exempt": 0, "pending_review": 1, "approved_unpaid": 1, "approved_paid": 0, "not_declared": 54, "rate": 0.0}, {"stt": 17, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Ngòi A 1", "total_dv": 82, "exempt": 0, "pending_review": 1, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 81, "rate": 0.0}, {"stt": 18, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Ngòi A 2", "total_dv": 53, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 53, "rate": 0.0}, {"stt": 19, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Ngòi A 3", "total_dv": 56, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 56, "rate": 0.0}, {"stt": 20, "group": "CHI BỘ THÔN", "name": "Chi bộ thôn Yên Thái 1", "total_dv": 60, "exempt": 0, "pending_review": 0, "approved_unpaid": 0, "approved_paid": 0, "not_declared": 60, "rate": 0.0}];
+
+// ==========================================
+// FIREBASE OPERATIONS
+// ==========================================
+async function testConnection() {
+  setStatus('loading', 'Đang kiểm tra...');
+  try {
+    await db.collection('dangphi').doc('_ping').set({ t: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection('dangphi').doc('_ping').delete();
+    setStatus('ok', 'Kết nối Firebase thành công!');
+    toast('✅ Firebase Firestore đã sẵn sàng!');
+  } catch (e) {
+    console.error(e);
+    setStatus('err', 'Lỗi: ' + e.message);
+    toast('❌ Không kết nối được: ' + e.message, true);
+  }
+}
+
+async function loadFromFirebase() {
+  setStatus('loading', 'Đang tải...');
+  try {
+    const snap = await DOC_REF.get();
+    if (snap.exists) {
+      const d = snap.data();
+      units = d.units || [];
+      document.getElementById('cfgDate').value = d.updateDate || '';
+      document.getElementById('cfgTitle').value = d.title || '';
+      document.getElementById('cfgOrg').value = d.orgName || '';
+      document.getElementById('cfgProvRank').value = d.provRank || '45/103';
+      renderTable();
+      isDirty = false;
+      updateDirtyBar();
+      setStatus('ok', 'Đã tải ' + units.length + ' đơn vị');
+      toast('✅ Đã tải dữ liệu từ Firebase (' + units.length + ' đơn vị)');
+    } else {
+      units = [];
+      renderTable();
+      setStatus('ok', 'Chưa có dữ liệu trên Firebase');
+      toast('ℹ️ Chưa có dữ liệu. Bấm "Nạp dữ liệu mặc định" để bắt đầu.');
+    }
+  } catch (e) {
+    console.error(e);
+    setStatus('err', 'Lỗi tải: ' + e.message);
+    toast('❌ Lỗi: ' + e.message, true);
+  }
+}
+
+async function saveToFirebase() {
+  collectFromTable();
+  // Auto-calc rates
+  units.forEach(u => {
+    u.rate = u.total_dv > 0 ? (u.approved_paid + u.exempt) / u.total_dv : 0;
+  });
+
+  setStatus('loading', 'Đang lưu...');
+  try {
+    await DOC_REF.set({
+      units: units,
+      updateDate: document.getElementById('cfgDate').value,
+      title: document.getElementById('cfgTitle').value,
+      orgName: document.getElementById('cfgOrg').value,
+      provRank: document.getElementById('cfgProvRank').value || '45/103',
+      lastModified: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    isDirty = false;
+    updateDirtyBar();
+    renderTable(); // refresh rates
+    setStatus('ok', 'Đã lưu ' + units.length + ' đơn vị');
+    toast('✅ Đã đồng bộ lên Firebase! Dashboard sẽ tự cập nhật.');
+  } catch (e) {
+    console.error(e);
+    setStatus('err', 'Lỗi lưu: ' + e.message);
+    toast('❌ Lỗi lưu: ' + e.message, true);
+  }
+}
+
+async function seedDefault() {
+  if (units.length > 0 && !confirm('Dữ liệu hiện tại sẽ bị thay thế bằng 50 đơn vị mặc định (CV 1085). Tiếp tục?')) return;
+  units = JSON.parse(JSON.stringify(SEED_DATA));
+  renderTable();
+  isDirty = true;
+  updateDirtyBar();
+  toast('📥 Đã nạp 50 đơn vị mặc định. Bấm "Lưu lên Firebase" để đồng bộ!');
+}
+
+// ==========================================
+// TABLE RENDERING
+// ==========================================
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+
+  if (units.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" style="padding:30px; color:var(--muted); text-align:center;">Chưa có dữ liệu. Bấm <b>"📥 Nạp dữ liệu mặc định"</b> hoặc <b>"🔄 Tải từ Firebase"</b></td></tr>';
+    updateStats();
+    return;
+  }
+
+  // Group units
+  const g1 = units.filter(u => u.group === 'ĐẢNG BỘ, CHI BỘ CƠ QUAN');
+  const g2 = units.filter(u => u.group === 'CHI BỘ THÔN');
+
+  let html = '';
+
+  if (g1.length > 0) {
+    html += '<tr class="group-header"><td colspan="11">I. ĐẢNG BỘ, CHI BỘ CƠ QUAN (' + g1.length + ' đơn vị)</td></tr>';
+    g1.forEach((u, i) => { html += unitRow(u, i, 'g1'); });
+  }
+  if (g2.length > 0) {
+    html += '<tr class="group-header"><td colspan="11">II. CHI BỘ THÔN (' + g2.length + ' đơn vị)</td></tr>';
+    g2.forEach((u, i) => { html += unitRow(u, i, 'g2'); });
+  }
+
+  tbody.innerHTML = html;
+  updateStats();
+}
+
+function unitRow(u, idx, gKey) {
+  const uid = gKey + '_' + idx;
+  const rate = u.rate || 0;
+  let rcls = 'rzero';
+  if (rate >= 0.999) rcls = 'r100';
+  else if (rate >= 0.5) rcls = 'rmed';
+  else if (rate > 0) rcls = 'rlow';
+
+  return `<tr data-name="${esc(u.name)}">
+    <td><input type="number" value="${u.stt}" data-field="stt" min="1" style="width:45px" oninput="markDirty()"></td>
+    <td class="left"><input type="text" value="${esc(u.name)}" data-field="name" oninput="markDirty()"></td>
+    <td>
+      <select data-field="group" onchange="markDirty()">
+        <option value="ĐẢNG BỘ, CHI BỘ CƠ QUAN" ${u.group==='ĐẢNG BỘ, CHI BỘ CƠ QUAN'?'selected':''}>Cơ quan</option>
+        <option value="CHI BỘ THÔN" ${u.group==='CHI BỘ THÔN'?'selected':''}>Thôn</option>
+      </select>
+    </td>
+    <td><input type="number" value="${u.total_dv}" data-field="total_dv" min="0" oninput="markDirty()"></td>
+    <td><input type="number" value="${u.exempt}" data-field="exempt" min="0" oninput="markDirty()"></td>
+    <td><input type="number" value="${u.pending_review}" data-field="pending_review" min="0" oninput="markDirty()"></td>
+    <td><input type="number" value="${u.approved_unpaid}" data-field="approved_unpaid" min="0" oninput="markDirty()"></td>
+    <td><input type="number" value="${u.approved_paid}" data-field="approved_paid" min="0" oninput="markDirty()"></td>
+    <td><input type="number" value="${u.not_declared}" data-field="not_declared" min="0" oninput="markDirty()"></td>
+    <td><span class="rate-display ${rcls}">${(rate*100).toFixed(rate>=0.999||rate===0?0:1)}%</span></td>
+    <td><button class="row-del" onclick="deleteUnit('${esc(u.name)}')" title="Xóa đơn vị">✕</button></td>
+  </tr>`;
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ==========================================
+// TABLE DATA COLLECTION
+// ==========================================
+function collectFromTable() {
+  const rows = document.querySelectorAll('#tableBody tr:not(.group-header)');
+  const collected = [];
+  rows.forEach(tr => {
+    const inputs = tr.querySelectorAll('input, select');
+    if (inputs.length < 9) return; // skip empty/info rows
+    const obj = {};
+    inputs.forEach(inp => {
+      const field = inp.dataset.field;
+      if (!field) return;
+      if (inp.type === 'number') obj[field] = parseInt(inp.value) || 0;
+      else obj[field] = inp.value.trim();
+    });
+    // Calc rate
+    obj.rate = obj.total_dv > 0 ? (obj.approved_paid + obj.exempt) / obj.total_dv : 0;
+    if (obj.name) collected.push(obj);
+  });
+  units = collected;
+}
+
+// ==========================================
+// ADD / DELETE
+// ==========================================
+function addUnit(group) {
+  collectFromTable();
+  const stt = units.filter(u => u.group === group).length + 1;
+  units.push({
+    stt: stt,
+    group: group,
+    name: '',
+    total_dv: 0, exempt: 0, pending_review: 0,
+    approved_unpaid: 0, approved_paid: 0, not_declared: 0,
+    rate: 0
+  });
+  renderTable();
+  markDirty();
+  // Focus the new row's name input
+  setTimeout(() => {
+    const rows = document.querySelectorAll('#tableBody tr:not(.group-header)');
+    const last = rows[rows.length - 1];
+    if (last) { const nameInput = last.querySelector('input[data-field="name"]'); if (nameInput) nameInput.focus(); }
+  }, 50);
+}
+
+function deleteUnit(name) {
+  if (!confirm('Xóa đơn vị "' + name + '"?')) return;
+  collectFromTable();
+  units = units.filter(u => u.name !== name);
+  renderTable();
+  markDirty();
+}
+
+// ==========================================
+// DIRTY STATE
+// ==========================================
+function markDirty() {
+  isDirty = true;
+  updateDirtyBar();
+}
+
+function updateDirtyBar() {
+  const bar = document.getElementById('dirtyBar');
+  bar.classList.toggle('show', isDirty);
+}
+
+// ==========================================
+// STATS
+// ==========================================
+function updateStats() {
+  const bar = document.getElementById('statsBar');
+  const tot = units.reduce((s,u) => s + (u.total_dv||0), 0);
+  const paid = units.reduce((s,u) => s + (u.approved_paid||0), 0);
+  const exempt = units.reduce((s,u) => s + (u.exempt||0), 0);
+  const done = units.filter(u => u.rate >= 0.999).length;
+  const rate = tot > 0 ? ((paid + exempt) / tot * 100).toFixed(1) : '0';
+
+  bar.innerHTML = `
+    Tổng: <b>${units.length}</b> đơn vị &nbsp;·&nbsp;
+    Đảng viên: <b>${tot.toLocaleString('vi')}</b> &nbsp;·&nbsp;
+    Đã nộp: <b style="color:var(--ngoc)">${paid.toLocaleString('vi')}</b> &nbsp;·&nbsp;
+    Miễn giảm: <b>${exempt}</b> &nbsp;·&nbsp;
+    Tỷ lệ: <b style="color:var(--son)">${rate}%</b> &nbsp;·&nbsp;
+    Hoàn thành 100%: <b style="color:var(--ngoc)">${done}/${units.length}</b>
+  `;
+}
+
+// ==========================================
+// UI HELPERS
+// ==========================================
+function setStatus(type, text) {
+  const pill = document.getElementById('fbStatus');
+  pill.className = 'status-pill ' + type;
+  document.getElementById('fbStatusText').innerText = text;
+}
+
+function toast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.className = 'toast' + (isError ? ' error' : '');
+  document.getElementById('toastMsg').innerText = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Warn before leaving with unsaved changes
+window.addEventListener('beforeunload', e => {
+  if (isDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ==========================================
+// INIT
+// ==========================================
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromFirebase();
+});
+</script>
+</body>
+</html>
