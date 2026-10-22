@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Zalo to Telegram Forwarder",
+  "version": "1.0.0",
+  "description": "Tự động gửi tin nhắn mới từ Zalo Web sang Telegram theo danh sách nhóm chỉ định",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://chat.zalo.me/*",
+    "https://api.telegram.org/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chat.zalo.me/*"],
+      "js": ["inject.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://chat.zalo.me/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["danh_sach_202_nhom.txt", "bo_qua_nhom.txt"],
+      "matches": ["https://chat.zalo.me/*"]
+    }
+  ]
+}

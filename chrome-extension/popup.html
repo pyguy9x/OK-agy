@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>DHTN Văn Bản Monitor</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      width: 380px;
+      padding: 16px;
+      background-color: #f8fafc;
+      color: #1e293b;
+      font-size: 13px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .header h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #b91c1c;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+    .status-badge.active {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .status-badge.inactive {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .live-status {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .live-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .live-items {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .item-tag {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #f1f5f9;
+      color: #334155;
+    }
+    .item-tag.alert {
+      background: #fef2f2;
+      color: #b91c1c;
+      font-weight: 700;
+      border: 1px solid #fecaca;
+    }
+    .item-tag .num {
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #e2e8f0;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .item-tag.alert .num {
+      background: #ef4444;
+      color: white;
+    }
+    .filter-group {
+      margin-bottom: 10px;
+      background: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .filter-group-title {
+      font-weight: 700;
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .checkbox-item:last-child {
+      margin-bottom: 0;
+    }
+    .checkbox-item input {
+      accent-color: #b91c1c;
+      cursor: pointer;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #334155;
+      font-size: 12px;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus {
+      border-color: #b91c1c;
+    }
+    .input-wrap {
+      display: flex;
+      gap: 6px;
+    }
+    .input-wrap button {
+      padding: 0 8px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .switch-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .switch-wrap span {
+      font-weight: 600;
+      color: #334155;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 20px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: 0.3s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #16a34a;
+    }
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    button.btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button.btn-primary {
+      background: #b91c1c;
+      color: white;
+    }
+    button.btn-primary:hover {
+      background: #991b1b;
+    }
+    button.btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    button.btn-secondary:hover {
+      background: #cbd5e1;
+    }
+    .status-msg {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      display: none;
+      word-break: break-all;
+    }
+    .status-msg.success {
+      display: block;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+    .status-msg.error {
+      display: block;
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>📑 DHTN Văn Bản Alert</h2>
+    <span id="badgeState" class="status-badge active">Đang bật</span>
+  </div>
+
+  <div class="card">
+    <div class="live-status">
+      <div class="live-header">
+        <span>Trạng thái 2 mục cần theo dõi:</span>
+        <span id="tabDomain" style="font-weight: normal; font-size: 11px;">dhtn.dcs.vn</span>
+      </div>
+      <div id="liveItems" class="live-items">
+        <span class="item-tag">Đang kiểm tra tab...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="switch-wrap">
+      <span>Bật giám sát văn bản</span>
+      <label class="switch">
+        <input type="checkbox" id="enabledCheck" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- 2 mục cần giám sát -->
+    <div class="filter-group">
+      <div class="filter-group-title">🎯 2 Mục theo dõi cố định</div>
+      <label class="checkbox-item">
+        <input type="checkbox" id="chkDiCapSo" checked>
+        <span>📤 <b>Văn bản đi</b> &gt; Chờ cấp số</span>
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="chkDenTiepNhan" checked>
+        <span>📥 <b>Văn bản đến</b> &gt; Chờ tiếp nhận</span>
+      </label>
+    </div>
+
+    <div class="form-group">
+      <label for="botToken">Telegram Bot Token</label>
+      <div class="input-wrap">
+        <input type="password" id="botToken" placeholder="Bot Token...">
+        <button type="button" id="toggleToken">👁️</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="chatId">Telegram Chat ID</label>
+      <input type="text" id="chatId" placeholder="Chat ID...">
+    </div>
+
+    <div class="form-group">
+      <label for="autoReload">Tự động F5 trang (phút) — Giữ kết nối & cập nhật</label>
+      <select id="autoReload">
+        <option value="0">Tắt (Không tự động F5)</option>
+        <option value="1">1 phút</option>
+        <option value="2">2 phút</option>
+        <option value="5" selected>5 phút (Khuyên dùng)</option>
+        <option value="10">10 phút</option>
+      </select>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnTest">🔔 Test Telegram</button>
+      <button class="btn btn-primary" id="btnSave">💾 Lưu cài đặt</button>
+    </div>
+
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+
+  <div class="footer">
+    Chỉ theo dõi: <code>Chờ cấp số (VB Đi)</code> &bull; <code>Chờ tiếp nhận (VB Đến)</code>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

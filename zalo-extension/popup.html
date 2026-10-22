@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Zalo to Telegram</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      width: 420px;
+      padding: 16px;
+      background-color: #f8fafc;
+      color: #1e293b;
+      font-size: 13px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .switch-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #0284c7;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 12px 14px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: #334155;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+    input[type="text"], input[type="password"], textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #1e293b;
+      background: #fff;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+    }
+    textarea {
+      resize: vertical;
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all .2s;
+    }
+    .btn-primary {
+      background: #0284c7;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #0369a1;
+    }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .badge-count {
+      font-size: 11px;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    details {
+      margin-top: 6px;
+    }
+    details summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      user-select: none;
+      outline: none;
+      padding: 4px 0;
+    }
+    details[open] summary {
+      margin-bottom: 6px;
+    }
+
+    .status-msg {
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-top: 8px;
+      display: none;
+    }
+    .status-msg.success {
+      display: block;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+    .status-msg.error {
+      display: block;
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .logs-container {
+      max-height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .log-item {
+      padding: 6px 8px;
+      background: #f1f5f9;
+      border-radius: 6px;
+      font-size: 11px;
+      border-left: 3px solid #cbd5e1;
+    }
+    .log-item.success {
+      border-left-color: #10b981;
+      background: #f0fdf4;
+    }
+    .log-item.skipped, .log-item.ignored {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+    }
+    .log-item.error {
+      border-left-color: #ef4444;
+      background: #fef2f2;
+    }
+    .log-top {
+      display: flex;
+      justify-content: space-between;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .log-group {
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .log-text {
+      color: #475569;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <h2>💬 Zalo to Telegram</h2>
+    </div>
+    <div class="switch-container">
+      <span id="statusText" style="font-size: 11px; font-weight: 600; color: #10b981;">Đang bật</span>
+      <label class="switch">
+        <input type="checkbox" id="toggleEnabled" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Telegram Settings Card -->
+  <div class="card">
+    <div class="card-title">
+      <span>🤖 Cấu hình Telegram</span>
+    </div>
+    <div class="form-group">
+      <label for="botToken">Telegram Bot Token:</label>
+      <input type="text" id="botToken" placeholder="VD: 8909257392:AAG9kRx...">
+    </div>
+    <div class="form-group">
+      <label for="chatId">Telegram Chat ID (mặc định):</label>
+      <input type="text" id="chatId" placeholder="VD: 928852403">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnTestTele">🔔 Test kết nối Bot</button>
+      <button class="btn btn-primary" id="btnSave">💾 Lưu cài đặt</button>
+    </div>
+    <div id="teleStatus" class="status-msg"></div>
+  </div>
+
+  <!-- Group Filter Card -->
+  <div class="card">
+    <div class="card-title">
+      <span>👥 Bộ lọc nhóm</span>
+      <span class="badge-count" id="groupCount">202 nhóm</span>
+    </div>
+    <div class="radio-group">
+      <label class="radio-label">
+        <input type="radio" name="filterMode" value="whitelist" id="modeWhitelist" checked>
+        <span>Chỉ gửi tin từ danh sách nhóm cho phép</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="filterMode" value="all" id="modeAll">
+        <span>Gửi tất cả nhóm Zalo</span>
+      </label>
+    </div>
+
+    <details id="detailsGroups">
+      <summary>📋 Chỉnh sửa danh sách nhóm (<span id="summaryGroupCount">202</span>)</summary>
+      <p style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Định dạng: <code>Tên nhóm | threadId | mem [| ChatId riêng]</code></p>
+      <textarea id="groupsText" rows="6" placeholder="Tên nhóm | threadId | 50 mem"></textarea>
+    </details>
+
+    <details id="detailsSkips">
+      <summary>🚫 Danh sách nhóm bỏ qua (<span id="skipCount">14</span>)</summary>
+      <p style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Mỗi dòng 1 threadId hoặc tên nhóm cần bỏ qua:</p>
+      <textarea id="skipText" rows="4" placeholder="Nhập các threadId hoặc tên nhóm cần bỏ qua..."></textarea>
+    </details>
+  </div>
+
+  <!-- Recent Activity Log Card -->
+  <div class="card">
+    <div class="card-title">
+      <span>📜 Nhật ký tin nhắn</span>
+      <button id="btnClearLogs" style="background: none; border: none; font-size: 11px; color: #64748b; cursor: pointer; text-decoration: underline;">Xóa log</button>
+    </div>
+    <div class="logs-container" id="logsContainer">
+      <div style="text-align: center; color: #94a3b8; padding: 12px 0;">Chưa có tin nhắn mới nào.</div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

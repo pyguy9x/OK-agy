@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ZALO Realtime • Pastel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f8fc; --surface: #ffffff; --surface-2: #fbfcff;
+    --border: #e8ebf4; --text: #2e3548; --muted: #8b95b0;
+    --accent: #6f9bf7; --accent-soft: #e9efff;
+    --green: #4cae8a; --amber: #d9a441; --red: #e07070;
+    --scroll-thumb: #c9d6ef; --scroll-thumb-hover: #a9bfe8;
+    --input-bg: #f7f8fc;
+    --flash-bg: #fff4c2; --flash-border: #eab308; --flash-glow: rgba(234,179,8,.30);
+  }
+  [data-theme="dark"] {
+    --bg: #131722; --surface: #1c2231; --surface-2: #222a3f;
+    --border: #2c3449; --text: #e7ecf7; --muted: #8f99b8;
+    --accent: #8aa9ff; --accent-soft: #2a3554;
+    --green: #5cc39a; --amber: #e0b45c; --red: #e88383;
+    --scroll-thumb: #3a4560; --scroll-thumb-hover: #4d5b7d;
+    --input-bg: #131722;
+    --flash-bg: #43350e; --flash-border: #a3822e; --flash-glow: rgba(234,179,8,.25);
+  }
+  .theme-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    padding: 7px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    white-space: nowrap;
+  }
+  .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+  [data-theme="dark"] .badge.g { background: rgba(76,174,138,0.18); color: #7fe0b5; }
+  [data-theme="dark"] .badge.d { background: rgba(111,155,247,0.18); color: #a9c3ff; }
+  [data-theme="dark"] .badge.sk { background: rgba(224,112,112,0.16); color: #f0a0a0; }
+  [data-theme="dark"] .skip { background: rgba(224,112,112,0.14); color: #f0a0a0; }
+  [data-theme="dark"] .skip:hover { background: rgba(224,112,112,0.24); }
+  [data-theme="dark"] .star:hover { background: rgba(217,164,65,0.14); }
+  [data-theme="dark"] .okbar { background: #14342a; color: #7fe0b5; border-color: #1e4d3d; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.55 "Segoe UI", system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+  ::selection { background: #dbe7ff; }
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  h1 { font-size: 14px; font-weight: 700; margin-right: auto; color: var(--text); }
+  h1 small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+  .pill b { color: var(--text); }
+  .pager { display: inline-flex; align-items: center; gap: 2px; padding: 3px 6px; border-radius: 999px;
+    background: var(--bg); border: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+  .pager button { border: 0; background: transparent; color: var(--text); font-size: 16px; line-height: 1;
+    padding: 2px 9px; border-radius: 999px; cursor: pointer; font-weight: 700; }
+  .pager button:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
+  .pager button:disabled { opacity: .3; cursor: default; }
+  .pager #pageInfo { font-variant-numeric: tabular-nums; min-width: 46px; text-align: center; font-weight: 700; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+  .dot.on { background: var(--green); }
+  input[type=search] {
+    background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 11px; border-radius: 8px; width: 210px; outline: none; font-size: 13px;
+  }
+  input[type=search]:focus { border-color: var(--accent); background: var(--surface); }
+  .tabs { display: flex; gap: 3px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+  .tabs button { border: 0; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 5px 11px; border-radius: 6px; cursor: pointer; }
+  .tabs button.active { background: var(--accent); color: #fff; }
+  .wrap { flex: 1; display: flex; min-height: 0; }
+  aside { width: 250px; overflow-y: auto; border-right: 1px solid var(--border); background: var(--surface); padding: 10px 8px; flex-shrink: 0; }
+  aside h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 0 6px 8px; }
+  .grp {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    width: 100%; text-align: left; padding: 7px 9px; margin-bottom: 2px;
+    border-radius: 8px; border: 0; background: transparent; color: var(--text);
+    font-size: 12.5px; cursor: pointer; line-height: 1.3;
+  }
+  .grp:hover { background: var(--accent-soft); }
+  .grp.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  .grp .cn { font-size: 10.5px; color: var(--muted); background: var(--bg); padding: 2px 7px; border-radius: 999px; flex-shrink: 0; border: 1px solid var(--border); }
+  main { flex: 1; overflow-y: auto; padding: 12px; min-width: 0; }
+
+  /* Thanh cuộn dọc gọn nhẹ */
+  aside, main { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) transparent; }
+  aside::-webkit-scrollbar, main::-webkit-scrollbar { width: 8px; }
+  aside::-webkit-scrollbar-track, main::-webkit-scrollbar-track { background: transparent; }
+  aside::-webkit-scrollbar-thumb, main::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 8px; border: 2px solid var(--bg); }
+  aside::-webkit-scrollbar-thumb:hover, main::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
+
+  .row { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; }
+  .row:hover { border-color: #c9d6ef; }
+  /* Tin nhan moi: noi bat bang mau vang nhat roi tu tra ve mau nen goc */
+  .row.new { animation: newFlash 2.8s ease-out; }
+  @keyframes newFlash {
+    0%   { background: var(--flash-bg); border-color: var(--flash-border);
+           box-shadow: 0 0 0 3px var(--flash-glow); transform: translateY(-5px); }
+    55%  { background: var(--flash-bg); border-color: var(--flash-border);
+           box-shadow: 0 0 0 2px var(--flash-glow); transform: none; }
+    100% { background: var(--surface); border-color: var(--border);
+           box-shadow: none; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row.new { animation: none; }
+  }
+  .row.skipped { opacity: .55; }
+  .row.skipped .body { text-decoration: line-through; }
+  .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+  .badge { font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; letter-spacing: .4px; }
+  .badge.g { background: #e6f6ef; color: #2f8f6b; }
+  .badge.d { background: #e9efff; color: #4a6fd4; }
+  .badge.sk { background: #fdecec; color: #c05050; }
+  .time { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .thread { font-size: 12.5px; font-weight: 700; color: var(--accent); }
+  .sender { font-size: 12.5px; font-weight: 600; }
+  .skip { margin-left: auto; border: 0; background: #fdecec; color: #c05050; font-size: 11.5px; padding: 4px 10px; border-radius: 999px; cursor: pointer; font-weight: 600; }
+  .skip:hover { background: #fbdcdc; }
+  .skip:disabled { opacity: .5; cursor: default; }
+  .star { margin-left: auto; border: 0; background: transparent; color: #b9c2d8; font-size: 15px; line-height: 1; padding: 2px 7px; border-radius: 999px; cursor: pointer; }
+  .star:hover { background: #fff7e6; color: var(--amber); }
+  .star.on { color: var(--amber); }
+  .star + .skip { margin-left: 0; }
+  .body { color: var(--text); font-size: 13.5px; white-space: pre-wrap; word-break: break-word; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  /* To vang tu khoa khi loc o tab Ky tu */
+  mark.hl { background: #fde047; color: #422006; padding: 0 2px; border-radius: 3px; }
+  [data-theme="dark"] mark.hl { background: #eab308; color: #1c1005; }
+  .row:not(.open) .body { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .tid { display: none; margin-top: 6px; font-size: 11px; color: var(--muted); font-family: Consolas, monospace; }
+  .row.open .tid { display: block; }
+  .empty { text-align: center; color: var(--muted); padding: 56px 0; font-size: 13px; }
+  .okbar { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 30; background: #e6f6ef; color: #2f8f6b; padding: 7px 14px; border-radius: 999px; font-size: 13px; border: 1px solid #cdeede; display: none; }
+  footer { padding: 8px 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11.5px; background: var(--surface); }
+  @media (max-width: 760px) { aside { display: none; } input[type=search] { width: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>ZALO Realtime<small>Firestore • van_ban • orderBy created_at desc • limit 1000</small></h1>
+  <span class="pill"><span class="dot" id="dot"></span><span id="status">Đang kết nối…</span></span>
+  <span class="pill"><b id="count">0</b>&nbsp;/&nbsp;<span id="total">0</span></span>
+  <span class="pager" id="pager" style="display:none">
+    <button id="prevPage" type="button" title="Trang trước">‹</button>
+    <span id="pageInfo">1/1</span>
+    <button id="nextPage" type="button" title="Trang sau">›</button>
+  </span>
+  <div class="tabs" id="tabs">
+    <button class="active" data-f="all">Tất cả</button>
+    <button data-f="GROUP">Nhóm</button>
+    <button data-f="DM">Riêng</button>
+    <button data-f="IMPORTANT">★ Quan trọng</button>
+    <button data-f="CHARS">🔎 Ký tự</button>
+    <button data-f="SKIPPED">🚫 Đã bỏ qua</button>
+  </div>
+  <input type="search" id="q" placeholder="Tìm nội dung / người gửi…" />
+  <input type="search" id="charq" placeholder="Ký tự cần lọc: @, #, ! …" title="Nhập ký tự hoặc từ khóa cần lọc, cách nhau bằng dấu phẩy — lọc tự động khi gõ" style="display:none" />
+  <button id="themeBtn" class="theme-btn" type="button" title="Chuyển chế độ sáng/tối">🌙 Tối</button>
+  <button id="saveBtn" class="theme-btn" type="button" title="Lưu toàn bộ tin nhắn của nhóm đang chọn ra file .txt">💾 Lưu tin nhắn</button>
+</header>
+
+<div class="wrap">
+  <aside>
+    <h2>Danh sách nhóm</h2>
+    <div id="groups"></div>
+  </aside>
+  <main id="list"><div class="empty">Đang tải dữ liệu realtime…</div></main>
+</div>
+
+<footer>chạy <b>node dashboard.js</b> rồi mở <b>http://localhost:3000</b> — nút “Bỏ qua” sẽ thêm nhóm vào <b>bo_qua_nhom.txt</b>.</footer>
+<div class="okbar" id="okbar"></div>
+
+<script>
+(function () {
+  // --- Nút sáng/tối ---
+  var themeBtn = document.getElementById("themeBtn");
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("dashboard-theme", t); } catch (e) {}
+    if (themeBtn) themeBtn.textContent = t === "dark" ? "☀️ Sáng" : "🌙 Tối";
+  }
+  (function initTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem("dashboard-theme"); } catch (e) {}
+    if (!saved) saved = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+    applyTheme(saved);
+  })();
+  if (themeBtn) themeBtn.addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(cur);
+  });
+
+  var list = document.getElementById("list");
+  var groupsEl = document.getElementById("groups");
+  var okbar = document.getElementById("okbar");
+  var nodes = {};
+  var docs = [];
+  var filter = "all";
+  var groupFilter = "";
+  var keyword = "";
+  var charTerms = [];
+  var important = {};
+  var skipped = {};
+  var PAGE_SIZE = 100;
+  var page = 1;
+  var emptyEl = document.createElement("div");
+  emptyEl.className = "empty";
+  emptyEl.textContent = "Không có tin nhắn nào khớp bộ lọc.";
+
+  var toastTimer = null;
+  function toast(msg, isErr) {
+    okbar.textContent = msg;
+    okbar.style.background = isErr ? "#fdecec" : "#e6f6ef";
+    okbar.style.color = isErr ? "#c05050" : "#2f8f6b";
+    okbar.style.borderColor = isErr ? "#f5caca" : "#cdeede";
+    okbar.style.display = "block";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { okbar.style.display = "none"; }, 2500);
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleTimeString("vi-VN");
+  }
+
+  function skipClick(e, d) {
+    e.stopPropagation();
+    var btn = e.currentTarget;
+    btn.disabled = true;
+    fetch("/skip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threadId: d.threadId || "" }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.ok) { toast("Lỗi: " + (j.error || "?"), true); btn.disabled = false; return; }
+        toast(j.added ? "Đã bỏ qua nhóm này!" : "Nhóm đã có trong danh sách bỏ qua.");
+        skipped[String(d.threadId || "")] = true;
+        saveSkipped();
+        var el = nodes[d.id];
+        if (el) {
+          el.classList.add("skipped");
+          var sk = el.querySelector(".badge.sk");
+          if (!sk) {
+            sk = document.createElement("span");
+            sk.className = "badge sk";
+            sk.textContent = "ĐÃ BỎ QUA";
+            el.querySelector(".meta").insertBefore(sk, btn);
+          }
+          btn.remove();
+        }
+      })
+      .catch(function (err) { toast("Lỗi mạng: " + err.message, true); btn.disabled = false; });
+  }
+
+  function kindOf(d) { return d.loai_hoi === "GROUP" ? "GROUP" : "DM"; }
+
+  function isImportant(d) {
+    return !!important[String(d.threadId || "")];
+  }
+
+  function isSkipped(d) {
+    return !!skipped[String(d.threadId || "")];
+  }
+
+  function saveSkipped() {
+    try { localStorage.setItem("dashboard-skipped", JSON.stringify(Object.keys(skipped))); } catch (e) {}
+  }
+
+  function toggleImportant(e, d) {
+    e.stopPropagation();
+    var btn = e.currentTarget;
+    var makeImp = !isImportant(d);
+    fetch("/important", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threadId: d.threadId || "", important: makeImp }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.ok) { toast("Lỗi: " + (j.error || "?"), true); return; }
+        important = {};
+        for (var i = 0; i < j.ids.length; i++) important[j.ids[i]] = true;
+        var els = document.querySelectorAll('.row[data-thread="' + d.threadId + '"]');
+        for (var k = 0; k < els.length; k++) {
+          var sb = els[k].querySelector(".star");
+          if (sb) sb.classList.toggle("on", makeImp);
+        }
+        renderGroups();
+        applyFilter();
+        toast(makeImp ? "Đã đánh dấu nhóm quan trọng" : "Đã bỏ đánh dấu quan trọng");
+      })
+      .catch(function (err) { toast("Lỗi mạng: " + err.message, true); });
+  }
+
+  function buildRow(d, isNew) {
+    var el = document.createElement("article");
+    var k = kindOf(d);
+    var g = k === "GROUP";
+    var title = g ? (d.threadName || "Nhóm") : (d.nguoi_gui || "Riêng");
+    var skp = isSkipped(d);
+    el.className = "row" + (isNew ? " new" : "") + (skp ? " skipped" : "");
+    if (isNew) {
+      // Het hieu ung nhap nhay thi go class de tra ve trang thai binh thuong
+      el.addEventListener("animationend", function h() {
+        el.classList.remove("new");
+        el.removeEventListener("animationend", h);
+      });
+    }
+    el.dataset.kind = k;
+    el.dataset.thread = d.threadId || "";
+    var meta =
+      '<span class="badge ' + (g ? "g" : "d") + '">' + (g ? "NHÓM" : "DM") + "</span>" +
+      '<span class="time">' + esc(fmtTime(d.created_at || d.gio_gui)) + "</span>" +
+      '<span class="thread">' + esc(title) + "</span>" +
+      '<span class="sender">' + esc(d.nguoi_gui || "") + "</span>" +
+      (g
+        ? '<button class="star' + (isImportant(d) ? " on" : "") + '" type="button" title="Đánh dấu nhóm quan trọng">★</button>' +
+          (skp ? '<span class="badge sk">ĐÃ BỎ QUA</span>' : '<button class="skip" type="button">Bỏ qua</button>')
+        : "");
+    el._rawBody = d.noi_dung || d.tin_goc || "[trống]";
+    el.innerHTML =
+      '<div class="meta">' + meta + "</div>" +
+      '<div class="body">' + highlightTerms(el._rawBody) + "</div>" +
+      '<div class="tid">threadId: ' + esc(d.threadId || "-") + " • id: " + esc(d.id) + "</div>";
+    el.addEventListener("click", function () { el.classList.toggle("open"); });
+    var skBtn = el.querySelector(".skip");
+    if (skBtn) skBtn.addEventListener("click", function (e) { skipClick(e, d); });
+    var starBtn = el.querySelector(".star");
+    if (starBtn) starBtn.addEventListener("click", function (e) { toggleImportant(e, d); });
+    return el;
+  }
+
+  function parseChars(s) {
+    var parts = String(s == null ? "" : s).split(",");
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var t = parts[i].trim().toLowerCase();
+      if (t) out.push(t);
+    }
+    return out;
+  }
+
+  function matchChars(d) {
+    if (!charTerms.length) return true;
+    var hay = ((d.noi_dung || "") + " " + (d.tin_goc || "")).toLowerCase();
+    for (var i = 0; i < charTerms.length; i++) {
+      if (hay.indexOf(charTerms[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  // To vang cac tu khoa dang loc trong noi dung tin nhan (chi o tab Ky tu).
+  // Luon bat dau tu ban text goc (raw) de khong bi long the mark.
+  function highlightTerms(raw) {
+    var e = esc(raw);
+    if (filter !== "CHARS" || !charTerms.length) return e;
+    var terms = charTerms.slice().sort(function (a, b) { return b.length - a.length; });
+    var pat = terms.map(function (t) {
+      return esc(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }).join("|");
+    if (!pat) return e;
+    try {
+      return e.replace(new RegExp("(" + pat + ")", "gi"), '<mark class="hl">$1</mark>');
+    } catch (err) { return e; }
+  }
+
+  function refreshHighlight() {
+    for (var i = 0; i < docs.length; i++) {
+      var n = nodes[docs[i].id];
+      if (!n || n.style.display === "none" || n._rawBody == null) continue;
+      var b = n.querySelector(".body");
+      if (b) b.innerHTML = highlightTerms(n._rawBody);
+    }
+  }
+
+  function visible(d) {
+    if (filter === "SKIPPED") {
+      if (!isSkipped(d)) return false;
+    } else if (filter === "IMPORTANT") {
+      if (!isImportant(d)) return false;
+    } else if (filter === "CHARS") {
+      if (!matchChars(d)) return false;
+    } else if (filter !== "all" && kindOf(d) !== filter) return false;
+    if (groupFilter && String(d.threadId || "") !== groupFilter) return false;
+    if (!keyword) return true;
+    var hay = ((d.noi_dung || "") + " " + (d.tin_goc || "") + " " + (d.nguoi_gui || "") + " " + (d.threadName || "")).toLowerCase();
+    return hay.indexOf(keyword) !== -1;
+  }
+
+  function applyFilter() {
+    // Loc theo tab / nhom / tu khoa -> danh sach hien thi, roi phan trang 100 tin/trang
+    var matched = [];
+    for (var i = 0; i < docs.length; i++) {
+      if (visible(docs[i])) matched.push(docs[i]);
+    }
+    var totalPages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
+    if (page > totalPages) page = totalPages;
+    if (page < 1) page = 1;
+    var start = (page - 1) * PAGE_SIZE;
+    var onPage = {};
+    for (var j = start; j < start + PAGE_SIZE && j < matched.length; j++) {
+      onPage[matched[j].id] = true;
+    }
+    for (var k = 0; k < docs.length; k++) {
+      var n = nodes[docs[k].id];
+      if (!n) continue;
+      n.style.display = onPage[docs[k].id] ? "" : "none";
+    }
+    if (matched.length === 0) {
+      if (!emptyEl.parentNode) list.appendChild(emptyEl);
+    } else if (emptyEl.parentNode) {
+      emptyEl.parentNode.removeChild(emptyEl);
+    }
+    document.getElementById("count").textContent = matched.length;
+    renderPager(totalPages);
+  }
+
+  function renderPager(totalPages) {
+    var p = document.getElementById("pager");
+    if (!p) return;
+    p.style.display = totalPages > 1 ? "" : "none";
+    document.getElementById("pageInfo").textContent = page + "/" + totalPages;
+    document.getElementById("prevPage").disabled = page <= 1;
+    document.getElementById("nextPage").disabled = page >= totalPages;
+  }
+
+  function goPage(next) {
+    page = next;
+    applyFilter();
+    list.scrollTop = 0;
+  }
+
+  function renderGroups() {
+    var counts = {};
+    for (var i = 0; i < docs.length; i++) {
+      var d = docs[i];
+      if (kindOf(d) !== "GROUP") continue;
+      var k = d.threadId || "?";
+      if (!counts[k]) counts[k] = { threadId: k, name: d.threadName || "Nhóm", n: 0 };
+      counts[k].n++;
+    }
+    var keys = Object.keys(counts).sort(function (a, b) { return counts[b].n - counts[a].n; });
+    var html = '<button class="grp' + (groupFilter ? "" : " active") + '" data-id="">Tất cả nhóm<span class="cn">' + docs.length + "</span></button>";
+    for (var j = 0; j < keys.length; j++) {
+      var c = counts[keys[j]];
+      html += '<button class="grp' + (groupFilter === c.threadId ? " active" : "") + '" data-id="' + esc(c.threadId) + '">' +
+        "<span>" + (important[c.threadId] ? "★ " : "") + esc(c.name) + "</span><span class=\"cn\">" + c.n + "</span></button>";
+    }
+    groupsEl.innerHTML = html;
+  }
+
+  groupsEl.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    groupFilter = b.dataset.id || "";
+    page = 1;
+    renderGroups();
+    applyFilter();
+  });
+
+  function addDocs(arr) {
+    if (!arr || !arr.length) return;
+    for (var i = arr.length - 1; i >= 0; i--) {
+      var d = arr[i];
+      if (nodes[d.id]) continue;
+      docs.unshift(d);
+      var el = buildRow(d, true);
+      nodes[d.id] = el;
+      list.insertBefore(el, list.firstChild);
+    }
+    renderGroups();
+    applyFilter();
+  }
+
+  // Tin nhan bi sua (modified): dua len dau danh sach nhu tin moi de khong bi sot,
+  // vi backend gui rieng mang modified ma addDocs khong xu ly
+  function refreshDocs(arr) {
+    if (!arr || !arr.length) return;
+    var fresh = [];
+    for (var i = 0; i < arr.length; i++) {
+      var d = arr[i];
+      var el = nodes[d.id];
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+      delete nodes[d.id];
+      for (var k = docs.length - 1; k >= 0; k--) {
+        if (docs[k].id === d.id) docs.splice(k, 1);
+      }
+      fresh.push(d);
+    }
+    addDocs(fresh);
+  }
+
+  function renderAll(arr) {
+    list.innerHTML = "";
+    nodes = {};
+    docs = arr || [];
+    for (var i = 0; i < docs.length; i++) {
+      var el = buildRow(docs[i], false);
+      nodes[docs[i].id] = el;
+      list.appendChild(el);
+    }
+    if (!docs.length) {
+      emptyEl.textContent = "Chưa có tin nhắn nào.";
+      list.appendChild(emptyEl);
+    }
+    renderGroups();
+    applyFilter();
+  }
+
+  document.getElementById("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    var all = this.querySelectorAll("button");
+    for (var i = 0; i < all.length; i++) all[i].classList.remove("active");
+    b.classList.add("active");
+    filter = b.dataset.f;
+    page = 1;
+    var charqEl = document.getElementById("charq");
+    if (charqEl) charqEl.style.display = filter === "CHARS" ? "" : "none";
+    applyFilter();
+    refreshHighlight();
+  });
+
+  document.getElementById("prevPage").addEventListener("click", function () {
+    if (page > 1) goPage(page - 1);
+  });
+  document.getElementById("nextPage").addEventListener("click", function () {
+    goPage(page + 1);
+  });
+
+  (function initCharFilter() {
+    var charInput = document.getElementById("charq");
+    if (!charInput) return;
+    try {
+      var saved = localStorage.getItem("dashboard-chars");
+      if (saved) charInput.value = saved;
+    } catch (e) {}
+    charTerms = parseChars(charInput.value);
+    charInput.addEventListener("input", function () {
+      charTerms = parseChars(this.value);
+      page = 1;
+      try { localStorage.setItem("dashboard-chars", this.value); } catch (e) {}
+      applyFilter();
+      refreshHighlight();
+    });
+  })();
+
+  document.getElementById("q").addEventListener("input", function () {
+    keyword = this.value.trim().toLowerCase();
+    page = 1;
+    applyFilter();
+  });
+
+  // Luu toan bo tin nhan cua nhom dang chon ra file .txt (chi dung du lieu da tai ve)
+  function saveGroupMessages() {
+    if (!groupFilter) { toast("Hãy chọn một nhóm ở danh sách bên trái trước đã."); return; }
+    var list = [];
+    for (var i = 0; i < docs.length; i++) {
+      if (String(docs[i].threadId || "") === groupFilter) list.push(docs[i]);
+    }
+    if (!list.length) { toast("Nhóm này chưa có tin nhắn nào trong dữ liệu đã tải.", true); return; }
+    list.sort(function (a, b) {
+      var ta = new Date(a.created_at || a.gio_gui).getTime() || 0;
+      var tb = new Date(b.created_at || b.gio_gui).getTime() || 0;
+      return ta - tb;
+    });
+    var gname = list[0].threadName || "Nhom";
+    var lines = [];
+    lines.push("Nhóm: " + gname);
+    lines.push("ThreadId: " + groupFilter);
+    lines.push("Xuất lúc: " + new Date().toLocaleString("vi-VN"));
+    lines.push("Tổng số tin (trong " + docs.length + " tin đã tải): " + list.length);
+    lines.push(new Array(61).join("="));
+    for (var j = 0; j < list.length; j++) {
+      var d = list[j];
+      var t = "";
+      try { t = new Date(d.created_at || d.gio_gui).toLocaleString("vi-VN"); } catch (e) {}
+      lines.push("[" + t + "] " + (d.nguoi_gui || "?") + ": " + (d.noi_dung || d.tin_goc || ""));
+    }
+    var blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/plain;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    var safe = gname.replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "_").slice(0, 60) || "nhom";
+    a.download = "tin_nhan_" + safe + ".txt";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+    toast("Đã lưu " + list.length + " tin nhắn của nhóm \"" + gname + "\".");
+  }
+  document.getElementById("saveBtn").addEventListener("click", saveGroupMessages);
+
+  var dot = document.getElementById("dot");
+  var status = document.getElementById("status");
+
+  function connect() {
+    var es = new EventSource("/events");
+    es.onopen = function () { dot.classList.add("on"); status.textContent = "Đang kết nối Realtime"; };
+    es.onerror = function () { dot.classList.remove("on"); status.textContent = "Mất kết nối — đang thử lại…"; };
+    es.onmessage = function (ev) {
+      var msg;
+      try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      if (msg.total != null) document.getElementById("total").textContent = msg.total;
+      if (msg.type === "init") renderAll(msg.docs);
+      else if (msg.type === "delta") {
+        addDocs(msg.added);
+        refreshDocs(msg.modified);
+      }
+      else if (msg.type === "error") {
+        dot.classList.remove("on");
+        status.textContent = "Lỗi: " + (msg.error || "?");
+        toast("Lỗi: " + (msg.error || "?"), true);
+      }
+    };
+  }
+
+  // Tai danh sach nhom da bo qua: uu tien localStorage, thu dong bo tu backend neu co
+  (function initSkipped() {
+    try {
+      var saved = JSON.parse(localStorage.getItem("dashboard-skipped") || "[]");
+      for (var i = 0; i < saved.length; i++) skipped[String(saved[i])] = true;
+    } catch (e) {}
+    fetch("/skip")
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok || !j.ids) return;
+        for (var k = 0; k < j.ids.length; k++) skipped[String(j.ids[k])] = true;
+        saveSkipped();
+        applyFilter();
+      })
+      .catch(function () {});
+  })();
+
+  fetch("/important")
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j.ok) return;
+      for (var i = 0; i < j.ids.length; i++) important[j.ids[i]] = true;
+      var all = document.querySelectorAll(".row[data-thread]");
+      for (var k = 0; k < all.length; k++) {
+        var sb = all[k].querySelector(".star");
+        if (sb && important[all[k].dataset.thread]) sb.classList.add("on");
+      }
+      renderGroups();
+      applyFilter();
+    })
+    .catch(function () {});
+
+  connect();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sổ VB đi — Realtime anywhere</title>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --new: #fbbf24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: "Segoe UI", Tahoma, sans-serif; padding: 20px; }
+  header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  h1 { font-size: 1.25rem; }
+  h1 span { color: var(--accent); }
+  #status { font-size: .85rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  #dot { width: 9px; height: 9px; border-radius: 50%; background: #ef4444; flex-shrink: 0; }
+  #dot.on { background: #22c55e; animation: pulse 1.5s infinite; }
+  #dot.warn { background: var(--new); }
+  @keyframes pulse { 50% { opacity: .4; } }
+
+  #toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  #toolbar input, #toolbar select, #btn-mode, #btn-clear {
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 8px 12px; font-size: .85rem; outline: none; font-family: inherit;
+  }
+  #toolbar input[type="search"] { flex: 1; min-width: 200px; }
+  #date-wrap { position: relative; display: inline-flex; align-items: center; }
+  #f-date { width: 140px; padding-right: 32px; }
+  #cal-icon { position: absolute; right: 8px; pointer-events: none; font-size: .9rem; user-select: none; }
+  #f-date-native { position: absolute; right: 0; top: 0; width: 32px; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; margin: 0; }
+  #toolbar input::placeholder { color: var(--muted); }
+  #toolbar input:focus, #toolbar select:focus { border-color: var(--accent); }
+  #btn-mode, #btn-clear { cursor: pointer; }
+  #btn-mode { background: #075985; border-color: #0369a1; }
+  #btn-clear { background: #334155; }
+  #stats { font-size: .85rem; color: var(--muted); margin-bottom: 14px; }
+
+  /* Hộp nhập config (chỉ hiện lần đầu / khi bấm Đổi nguồn) */
+  #setup { max-width: 720px; margin: 30px auto; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  #setup h3 { margin-bottom: 10px; font-size: 1rem; }
+  #setup p, #setup li { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
+  #setup input { width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: .8rem; margin: 8px 0; }
+  #setup button { background: var(--accent); color: #0f172a; border: 0; border-radius: 8px; padding: 10px 18px; font-weight: 600; cursor: pointer; }
+  #setup details { margin-top: 14px; }
+  #setup summary { color: var(--muted); font-size: .85rem; cursor: pointer; }
+  #setup details button { background: #334155; color: var(--text); margin-top: 6px; }
+  #setup details input { font-size: .8rem; }
+  .hidden { display: none; }
+
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-left-width: 4px; border-radius: 12px; padding: 14px 16px; }
+  .card.flash { border-color: var(--new); border-left-color: var(--new); box-shadow: 0 0 14px rgba(251,191,36,.35); }
+  .card h2 { font-size: .85rem; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; display: flex; justify-content: space-between; gap: 8px; }
+  .card h2 .soKH { font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--text); font-size: .95rem; margin-left: auto; }
+  .card h2 .row { color: var(--muted); font-weight: normal; }
+  .new-badge { font-size: .65rem; background: var(--new); color: #1e293b; border-radius: 4px; padding: 1px 6px; margin-left: 6px; display: none; }
+  .card.flash .new-badge { display: inline-block; }
+  .f { display: flex; gap: 8px; font-size: .9rem; margin: 4px 0; line-height: 1.45; }
+  .f b { color: var(--muted); min-width: 78px; font-weight: 600; flex-shrink: 0; font-size: .82rem; padding-top: 1px; }
+  .noi-dung { font-weight: 500; }
+  .empty { grid-column: 1/-1; text-align: center; color: var(--muted); padding: 40px; }
+  mark { background: rgba(251,191,36,.35); color: inherit; border-radius: 2px; padding: 0 1px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📄 Sổ Văn bản Đi <span id="mode-label">— Firestore realtime (anywhere)</span></h1>
+  <div id="status"><div id="dot"></div><span id="status-text">Đang kết nối…</span></div>
+</header>
+
+<!-- Màn hình nhập config — CHỈ HIỆN khi chưa có apiKey đã lưu -->
+<div id="setup">
+  <h3>🔑 Kết nối Firestore trực tiếp (đọc từ mọi máy, mọi mạng)</h3>
+  <p>Chỉ cần dán <b>apiKey</b> hoặc cả khối <b>firebaseConfig</b> của dự án. Lấy như sau:<br>
+  Firebase Console → ⚙️ <b>Project settings</b> → <b>General</b> → kéo xuống <b>Your apps</b> → nếu chưa có web app bấm nút <b>&lt;/&gt;</b> (Web) → đặt tên tùy ý → copy khối <code>firebaseConfig</code> (hoặc chỉ dòng <code>apiKey: "AIza..."</code>) → dán vào đây.</p>
+  <input id="fb-cfg" placeholder='apiKey: "AIza..." (hoặc dán cả khối const firebaseConfig = {...})'>
+  <button id="btn-fb">Kết nối Firestore →</button>
+
+  <details>
+    <summary>Cách khác: kết nối qua máy chủ đang chạy sovb-server (trong LAN)</summary>
+    <input id="srv-url" placeholder="http://192.168.1.50:3080">
+    <button id="btn-lan">Kết nối qua server</button>
+  </details>
+</div>
+
+<div id="app" class="hidden">
+  <div id="toolbar">
+    <input id="search" type="search" placeholder="🔍 Tìm số ký hiệu, nội dung, người ký…">
+    <select id="f-sheet"><option value="">Tất cả sheet</option></select>
+    <select id="f-ky"><option value="">Mọi người ký</option></select>
+    <div id="date-wrap">
+      <input id="f-date" type="text" placeholder="dd/mm/yyyy" title="Lọc theo ngày ký (dd/mm/yyyy)">
+      <span id="cal-icon">📅</span>
+      <input id="f-date-native" type="date" tabindex="-1" title="Chọn ngày từ lịch">
+    </div>
+    <button id="btn-mode">Đổi nguồn</button>
+    <button id="btn-clear">Xóa lọc</button>
+  </div>
+  <div id="stats"></div>
+  <div id="grid"></div>
+</div>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+let known = new Set(), allItems = [], es = null, mode = "";
+
+const dot = $("dot"), statusText = $("status-text"), grid = $("grid"), stats = $("stats");
+
+function setStatus(cls, text) {
+  dot.className = cls; // "" | "on" | "warn"
+  statusText.textContent = text;
+}
+
+/* ---------- Render (giữ nguyên logic dashboard gốc) ---------- */
+function colorFor(name) {
+  let h = 0;
+  for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return `hsl(${h}, 72%, 62%)`;
+}
+function highlight(text, q) {
+  const safe = esc(text);
+  if (!q) return safe;
+  try { return safe.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"), "<mark>$1</mark>"); }
+  catch { return safe; }
+}
+function cardHTML(it, isNew, q) {
+  const col = colorFor(it.tenSheet);
+  return `<div class="card${isNew ? " flash" : ""}" style="border-left-color:${col}">
+    <h2 style="color:${col}">${esc(it.tenSheet)}<span class="soKH">${highlight(it.soKH, q) || "—"}</span><span class="new-badge">MỚI</span><span class="row">#${it.row}</span></h2>
+    <div class="f"><b>Thời gian</b><span>${highlight(it.thoiGian, q) || "—"}</span></div>
+    <div class="f"><b>Số KH</b><span><strong>${highlight(it.soKH, q) || "—"}</strong></span></div>
+    <div class="f"><b>Nội dung</b><span class="noi-dung">${highlight(it.noiDung, q) || "—"}</span></div>
+    <div class="f"><b>Ký</b><span>${highlight(it.ky, q) || "—"}</span></div>
+    <div class="f"><b>Gửi</b><span>${highlight(it.gui, q) || "—"}</span></div>
+  </div>`;
+}
+function buildFilters(items) {
+  const uniq = (v) => v && String(v).trim();
+  const sheets = [...new Set(items.map((i) => i.tenSheet))].sort((a, b) => a.localeCompare(b, "vi"));
+  const kys = [...new Set(items.map((i) => uniq(i.ky)))].filter(Boolean).sort((a, b) => a.localeCompare(b, "vi"));
+  const keep = (sel, opts, label) => {
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">${label}</option>` + opts.map((o) => `<option>${esc(o)}</option>`).join("");
+    if (opts.includes(cur)) sel.value = cur;
+  };
+  keep($("f-sheet"), sheets, "Tất cả sheet");
+  keep($("f-ky"), kys, "Mọi người ký");
+}
+function applyFilters() {
+  const q = $("search").value.trim().toLowerCase();
+  const sheet = $("f-sheet").value, ky = $("f-ky").value;
+  const filterDate = $("f-date").value.trim();
+  const hit = (v) => String(v || "").toLowerCase().includes(q);
+
+  // Chuẩn hóa thoiGian (DD/MM/YYYY hoặc YYYY-MM-DD) về định dạng "YYYY-MM-DD" để so sánh
+  const toDateStr = (s) => {
+    if (!s) return "";
+    s = String(s).trim();
+    const m1 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m1) return `${m1[3]}-${m1[2].padStart(2, "0")}-${m1[1].padStart(2, "0")}`;
+    const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m2) return `${m2[1]}-${m2[2]}-${m2[3]}`;
+    return "";
+  };
+
+  const parseFilterDate = (s) => {
+    if (!s) return "";
+    s = String(s).trim();
+    const m1 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m1) return `${m1[3]}-${m1[2].padStart(2, "0")}-${m1[1].padStart(2, "0")}`;
+    const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m2) return `${m2[1]}-${m2[2]}-${m2[3]}`;
+    return "";
+  };
+
+  let items = allItems;
+  if (sheet) items = items.filter((i) => i.tenSheet === sheet);
+  if (ky) items = items.filter((i) => (i.ky || "").trim() === ky);
+  if (filterDate) {
+    const targetDate = parseFilterDate(filterDate);
+    if (targetDate) {
+      items = items.filter((i) => toDateStr(i.thoiGian) === targetDate);
+    } else {
+      items = items.filter((i) => String(i.thoiGian || "").includes(filterDate));
+    }
+  }
+  if (q) items = items.filter((i) => hit(i.tenSheet) || hit(i.thoiGian) || hit(i.soKH) || hit(i.noiDung) || hit(i.ky) || hit(i.gui));
+
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty">${allItems.length ? "Không có sheet nào khớp bộ lọc" : "Chưa có dữ liệu…"}</div>`;
+    stats.textContent = "";
+    return;
+  }
+  grid.innerHTML = items.map((it) => {
+    const isNew = !known.has(`${it.tenSheet}|${it.soKH}`);
+    known.add(`${it.tenSheet}|${it.soKH}`);
+    return cardHTML(it, isNew, q);
+  }).join("");
+  stats.innerHTML = `${items.length}/${allItems.length} sheet${q || sheet || ky || filterDate ? " khớp lọc" : ""} · ${esc(mode)} · ${new Date().toLocaleTimeString("vi-VN")}`;
+  setTimeout(() => document.querySelectorAll(".card.flash").forEach((c) => c.classList.remove("flash")), 5000);
+}
+function render(items) {
+  // Ưu tiên sheet 1-8, 14, 30 lên đầu (đúng thứ tự), còn lại theo số tăng dần
+  const PRIO = [1, 2, 3, 4, 5, 6, 7, 8, 14, 30];
+  const num = (n) => { const m = String(n).match(/^(\d+)\./); return m ? +m[1] : Infinity; };
+  const rank = (n) => { const i = PRIO.indexOf(num(n)); return i >= 0 ? i : 100 + num(n); };
+  items = [...items].sort((a, b) => rank(a.tenSheet) - rank(b.tenSheet));
+  allItems = items;
+  buildFilters(items);
+  applyFilters();
+}
+$("f-sheet").addEventListener("change", applyFilters);
+$("f-ky").addEventListener("change", applyFilters);
+$("f-date").addEventListener("input", applyFilters);
+$("f-date-native").addEventListener("change", (e) => {
+  if (!e.target.value) return;
+  const parts = e.target.value.split("-");
+  if (parts.length === 3) {
+    $("f-date").value = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    applyFilters();
+  }
+});
+$("search").addEventListener("input", applyFilters);
+$("btn-clear").addEventListener("click", () => {
+  $("search").value = "";
+  $("f-sheet").value = "";
+  $("f-ky").value = "";
+  $("f-date").value = "";
+  $("f-date-native").value = "";
+  applyFilters();
+});
+
+/* ---------- Chế độ CHÍNH: Firestore trực tiếp ---------- */
+// Chấp nhận: apiKey thuần, JSON, hoặc cả dòng "const firebaseConfig = {...};"
+function parseFirebaseConfig(raw) {
+  raw = String(raw).trim();
+  const grab = (key) => {
+    const m = raw.match(new RegExp(`["']?${key}["']?\\s*[:=]\\s*["']([^"']+)["']`));
+    return m ? m[1] : null;
+  };
+  const projectId = grab("projectId") || "layso-vt";
+  // apiKey: lấy theo key, hoặc tìm trực tiếp chuỗi AIza... (user dán apiKey thuần)
+  const apiKey = grab("apiKey") || (raw.match(/AIza[0-9A-Za-z\-_]{30,}/) || [])[0];
+  if (!apiKey) throw new Error("Không thấy apiKey trong nội dung dán vào");
+  return {
+    apiKey,
+    authDomain: grab("authDomain") || `${projectId}.firebaseapp.com`,
+    projectId,
+    storageBucket: grab("storageBucket") || `${projectId}.appspot.com`,
+    messagingSenderId: grab("messagingSenderId") || "",
+    appId: grab("appId") || "",
+  };
+}
+
+function connectFirestore(raw) {
+  mode = "Firestore trực tiếp";
+  let cfg;
+  try { cfg = parseFirebaseConfig(raw); }
+  catch (e) { setStatus("warn", e.message); $("setup").classList.remove("hidden"); return; }
+
+  localStorage.setItem("sovb_cfg", JSON.stringify(cfg));
+  firebase.initializeApp(cfg);
+  firebase.firestore().collection("so_vb_di").orderBy("thoiGianQuet", "desc").limit(500)
+    .onSnapshot(
+      (snap) => {
+        showApp();
+        const newest = new Map();
+        snap.forEach((doc) => {
+          const d = doc.data();
+          if (!d.tenSheet || newest.has(d.tenSheet)) return; // giữ doc mới nhất mỗi sheet
+          newest.set(d.tenSheet, { ...d, row: d.row || "" });
+        });
+        render([...newest.values()]);
+        setStatus("on", "Realtime (Firestore) — đã kết nối");
+      },
+      (err) => setStatus("warn", "Firestore lỗi: " + err.message)
+    );
+}
+
+/* ---------- Chế độ phụ: qua sovb-server (LAN) ---------- */
+function connectLAN(base) {
+  mode = "Server " + base.replace(/\/+$/, "");
+  base = base.replace(/\/+$/, "");
+  fetch(base + "/api/latest")
+    .then((r) => r.json())
+    .then((d) => { showApp(); render(d.items || []); setStatus("on", "Realtime (SSE) — đã kết nối"); })
+    .catch((e) => setStatus("warn", "Không gọi được server: " + e.message));
+  openSSE(base);
+}
+function openSSE(base) {
+  es = new EventSource(base + "/api/stream");
+  es.onopen = () => setStatus("on", "Realtime (SSE) — đã kết nối");
+  es.onerror = () => {
+    setStatus("warn", "Mất kết nối server — thử lại sau 5s");
+    es.close();
+    setTimeout(() => openSSE(base), 5000);
+  };
+  es.onmessage = (e) => {
+    try {
+      const d = JSON.parse(e.data);
+      if ((d.type === "update" || d.type === "hello") && d.items) render(d.items);
+    } catch {}
+  };
+}
+
+function showApp() { $("setup").classList.add("hidden"); $("app").classList.remove("hidden"); }
+function showSetup() { $("setup").classList.remove("hidden"); $("app").classList.add("hidden"); setStatus("warn", "Chưa kết nối — cần nhập apiKey/config"); }
+
+/* ---------- Nút ---------- */
+$("btn-fb").addEventListener("click", () => connectFirestore($("fb-cfg").value));
+$("btn-lan").addEventListener("click", () => {
+  const v = $("srv-url").value.trim();
+  if (!/^https?:\/\//.test(v)) return alert("Nhập URL bắt đầu http:// hoặc https://");
+  connectLAN(v);
+});
+$("btn-mode").addEventListener("click", () => {
+  if (!confirm("Xóa cấu hình đã lưu và quay lại màn hình nhập config?")) return;
+  localStorage.removeItem("sovb_cfg");
+  localStorage.removeItem("sovb_lan");
+  if (es) es.close();
+  location.reload();
+});
+
+/* ---------- Khởi động: tự kết nối nếu đã có config ---------- */
+const savedCfg = localStorage.getItem("sovb_cfg");
+if (savedCfg) {
+  connectFirestore(savedCfg); // cfg dạng JSON — parseFirebaseConfig đọc được
+} else {
+  const savedSrv = localStorage.getItem("sovb_lan");
+  if (savedSrv) { $("srv-url").value = savedSrv; connectLAN(savedSrv); }
+  else showSetup();
+}
+</script>
+</body>
+</html>

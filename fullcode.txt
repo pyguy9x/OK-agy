@@ -1,0 +1,1634 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="-1" />
+<title>Hệ thống thông tin điều hành tác nghiệp</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="google" content="notranslate"/>
+
+<link rel="stylesheet" type="text/css" href="/app-view/zkau/web/3a6d451/zul/css/zk.wcs"/>
+
+<script type="text/javascript" src="/app-view/zkau/web/3a6d451/js/zk.wpd" charset="UTF-8"></script>
+<script type="text/javascript" src="/app-view/zkau/web/3a6d451/js/zul.lang.wpd" charset="UTF-8"></script>
+<script type="text/javascript" src="/app-view/zkau/web/3a6d451/js/zuljsp.js" charset="UTF-8"></script>
+<!-- ZK 6.5.3 EE 2013070210 -->
+<link rel="shortcut icon" type="image/x-icon" href="/app-view/theme/admin-ex/images/logo/favicon_twd.svg"/>
+<link rel="apple-touch-icon" type="image/x-icon" href="/app-view/theme/admin-ex/images/logo/favicon_twd.svg"/>
+<link id="styleTheme" href="/app-view/theme/admin-ex/css/theme-dark-blue.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/fonts/font-awesome-4.4.0/css/font-awesome.min.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/fonts/inter/font-inter.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/fonts/material-design-iconic-2.1.2/css/material-design-iconic-font.min.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/plugins/morris.js-0.5.1/morris.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/plugins/alertify-v0.3.11/alertify.core.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/plugins/alertify-v0.3.11/alertify.default.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/css/kendo/kendo.common.min.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/css/kendo/kendo.rtl.min.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/css/kendo/kendo.flat.min.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/css/kendo/kendo.dataviz.min.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/css/kendo/kendo.dataviz.flat.min.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/plugins/hamburger-icons/style.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/theme/admin-ex/css/theme-1.0.0.css?v=25" type="text/css" rel="stylesheet"/>
+<link href="/app-view/theme/admin-ex/css/common-1.0.0.css?v=27" type="text/css" rel="stylesheet"/>
+<link href="/app-view/theme/admin-ex/css/main-1.0.1.css?v=21" type="text/css" rel="stylesheet"/>
+<link href="/app-view/theme/admin-ex/css/lockscreen.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/theme/admin-ex/css/home-1.0.1.css?v=24" type="text/css" rel="stylesheet"/>
+<link rel="stylesheet" href="/app-view/theme/admin-ex/css/font.css"/>
+<link href="/app-view/theme/admin-ex/css/downloadProgress.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/css/app-custom-plugins.css?v=2" type="text/css" rel="stylesheet"/>
+<link href="/app-view/css/jquery-ui.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/css/alertPopup.css" type="text/css" rel="stylesheet"/>
+<link href="/app-view/zul/css/loading-icon-override.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<div id="aCEP_" class="z-temp"><div id="zk_proc" class="z-loading"><div class="z-loading-indicator"><span class="z-loading-icon"></span>Processing...</div></div><div id="aCEP24" style="display:none">
+                                            
+                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M11.3144 15.7999C11.1667 15.4421 11.1667 14.9894 11.1667 14.0833C11.1667 13.1772 11.1667 12.7246 11.3144 12.3668C11.4122 12.1309 11.5554 11.9165 11.7359 11.7359C11.9165 11.5554 12.1309 11.4122 12.3668 11.3144C12.7246 11.1667 13.1772 11.1667 14.0833 11.1667C14.9894 11.1667 15.4421 11.1667 15.7999 11.3144C16.0358 11.4122 16.2502 11.5554 16.4307 11.7359C16.6113 11.9165 16.7545 12.1309 16.8522 12.3668C17 12.7246 17 13.1772 17 14.0833C17 14.9894 17 15.4421 16.8522 15.7999C16.7545 16.0358 16.6113 16.2502 16.4307 16.4307C16.2502 16.6113 16.0358 16.7545 15.7999 16.8522C15.4421 17 14.9894 17 14.0833 17C13.1772 17 12.7246 17 12.3668 16.8522C12.1309 16.7545 11.9165 16.6113 11.7359 16.4307C11.5554 16.2502 11.4122 16.0358 11.3144 15.7999ZM11.3144 7.63322C11.1667 7.27544 11.1667 6.82278 11.1667 5.91667C11.1667 5.01056 11.1667 4.55789 11.3144 4.20011C11.4122 3.9642 11.5554 3.74984 11.7359 3.56928C11.9165 3.38872 12.1309 3.2455 12.3668 3.14778C12.7246 3 13.1772 3 14.0833 3C14.9894 3 15.4421 3 15.7999 3.14778C16.0358 3.2455 16.2502 3.38872 16.4307 3.56928C16.6113 3.74984 16.7545 3.9642 16.8522 4.20011C17 4.55789 17 5.01056 17 5.91667C17 6.82278 17 7.27544 16.8522 7.63322C16.7545 7.86914 16.6113 8.08349 16.4307 8.26405C16.2502 8.44461 16.0358 8.58784 15.7999 8.68556C15.4421 8.83333 14.9894 8.83333 14.0833 8.83333C13.1772 8.83333 12.7246 8.83333 12.3668 8.68556C12.1309 8.58784 11.9165 8.44461 11.7359 8.26405C11.5554 8.08349 11.4122 7.86914 11.3144 7.63322ZM3.14778 15.7999C3 15.4421 3 14.9894 3 14.0833C3 13.1772 3 12.7246 3.14778 12.3668C3.2455 12.1309 3.38872 11.9165 3.56928 11.7359C3.74984 11.5554 3.9642 11.4122 4.20011 11.3144C4.55789 11.1667 5.01056 11.1667 5.91667 11.1667C6.82278 11.1667 7.27544 11.1667 7.63322 11.3144C7.86914 11.4122 8.08349 11.5554 8.26405 11.7359C8.44461 11.9165 8.58784 12.1309 8.68556 12.3668C8.83333 12.7246 8.83333 13.1772 8.83333 14.0833C8.83333 14.9894 8.83333 15.4421 8.68556 15.7999C8.58784 16.0358 8.44461 16.2502 8.26405 16.4307C8.08349 16.6113 7.86914 16.7545 7.63322 16.8522C7.27544 17 6.82278 17 5.91667 17C5.01056 17 4.55789 17 4.20011 16.8522C3.9642 16.7545 3.74984 16.6113 3.56928 16.4307C3.38872 16.2502 3.2455 16.0358 3.14778 15.7999ZM3.14778 7.63322C3 7.27544 3 6.82278 3 5.91667C3 5.01056 3 4.55789 3.14778 4.20011C3.2455 3.9642 3.38872 3.74984 3.56928 3.56928C3.74984 3.38872 3.9642 3.2455 4.20011 3.14778C4.55789 3 5.01056 3 5.91667 3C6.82278 3 7.27544 3 7.63322 3.14778C7.86914 3.2455 8.08349 3.38872 8.26405 3.56928C8.44461 3.74984 8.58784 3.9642 8.68556 4.20011C8.83333 4.55789 8.83333 5.01056 8.83333 5.91667C8.83333 6.82278 8.83333 7.27544 8.68556 7.63322C8.58784 7.86914 8.44461 8.08349 8.26405 8.26405C8.08349 8.44461 7.86914 8.58784 7.63322 8.68556C7.27544 8.83333 6.82278 8.83333 5.91667 8.83333C5.01056 8.83333 4.55789 8.83333 4.20011 8.68556C3.9642 8.58784 3.74984 8.44461 3.56928 8.26405C3.38872 8.08349 3.2455 7.86914 3.14778 7.63322Z" stroke="white" stroke-width="1.1" stroke-linecap="square" stroke-linejoin="round"/>
+                                                </svg>
+                                            
+                                        </div>
+<div id="aCEP94" style="display:none">
+                                                
+                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M9.9974 2.29102C5.7402 2.29102 2.28906 5.74215 2.28906 9.99935C2.28906 14.2565 5.7402 17.7077 9.9974 17.7077C14.2546 17.7077 17.7057 14.2565 17.7057 9.99935C17.7057 5.74215 14.2546 2.29102 9.9974 2.29102ZM1.03906 9.99935C1.03906 5.0518 5.04984 1.04102 9.9974 1.04102C14.9449 1.04102 18.9557 5.0518 18.9557 9.99935C18.9557 14.9469 14.9449 18.9577 9.9974 18.9577C5.04984 18.9577 1.03906 14.9469 1.03906 9.99935ZM9.9974 6.45768C9.4221 6.45768 8.95573 6.92405 8.95573 7.49935C8.95573 7.84453 8.67591 8.12435 8.33073 8.12435C7.98555 8.12435 7.70573 7.84453 7.70573 7.49935C7.70573 6.2337 8.73174 5.20768 9.9974 5.20768C11.263 5.20768 12.2891 6.2337 12.2891 7.49935C12.2891 7.95463 12.1557 8.38066 11.9256 8.73821C11.7815 8.96216 11.613 9.17597 11.4576 9.36904C11.4292 9.40435 11.4013 9.4389 11.3739 9.47287C11.245 9.63242 11.1266 9.77888 11.0173 9.92916C10.7476 10.2998 10.6224 10.5783 10.6224 10.8327V11.2493C10.6224 11.5945 10.3426 11.8743 9.9974 11.8743C9.65222 11.8743 9.3724 11.5945 9.3724 11.2493V10.8327C9.3724 10.1666 9.69941 9.61583 10.0065 9.19373C10.1363 9.01537 10.2785 8.83947 10.4078 8.67952C10.4337 8.64748 10.4591 8.61608 10.4838 8.58542C10.6381 8.39362 10.7695 8.22489 10.8744 8.06181C10.9786 7.89992 11.0391 7.70765 11.0391 7.49935C11.0391 6.92405 10.5727 6.45768 9.9974 6.45768ZM9.9974 12.7077C10.3426 12.7077 10.6224 12.9875 10.6224 13.3327V14.166C10.6224 14.5112 10.3426 14.791 9.9974 14.791C9.65222 14.791 9.3724 14.5112 9.3724 14.166V13.3327C9.3724 12.9875 9.65222 12.7077 9.9974 12.7077Z" fill="white"/>
+                                                </svg>
+                                            
+                                            </div>
+<div id="aCEPd4" style="display:none">
+                                                
+                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M9.9974 3.125C8.50162 3.125 7.28906 4.33756 7.28906 5.83333C7.28906 7.3291 8.50162 8.54167 9.9974 8.54167C11.4932 8.54167 12.7057 7.3291 12.7057 5.83333C12.7057 4.33756 11.4932 3.125 9.9974 3.125ZM6.03906 5.83333C6.03906 3.64721 7.81127 1.875 9.9974 1.875C12.1835 1.875 13.9557 3.64721 13.9557 5.83333C13.9557 8.01946 12.1835 9.79167 9.9974 9.79167C7.81127 9.79167 6.03906 8.01946 6.03906 5.83333ZM6.15211 13.08C5.16293 13.5745 4.78906 14.1422 4.78906 14.5833C4.78906 15.0245 5.16293 15.5921 6.15211 16.0867C7.10392 16.5626 8.46255 16.875 9.9974 16.875C11.5322 16.875 12.8909 16.5626 13.8427 16.0867C14.8319 15.5921 15.2057 15.0245 15.2057 14.5833C15.2057 14.1422 14.8319 13.5745 13.8427 13.08C12.8909 12.6041 11.5322 12.2917 9.9974 12.2917C8.46255 12.2917 7.10392 12.6041 6.15211 13.08ZM5.5931 11.9619C6.75255 11.3822 8.31058 11.0417 9.9974 11.0417C11.6842 11.0417 13.2422 11.3822 14.4017 11.9619C15.5238 12.523 16.4557 13.4136 16.4557 14.5833C16.4557 15.753 15.5238 16.6437 14.4017 17.2047C13.2422 17.7845 11.6842 18.125 9.9974 18.125C8.31058 18.125 6.75255 17.7845 5.5931 17.2047C4.47103 16.6437 3.53906 15.753 3.53906 14.5833C3.53906 13.4136 4.47103 12.523 5.5931 11.9619Z" fill="white"/>
+                                                </svg>
+                                            
+                                            </div>
+<div id="aCEPh4" style="display:none">
+                                                
+                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M5.97711 14.7736C7.08151 15.878 8.5347 16.5653 10.0891 16.7183C11.6434 16.8713 13.2027 16.4806 14.5013 15.6127C15.7998 14.7449 16.7572 13.4536 17.2104 11.9589C17.6635 10.4642 17.5844 8.85863 16.9864 7.41579C16.3883 5.97294 15.3085 4.78211 13.9309 4.04623C12.5532 3.31034 10.963 3.07494 9.43129 3.38015C7.89954 3.68535 6.52101 4.51227 5.53064 5.71998C4.54026 6.92769 3.99932 8.44147 4 10.0033V11.5004" stroke="white" stroke-width="1.12506" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M2.5 10.0002L4.00008 11.5003L5.50017 10.0002M10.0004 7V10.7502H13.7506" stroke="white" stroke-width="1.12506" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            
+                                            </div>
+<div id="aCEPl4" style="display:none">
+                                                
+                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.47493 3.17693C6.47493 1.84532 7.60754 0.833984 8.91811 0.833984H10.6722C11.9828 0.833984 13.1154 1.84532 13.1154 3.17693C13.1154 3.69937 13.6744 4.03152 14.1332 3.78174L14.2265 3.73098C15.372 3.10737 16.8545 3.46277 17.5397 4.58171L18.4168 6.01398C19.1178 7.15879 18.6836 8.60297 17.5165 9.23828C17.0776 9.47722 17.0776 10.1074 17.5165 10.3464C18.6836 10.9817 19.1178 12.4258 18.4168 13.5707L17.5397 15.0029C16.8545 16.1219 15.372 16.4773 14.2265 15.8537L14.1332 15.8029C13.6744 15.5531 13.1154 15.8853 13.1154 16.4077C13.1154 17.7393 11.9828 18.7507 10.6722 18.7507H8.91811C7.60754 18.7507 6.47493 17.7393 6.47493 16.4077C6.47493 15.8853 5.91595 15.5531 5.4571 15.8029L5.12764 15.1977L5.4571 15.8029L5.36386 15.8537L5.03439 15.2484L5.36386 15.8537C4.21827 16.4773 2.73576 16.1219 2.05059 15.0029L1.17355 13.5707C0.472533 12.4259 0.906707 10.9817 2.0738 10.3464C2.51276 10.1074 2.51275 9.47722 2.0738 9.23827C0.906709 8.60296 0.472534 7.15878 1.17355 6.01397L2.05059 4.5817C2.73577 3.46276 4.21827 3.10736 5.36386 3.73097L5.4571 3.78173C5.91595 4.03151 6.47493 3.69936 6.47493 3.17693ZM8.91811 2.21219C8.29118 2.21219 7.85313 2.68176 7.85313 3.17693C7.85313 4.74499 6.17539 5.74191 4.79817 4.99221L4.70493 4.94145C4.17258 4.65167 3.50952 4.83832 3.22594 5.30142L2.3489 6.73369C2.08116 7.17093 2.22188 7.74971 2.73273 8.02779C4.13072 8.7888 4.13072 10.7958 2.73273 11.5568C2.22188 11.8349 2.08116 12.4137 2.3489 12.8509L3.22594 14.2832C3.50952 14.7463 4.17258 14.933 4.70492 14.6432L5.02039 15.2227L4.70493 14.6432L4.79817 14.5924C6.17539 13.8427 7.85313 14.8396 7.85313 16.4077C7.85313 16.9029 8.29118 17.3724 8.91811 17.3724H10.6722C11.2991 17.3724 11.7372 16.9029 11.7372 16.4077C11.7372 14.8396 13.4149 13.8427 14.7922 14.5924L14.8854 14.6432C15.4177 14.933 16.0808 14.7463 16.3644 14.2832L17.2414 12.8509C17.5092 12.4137 17.3684 11.8349 16.8576 11.5568C15.4596 10.7958 15.4596 8.7888 16.8576 8.0278C17.3684 7.74972 17.5092 7.17095 17.2414 6.7337L16.3644 5.30143C16.0808 4.83833 15.4177 4.65168 14.8854 4.94146L14.7922 4.99222C13.4149 5.74192 11.7372 4.74499 11.7372 3.17693C11.7372 2.68176 11.2991 2.21219 10.6722 2.21219H8.91811ZM9.79517 7.72501C8.65342 7.72501 7.72786 8.65058 7.72786 9.79232C7.72786 10.9341 8.65342 11.8596 9.79517 11.8596C10.9369 11.8596 11.8625 10.9341 11.8625 9.79232C11.8625 8.65058 10.9369 7.72501 9.79517 7.72501ZM6.34965 9.79232C6.34965 7.88941 7.89226 6.3468 9.79517 6.3468C11.6981 6.3468 13.2407 7.88941 13.2407 9.79232C13.2407 11.6952 11.6981 13.2378 9.79517 13.2378C7.89226 13.2378 6.34965 11.6952 6.34965 9.79232Z" fill="white"/>
+                                                </svg>
+                                            
+                                            </div>
+<div id="aCEPo4" style="display:none">
+                                            
+                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M14.7319 12.1099C14.4878 11.8658 14.4878 11.4701 14.7319 11.226L15.8093 10.1486C15.8907 10.0673 15.8907 9.93535 15.8093 9.85399L14.7319 8.77658C14.4878 8.5325 14.4878 8.13677 14.7319 7.89269C14.976 7.64862 15.3717 7.64862 15.6158 7.89269L16.6932 8.97011C17.2627 9.53962 17.2627 10.463 16.6932 11.0325L15.6158 12.1099C15.3717 12.354 14.976 12.354 14.7319 12.1099Z" fill="white"/>
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.88281 4.17052C7.88281 3.33855 6.95558 2.8423 6.26333 3.3038L4.59667 4.41491C4.30688 4.60811 4.13281 4.93335 4.13281 5.28163V15.1644C4.13281 15.5126 4.30688 15.8379 4.59667 16.0311L6.26333 17.1422C6.95558 17.6037 7.88281 17.1074 7.88281 16.2755V4.17052ZM9.09825 3.76466C8.82422 2.1857 6.97658 1.32599 5.56996 2.26374L3.90329 3.37485C3.26575 3.79988 2.88281 4.51541 2.88281 5.28163V15.1644C2.88281 15.9306 3.26575 16.6461 3.90329 17.0711L5.56996 18.1822C6.97658 19.12 8.82422 18.2603 9.09825 16.6813H12.6745C13.9401 16.6813 14.9661 15.6553 14.9661 14.3897C14.9661 14.0445 14.6863 13.7647 14.3411 13.7647C13.996 13.7647 13.7161 14.0445 13.7161 14.3897C13.7161 14.965 13.2498 15.4313 12.6745 15.4313H9.13281V5.01466H12.6745C13.2498 5.01466 13.7161 5.48103 13.7161 6.05633C13.7161 6.4015 13.996 6.68133 14.3411 6.68133C14.6863 6.68133 14.9661 6.4015 14.9661 6.05633C14.9661 4.79067 13.9401 3.76466 12.6745 3.76466H9.09825ZM10.3828 10.0011C10.3828 9.65587 10.6626 9.37605 11.0078 9.37605L16.0078 9.37605C16.353 9.37605 16.6328 9.65587 16.6328 10.0011C16.6328 10.3462 16.353 10.6261 16.0078 10.6261L11.0078 10.6261C10.6626 10.6261 10.3828 10.3462 10.3828 10.0011Z" fill="white"/>
+                                                </svg>
+                                            
+                                        </div>
+<script type="text/javascript">if(zk.clientinfo === undefined)zk.clientinfo = true;</script></div>
+<script type="text/javascript" src="/app-view/js/Scan-Resource-New/Scripts/viettelScanDocIn.js?v=2">
+</script>
+
+<script type="text/javascript" src="/app-view/js/alertPopup.js?v=1">
+</script>
+
+<script type="text/javascript" src="/app-view/js/eCookie.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/app-constants.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery-3.6.4.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery-migrate-3.6.0.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery.mousewheel-3.1.3.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/modernizr.custom.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery.resize.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery.validationEngine-vi.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery.validationEngine.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery.ellipsis.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery-ui.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/jquery.animateNumber.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/raphael-2.1.2/raphael-min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/morris.js-0.5.1/morris.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/sortable/Sortable.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/snap.svg-0.4.1/snap.svg-min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/sortable/jquery.binding.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/basil.js/basil.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/d3js/d3.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/alertify-v0.3.11/alertify.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/js-base64-v2.1.9/base64.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/preloadjs/preloadjs-0.6.2.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/plugins/nicescroll-v3.6.6/jquery.nicescroll.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/app-custom-scrollbar.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/app-custom-plugins.js?v=2">
+</script>
+
+<script type="text/javascript" src="/app-view/theme/admin-ex/js/main-1.0.2.js?v=6">
+</script>
+
+<script type="text/javascript" src="/app-view/theme/admin-ex/js/portal.js?v=8">
+</script>
+
+<script type="text/javascript" src="/app-view/theme/admin-ex/js/portalMission.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/chart.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/marked.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/theme/admin-ex/js/missionDashboard.js">
+</script>
+
+<script type="text/javascript" src="/app-view/theme/admin-ex/js/kpiDashboard.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/pages/lockscreen.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/clipboard.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/edge/edge.6.0.0.min.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/surveyDiv.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/kendo/kendo.all.min.custom.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/kendoDiv.js">
+</script>
+
+<script type="text/javascript" src="/app-view/ckeditor/ckeditor.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/security/firefox-1.0.7.js?v=6">
+</script>
+
+<script type="text/javascript" src="/app-view/js/security/chrome.js?v=47.20">
+</script>
+
+<script type="text/javascript" src="/app-view/js/security/security.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/countdown/CloudCATimeCircles.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/countDownDiv.js">
+</script>
+
+<script type="text/javascript" src="/app-view/theme/admin-ex/js/downloadProgress.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/flow/flow.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/flow/goJs/go-debug.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/flow/goJs/vofficeFlow.js?v=19">
+</script>
+
+<script type="text/javascript" src="/app-view/theme/admin-ex/js/pkijs.bundle.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/screen-shot.js">
+</script>
+
+<script type="text/javascript" src="/app-view/js/vt-office-plugin/vt-office-plugin-api.js?v=1.40">
+</script>
+
+<script class="z-runonce" type="text/javascript">//<![CDATA[
+zkmx(
+[0,'aCEP_',{id:'pageMain',dt:'z_827',cu:'/app-view',uu:'/app-view/zkau',ru:'/theme/admin-ex/pages/main.zul'},[
+['zul.utl.Style','aCEP0',{visible:false,content:'\n        body { display: none; }\n\n        .EDGE-858961382 { right: 200px; }\n\n\n        .z-apply-mask {\n        width:100%;\n        height:100%;\n        background: transparent;\n        position:absolute;\n        z-index:89000;\n        top:0;\n        left:0;\n        filter:alpha(opacity=60);\n        opacity:.6;\n        zoom:1\n        }\n\n        .toggle-btn {\n        width: 40px;\n        height: 20px;\n        border-radius: 20px;\n        background-color: #d1d5db;\n        border: none;\n        cursor: pointer;\n        position: relative;\n        transition: background-color 0.25s ease;\n        padding: 0 !important;\n        }\n\n        .toggle-btn.active {\n        background-color: #22c55e; /* xanh lá */\n        }\n\n        .toggle-dot {\n        width: 14px !important;\n        height: 14px !important;\n        padding: 0 !important;\n        display: block;\n        background-color: #ffffff;\n        border-radius: 50%;\n        position: absolute;\n        top: 3px;\n        left: 3px;\n        transition: all 0.25s ease;\n        }\n\n        .toggle-btn.active .toggle-dot {\n        left: 23px;\n        }\n\n        .toggle-btn {\n        margin-right: 0px;\n        cursor: pointer;\n        display: inline-block;\n        }\n    '},[]],
+['zul.wgt.Div','aCEP1',{id:'app',$onCtrlKey:true,width:'100%',height:'100%',style:'margin: 0;',prolog:'\n    \n    ',ctrlKeys:'@h@r@l@o#f1'},[
+['zul.wgt.Div','aCEP2',{id:'divLockScreen',visible:false,width:'100%',height:'100%'},[
+['zul.wgt.Div','aCEP3',{width:'100%',height:'100%',sclass:'lock-screen'},[
+['zul.wgt.Div','aCEP4',{sclass:'container'},[
+['zul.wgt.Div','aCEP5',{sclass:'lockscreen-form'},[
+['zul.wgt.Div','aCEP6',{sclass:'user-image'},[
+['zul.wgt.Image','aCEP7',{sclass:'profile-image',src:'/app-view/zkau/web/3a6d451/img/spacer.gif'},[]],
+['zul.wgt.Div','aCEP8',{sclass:'lock-icon fa-lock'},[]]]],
+['zul.wgt.Div','aCEP9',{sclass:'logo-app'},[
+['zul.wgt.Div','aCEPa',{sclass:'logo'},[]]]],
+['zul.wgt.Div','aCEPb',{sclass:'user-name'},[
+['zul.wgt.Label','aCEPc',{style:'white-space: pre-wrap;',value:'Văn Thư'},[]]]],
+['zul.box.Vlayout','aCEPd',{sclass:'content'},[
+['zul.wgt.Div','aCEPe',{sclass:'loginTextbox',tooltiptext:'Mật khẩu'},[
+['zul.wgt.Div','aCEPf',{},[
+['zul.wgt.Div','aCEPg',{sclass:'button'},[
+['zul.wgt.Label','aCEPh',{sclass:'textbox-icon fa-key',style:'white-space: pre-wrap;'},[]]]]]],
+['zul.wgt.Div','aCEPi',{},[
+['zul.wgt.Div','aCEPj',{sclass:'textbox'},[
+['zul.inp.Textbox','aCEPk',{id:'textboxLockScreenPassword',$$onError:false,$$onChange:false,$onOK:true,placeholder:'Mật khẩu',type:'password'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPl',{style:'text-align: center;'},[
+['zul.wgt.Label','aCEPm',{id:'loginMessageLabel',style:'display: block; margin-top: 10px; color: #EE0033;'},[]]]],
+['zul.box.Hlayout','aCEPn',{style:'text-align: center; margin-top: 10px;',valign:'middle'},[
+['zul.wgt.Button','aCEPo',{id:'buttonUnlockScreen',$onClick:true,$onOK:true,width:'340px',sclass:'faLogin fa-sign-in',tooltiptext:'Đăng nhập',autodisable:'self'},[]]]]]],
+['zul.wgt.Div','aCEPp',{sclass:'lockscreen-footer'},[
+['zul.wgt.Div','aCEPq',{},[
+['zul.wgt.Label','aCEPr',{style:'white-space: pre-wrap;',value:'TẬP ĐOÀN VIỄN THÔNG QUÂN ĐỘI'},[]]]],
+['zul.wgt.Div','aCEPs',{},[
+['zul.wgt.Label','aCEPt',{style:'white-space: pre-wrap;',value:'Copyright © 2015'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEPu',{id:'mainContent',width:'100%',height:'100%',sclass:'main-content-container'},[
+['zul.wgt.Div','aCEPv',{id:'mainHeader',sclass:'main-header'},[
+['zul.wgt.Div','aCEPw',{sclass:'header-left'},[
+['zul.wgt.Div','aCEPx',{listeners:{onClick:function(event){
+toogleLeftMenu()
+}},sclass:'quick-button c-hamburger c-hamburger--htx btn-toogle-left-menu',tooltiptext:'Thu nhỏ/Mở rộng menu'},[
+['zul.wgt.Label','aCEPy',{style:'white-space: pre-wrap;'},[]]]],
+['zul.wgt.Div','aCEPz',{sclass:'app-logo',tooltiptext:'Hệ thống Văn phòng Điện tử'},[
+['zul.wgt.Div','aCEP_0',{style:'display: flex; align-items: center'},[
+['zul.wgt.Image','aCEP00',{id:'logoVoffice',$onClick:true,sclass:'logo-voffice',style:'cursor: pointer;',src:'/app-view/theme/admin-ex/images/logo/twd.png'},[]],
+['zul.wgt.Div','aCEP10',{sclass:'brand-name'},[
+['zul.wgt.Div','aCEP20',{sclass:'brand-name-name'},[
+['zul.wgt.Label','aCEP30',{id:'lblDeptBanner',style:'white-space: pre-wrap;',value:'TỈNH ỦY LÀO CAI'},[]]]],
+['zul.wgt.Div','aCEP40',{sclass:'brand-name-description'},[
+['zul.wgt.Label','aCEP50',{style:'white-space: pre-wrap;',value:'Hệ thống thông tin điều hành tác nghiệp các cơ quan Đảng'},[]]]]]]]]]],
+['zul.wgt.Div','aCEP60',{style:'padding-left: 82px;'},[
+['zul.wgt.Image','aCEP70',{id:'bannerImage',src:'/app-view/zkau/web/3a6d451/img/spacer.gif'},[]]]]]],
+['zul.wgt.Div','aCEP80',{visible:false,sclass:'header-center'},[]],
+['zul.wgt.Div','aCEP90',{sclass:'header-right'},[
+['zul.wgt.Div','aCEPa0',{sclass:'quick-button select-language-popup-btn',style:'display: none',tooltiptext:'Chọn ngôn ngữ'},[
+['zul.wgt.Div','aCEPb0',{sclass:'quick-button-container'},[
+['zul.wgt.Image','aCEPc0',{id:'imageVietNam',tooltiptext:'Tiếng Việt',src:'/app-view/images/nationalFlag/vi.png'},[]],
+['zul.wgt.Image','aCEPd0',{id:'imageEnglish',visible:false,style:'width:36px;height:32px;',tooltiptext:'English',src:'/app-view/images/nationalFlag/en.png'},[]],
+['zul.wgt.Image','aCEPe0',{id:'imageFrence',visible:false,tooltiptext:'français',src:'/app-view/images/nationalFlag/fr.png'},[]],
+['zul.wgt.Image','aCEPf0',{id:'imagePT',visible:false,tooltiptext:'Português',src:'/app-view/images/nationalFlag/pt.png'},[]],
+['zul.wgt.Image','aCEPg0',{id:'imageES',visible:false,tooltiptext:'Lengua española',src:'/app-view/images/nationalFlag/es.png'},[]],
+['zul.wgt.Image','aCEPh0',{id:'imageTL',visible:false,tooltiptext:'Timor-Leste',src:'/app-view/images/nationalFlag/tl.png'},[]],
+['zul.wgt.Image','aCEPi0',{id:'imageLA',visible:false,tooltiptext:'Laos',src:'/app-view/images/nationalFlag/la.png'},[]]]]]],
+['zul.wgt.Div','aCEPj0',{sclass:'popup-form-container note-popup-form'},[
+['zul.wgt.Div','aCEPk0',{sclass:'popup-form-mask'},[]],
+['zul.wgt.Div','aCEPl0',{sclass:'popup-form top-arrow popup-note'},[
+['zul.wgt.Div','aCEPm0',{sclass:'popup-form-content'},[
+['zul.wgt.Div','aCEPn0',{sclass:'note-panel'},[]]]]]]]],
+['zul.wgt.Div','aCEPo0',{id:'buttonSearchAll',$onClick:true,sclass:'quick-button show-search-popup-btn',tooltiptext:'Tìm kiếm'},[
+['zul.wgt.Div','aCEPp0',{sclass:'quick-button-container'},[
+['zul.wgt.Div','aCEPq0',{sclass:'notification-bell'},[
+['zul.wgt.Label','aCEPr0',{sclass:'font-icon quick-button-main-icon fa-search',style:'white-space: pre-wrap;'},[]]]]]]]],
+['zul.wgt.Div','aCEPs0',{id:'searchPopup',sclass:'popup-form-container show-search-popup-form',style:'opacity: 0.9;'},[
+['zul.wgt.Div','aCEPt0',{sclass:'popup-form-mask'},[]],
+['zul.wgt.Div','aCEPu0',{sclass:'popup-form top-arrow popup-select-theme'},[
+['zul.wgt.Div','aCEPv0',{sclass:'popup-form-content'},[
+['zul.wgt.Div','aCEPw0',{sclass:'notification-panel'},[
+['zul.wgt.Div','aCEPx0',{sclass:'select-theme-panel'},[
+['zul.wgt.Div','aCEPy0',{style:'width: 700px;'},[
+['zul.wnd.Panel','aCEPz0',{id:'searchPanel',$$onMinimize:false,$$onZIndex:false,$$onMove:false,$onClose:true,$$onOpen:false,$$onMaximize:false,$$onSize:false,sclass:'notification-panel',title:'Tìm kiếm'},[
+['zul.wnd.Panelchildren','aCEP_1',{sclass:'notification-panel-children'},[
+['zul.wgt.Div','aCEP01',{style:'padding: 10px 5px 5px 5px;',prolog:'\n                                                    '},[
+['zul.box.Vlayout','aCEP11',{},[
+['zul.wgt.Div','aCEP21',{style:'border: 1px solid #d9dddf;'},[
+['zul.box.Hlayout','aCEP31',{width:'100%',valign:'middle'},[
+['zul.box.Vlayout','aCEP41',{},[
+['zul.inp.Textbox','aCEP51',{id:'txtSearchAll',$onOK:true,$onChanging:true,width:'665px',style:'border: 0px solid #fff;',tooltiptext:'Thông tin tìm kiếm',placeholder:'Nhập điều kiện tìm kiếm'},[]]]],
+['zul.box.Vlayout','aCEP61',{},[
+['zul.wgt.Label','aCEP71',{id:'buttonSearch',$onClick:true,sclass:'font-icon fa-search',style:'cursor: pointer;'},[]]]]]]]],
+['zul.wgt.Div','aCEP81',{visible:false,sclass:'scrollbarCustomPortal',style:'height: auto; max-height: 200px; overflow-y:auto; padding-top: 1px;'},[
+['zul.menu.Menupopup','aCEPa1',{visible:false,$$onOpen:false},[
+['zul.menu.Menuitem','aCEPb1',{$$onCheck:false,$onClick:true,label:'Hiển thị một phần'},[]]]],
+['zul.sel.Listbox','aCEP91',{id:'searchAllResponseList',$onClick:true,$$onDataLoading:true,$$onAnchorPos:false,$$onSelect:false,$$onInnerWidth:false,$$onAcrossPage:true,$$onRender:true,$$onScrollPos:false,$$onPageSize:true,style:'white-space:pre-wrap;',context:'uuid(aCEPa1)',emptyMessage:'Danh sách rỗng!',_topPad:0,_totalSize:0,_offset:0},[
+['zul.sel.Listhead','aCEPc1',{$$onColSize:false,$onColSize:true,menupopup:''},[
+['zul.sel.Listheader','aCEPd1',{$onSort:true,align:'left'},[]]]]]]]]]]]]]]]]]]]]]]]]]]]],
+['zul.wgt.Div','aCEPj1',{id:'btnNotification',$onClick:true,sclass:'quick-button show-notification-popup-btn',tooltiptext:'Chi tiết thông báo'},[
+['zul.wgt.Div','aCEPk1',{sclass:'quick-button-container'},[
+['zul.wgt.Div','aCEPl1',{sclass:'notification-bell'},[
+['zul.wgt.Label','aCEPm1',{sclass:'font-icon quick-button-main-icon fa-bell-o',style:'white-space: pre-wrap;'},[]]]],
+['zul.wgt.Div','aCEPn1',{id:'divCountNotice',sclass:'notification-count'},[
+['zul.wgt.Label','aCEPo1',{id:'labelCountNotice',style:'font-size: 10px;',value:'9+'},[]]]]]]]],
+['zul.wgt.Div','aCEPp1',{id:'notificationPopup',sclass:'popup-form-container show-notification-popup-form',style:'opacity: 0.9;'},[
+['zul.wgt.Div','aCEPq1',{sclass:'popup-form-mask'},[]],
+['zul.wgt.Div','aCEPr1',{sclass:'popup-form top-arrow popup-select-theme'},[
+['zul.wgt.Div','aCEPs1',{sclass:'popup-form-content'},[
+['zul.wgt.Div','aCEPt1',{sclass:'notification-panel'},[
+['zul.wgt.Div','aCEPu1',{sclass:'select-theme-panel'},[
+['zul.wgt.Div','aCEPv1',{style:'width: 400px;'},[
+['zul.wnd.Panel','aCEPw1',{id:'documentPanel',$onClose:true,sclass:'notification-panel',title:'Thông báo'},[
+['zul.wnd.Panelchildren','aCEPx1',{sclass:'notification-panel-children'},[
+['zul.wgt.Div','aCEPy1',{style:'padding: 10px 5px 5px 5px;',prolog:'\n                                                    '},[
+['zul.box.Vlayout','aCEPz1',{},[
+['zul.wgt.Div','aCEP_2',{style:'border: 1px solid #d9dddf;'},[
+['zul.box.Hlayout','aCEP02',{width:'100%',valign:'middle'},[
+['zul.box.Vlayout','aCEP12',{},[
+['zul.inp.Textbox','aCEP22',{id:'txtNotificationSearch',$onOK:true,width:'365px',style:'border: 0px solid #fff;',tooltiptext:'Thông tin tìm kiếm',placeholder:'Tiêu đề, mô tả'},[]]]],
+['zul.box.Vlayout','aCEP32',{},[
+['zul.wgt.Label','aCEP42',{id:'txtSearch',$onClick:true,sclass:'font-icon fa-search',style:'cursor: pointer;'},[]]]]]]]],
+['zul.wgt.Div','aCEP52',{sclass:'scrollbarCustomPortal',style:'height: auto; max-height: 200px; overflow-y:auto; padding-top: 1px;'},[
+['zul.menu.Menupopup','aCEP72',{visible:false},[
+['zul.menu.Menuitem','aCEP82',{$onClick:true,label:'Hiển thị một phần'},[]]]],
+['zul.sel.Listbox','aCEP62',{id:'notificationList',$onClick:true,style:'white-space:pre-wrap;',context:'uuid(aCEP72)',emptyMessage:'Danh sách rỗng!',_topPad:0,_totalSize:0,_offset:0},[
+['zul.sel.Listhead','aCEP92',{$onColSize:true,menupopup:''},[
+['zul.sel.Listheader','aCEPa2',{$onSort:true,align:'left'},[]]]]]]]]]]]]]]]]]]]]]]]]]]]],
+['zul.wgt.Div','aCEPj2',{id:'boxMultiLanguage',sclass:'popup-form-container select-language-popup-form',style:'display: none'},[
+['zul.wgt.Div','aCEPk2',{sclass:'popup-form-mask'},[]],
+['zul.wgt.Div','aCEPl2',{sclass:'popup-form top-arrow popup-select-theme'},[
+['zul.wgt.Div','aCEPm2',{sclass:'popup-form-content'},[
+['zul.wgt.Div','aCEPn2',{sclass:'select-theme-panel'},[
+['zul.wgt.Div','aCEPo2',{id:'vietNam',$onClick:true,sclass:'box_multiLanguagePanel_row',tooltiptext:'Tiếng Việt'},[
+['zul.wgt.Div','aCEPp2',{},[
+['zul.wgt.Image','aCEPq2',{src:'/app-view/images/nationalFlag/vi.png'},[]]]]]],
+['zul.wgt.Div','aCEPr2',{id:'engLish',$onClick:true,sclass:'box_multiLanguagePanel_row',tooltiptext:'English'},[
+['zul.wgt.Div','aCEPs2',{},[
+['zul.wgt.Image','aCEPt2',{src:'/app-view/images/nationalFlag/en.png'},[]]]]]],
+['zul.wgt.Div','aCEPu2',{id:'france',$onClick:true,sclass:'box_multiLanguagePanel_row',tooltiptext:'français'},[
+['zul.wgt.Div','aCEPv2',{},[
+['zul.wgt.Image','aCEPw2',{src:'/app-view/images/nationalFlag/fr.png'},[]]]]]],
+['zul.wgt.Div','aCEPx2',{id:'portugal',visible:false,$onClick:true,sclass:'box_multiLanguagePanel_row',tooltiptext:'Português'},[
+['zul.wgt.Div','aCEPy2',{},[
+['zul.wgt.Image','aCEPz2',{src:'/app-view/images/nationalFlag/pt.png'},[]]]]]],
+['zul.wgt.Div','aCEP_3',{id:'peru',$onClick:true,sclass:'box_multiLanguagePanel_row',tooltiptext:'Lengua española'},[
+['zul.wgt.Div','aCEP03',{},[
+['zul.wgt.Image','aCEP13',{src:'/app-view/images/nationalFlag/es.png'},[]]]]]],
+['zul.wgt.Div','aCEP23',{id:'timor',$onClick:true,sclass:'box_multiLanguagePanel_row',tooltiptext:'Timor-Leste'},[
+['zul.wgt.Div','aCEP33',{},[
+['zul.wgt.Image','aCEP43',{src:'/app-view/images/nationalFlag/tl.png'},[]]]]]]]]]]]]]],
+['zul.wgt.Div','aCEP53',{visible:false,sclass:'quick-button select-theme-popup-btn',tooltiptext:'Chọn màu ứng dụng'},[
+['zul.wgt.Div','aCEP63',{sclass:'quick-button-container'},[
+['zul.wgt.Label','aCEP73',{sclass:'font-icon quick-button-main-icon fa-magic',style:'white-space: pre-wrap;'},[]]]]]],
+['zul.wgt.Div','aCEP83',{visible:false,sclass:'popup-form-container select-theme-popup-form'},[
+['zul.wgt.Div','aCEP93',{sclass:'popup-form-mask'},[]],
+['zul.wgt.Div','aCEPa3',{sclass:'popup-form top-arrow popup-select-theme'},[
+['zul.wgt.Div','aCEPb3',{sclass:'popup-form-content'},[
+['zul.wgt.Div','aCEPc3',{sclass:'select-theme-panel'},[
+['zul.wgt.Div','aCEPd3',{domExtraAttrs:{'theme':'theme-random'
+,'click-hide':'true'
+},sclass:'theme-box font-icon fa-random',tooltiptext:'Random'},[]],
+['zul.wgt.Div','aCEPe3',{domExtraAttrs:{'theme':'theme-dark-blue'
+,'click-hide':'true'
+},sclass:'theme-box theme-dark-blue',tooltiptext:'Dark blue'},[]],
+['zul.wgt.Div','aCEPf3',{domExtraAttrs:{'theme':'theme-dark-gray'
+,'click-hide':'true'
+},sclass:'theme-box theme-dark-gray',tooltiptext:'Dark gray'},[]],
+['zul.wgt.Div','aCEPg3',{domExtraAttrs:{'theme':'theme-dark-green'
+,'click-hide':'true'
+},sclass:'theme-box theme-dark-green',tooltiptext:'Dark green'},[]],
+['zul.wgt.Div','aCEPh3',{domExtraAttrs:{'theme':'theme-red-gray'
+,'click-hide':'true'
+},sclass:'theme-box theme-red-gray',tooltiptext:'Red gray'},[]],
+['zul.wgt.Div','aCEPi3',{sclass:'clear-fix'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPj3',{id:'buttonQuickRefresh',$onClick:true,sclass:'quick-button',tooltiptext:'Làm mới nội dung'},[
+['zul.wgt.Div','aCEPk3',{sclass:'quick-button-container'},[
+['zul.wgt.Label','aCEPl3',{sclass:'font-icon quick-button-main-icon fa-refresh',style:'white-space: pre-wrap;'},[]]]]]],
+['zul.wgt.Div','aCEPm3',{sclass:'box-user-info user-info-popup-btn',tooltiptext:'Thông tin người dùng'},[
+['zul.wgt.Div','aCEPn3',{sclass:'box-user-info-container'},[
+['zul.wgt.Div','aCEPo3',{},[
+['zul.wgt.Image','aCEPp3',{id:'profileImage',sclass:'profile-image',src:'/app-view/images/profileImage/female_business_user.png'},[]]]],
+['zul.wgt.Div','aCEPq3',{sclass:'user-info'},[
+['zul.wgt.Div','aCEPr3',{},[
+['zul.wgt.Label','aCEPs3',{sclass:'user-name',style:'white-space: pre-wrap;',value:'Văn Thư'},[]]]],
+['zul.wgt.Div','aCEPt3',{},[
+['zul.wgt.Label','aCEPu3',{sclass:'user-role',style:'white-space: pre-wrap;',value:'Văn phòng Đảng ủy'},[]]]]]],
+['zul.wgt.Div','aCEPv3',{sclass:'config-btn'},[
+['zul.wgt.Label','aCEPw3',{sclass:'font-icon fa-cog',style:'white-space: pre-wrap;'},[]]]]]]]],
+['zul.wgt.Div','aCEPx3',{sclass:'popup-form-container user-info-popup-form'},[
+['zul.wgt.Div','aCEPy3',{sclass:'popup-form-mask'},[]],
+['zul.wgt.Div','aCEPz3',{sclass:'popup-form top-arrow popup-user-info'},[
+['zul.wgt.Div','aCEP_4',{sclass:'popup-form-content'},[
+['zul.wgt.Div','aCEP04',{sclass:'user-info-panel'},[
+['zul.wgt.Div','aCEP14',{domExtraAttrs:{'click-hide':'true'
+},style:'display: flex; justify-content: space-between; align-items: center; padding: 0 30px 0 20px; height: 30px'},[
+['zul.wgt.Html','aCEP24',{style:'margin-right: 5px',content:zk('aCEP24').detachChildren()},[]],
+['zul.wgt.Div','aCEP34',{style:'display: flex; align-items: center; color: #ffffff; padding-right: 12px;'},[
+['zul.wgt.Label','aCEP44',{id:'toggleHomeModeValue',style:'white-space: pre-wrap;',value:'Trang chủ đơn giản'},[]]]],
+['zul.wgt.Div','aCEP54',{id:'toggleHomeMode',$onClick:true,sclass:'toggle-btn'},[
+['zul.wgt.Div','aCEP64',{id:'toggleDot',sclass:'toggle-dot'},[]]]]]],
+['zul.wgt.Div','aCEP74',{id:'help',$onClick:true,domExtraAttrs:{'click-hide':'true'
+},sclass:'user-info-panel-row',style:'display: flex; align-items: center;'},[
+['zul.wgt.Div','aCEP84',{style:'display: flex; align-items: center;'},[
+['zul.wgt.Html','aCEP94',{style:'margin-right: 5px',content:zk('aCEP94').detachChildren()},[]],
+['zul.wgt.Label','aCEPa4',{style:'white-space: pre-wrap;',tooltiptext:'F1',value:'Trợ giúp'},[]]]]]],
+['zul.wgt.Div','aCEPb4',{id:'changeUserInfo',$onClick:true,domExtraAttrs:{'click-hide':'true'
+},sclass:'user-info-panel-row',style:'display: flex; align-items: center;'},[
+['zul.wgt.Div','aCEPc4',{style:'display: flex; align-items: center;'},[
+['zul.wgt.Html','aCEPd4',{style:'margin-right: 5px',content:zk('aCEPd4').detachChildren()},[]],
+['zul.wgt.Label','aCEPe4',{style:'white-space: pre-wrap;',tooltiptext:'Hồ sơ cá nhân',value:'Hồ sơ cá nhân'},[]]]]]],
+['zul.wgt.Div','aCEPf4',{id:'versionControl',$onClick:true,domExtraAttrs:{'click-hide':'true'
+},sclass:'user-info-panel-row',style:'display: flex; align-items: center;'},[
+['zul.wgt.Div','aCEPg4',{style:'display: flex; align-items: center;'},[
+['zul.wgt.Html','aCEPh4',{style:'margin-right: 5px',content:zk('aCEPh4').detachChildren()},[]],
+['zul.wgt.Label','aCEPi4',{style:'white-space: pre-wrap;',tooltiptext:'Quản lý phiên bản',value:'Quản lý phiên bản'},[]]]]]],
+['zul.wgt.Div','aCEPj4',{id:'changeHomeWidgets',$onClick:true,domExtraAttrs:{'click-hide':'true'
+},sclass:'user-info-panel-row',style:'display: flex; align-items: center;'},[
+['zul.wgt.Div','aCEPk4',{style:'display: flex; align-items: center;'},[
+['zul.wgt.Html','aCEPl4',{style:'margin-right: 5px',content:zk('aCEPl4').detachChildren()},[]],
+['zul.wgt.Label','aCEPm4',{style:'white-space: pre-wrap;',tooltiptext:'Cấu hình trang chủ',value:'Cấu hình trang chủ'},[]]]]]],
+['zul.wgt.Div','aCEPn4',{id:'logout',$onClick:true,domExtraAttrs:{'click-hide':'true'
+},sclass:'user-info-panel-row',style:'display: flex; align-items: center; padding: 10px 30px 10px 20px; cursor: pointer; height: 30px; margin-top:5px;'},[
+['zul.wgt.Html','aCEPo4',{content:zk('aCEPo4').detachChildren()},[]],
+['zul.wgt.Label','aCEPp4',{style:'background-color: #ff0000; color: #ffffff; height: 30px; width: 100%; padding-left: 15px; margin-left: 5px;border-radius: 6px; font-weight: bold; font-size: 14px; display: flex; align-items: center;',tooltiptext:'Alt+L',value:'Đăng xuất'},[]]]]]]]]]]]]]]]],
+['zul.wgt.Div','aCEPq4',{id:'mainLeft',sclass:'main-left'},[
+['zul.wgt.Div','aCEPr4',{sclass:'left-menu'},[
+['zul.wgt.Div','aCEPs4',{sclass:'left-menu-expand scrollbarCustomPortal'},[
+['zul.wgt.Div','aCEPt4',{id:'leftMenuExpand'},[
+['zul.wgt.Div','aCEP69',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEP79',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '337j+nELb47myuRTuqu3MA==')
+}},domExtraAttrs:{'menu-selector':'337j+nELb47myuRTuqu3MA=='
+},sclass:'expand-menu-name font-icon fa-submission expand-parent-menu'},[
+['zul.wgt.Label','aCEP89',{sclass:'expand-menu-name-text',value:'PHIẾU TRÌNH'},[]]]],
+['zul.wgt.Div','aCEP99',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEPa9',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPb9',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'KGKMpuH8Uz1Z/VlbniDrDQ==')
+}},domExtraAttrs:{'menu-selector':'KGKMpuH8Uz1Z/VlbniDrDQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPc9',{sclass:'expand-sub-menu-name-text',value:'Phiếu trình của tôi'},[]]]]]],
+['zul.wgt.Div','aCEPd9',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPe9',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'plRSoImoFrcBXQJfpaAt9g==')
+}},domExtraAttrs:{'menu-selector':'plRSoImoFrcBXQJfpaAt9g=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPf9',{sclass:'expand-sub-menu-name-text',value:'Phiếu trình cần phê duyệt'},[]]]]]],
+['zul.wgt.Div','aCEPg9',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPh9',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'Qa7qp+2nIRvE6S7mZw6nBQ==')
+}},domExtraAttrs:{'menu-selector':'Qa7qp+2nIRvE6S7mZw6nBQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPi9',{sclass:'expand-sub-menu-name-text',value:'Phiếu trình nhận để biết'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPy9',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEPz9',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'XvAtETBCzLimjfYok2QLeQ==')
+}},domExtraAttrs:{'menu-selector':'XvAtETBCzLimjfYok2QLeQ=='
+},sclass:'expand-menu-name font-icon fa-new-sign expand-parent-menu'},[
+['zul.wgt.Label','aCEP_a',{sclass:'expand-menu-name-text',value:'VĂN BẢN ĐI'},[]]]],
+['zul.wgt.Div','aCEP0a',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEP1a',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP2a',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'rP0DFddUzrjd1zCkH78ElQ==')
+}},domExtraAttrs:{'menu-selector':'rP0DFddUzrjd1zCkH78ElQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP3a',{sclass:'expand-sub-menu-name-text',value:'Dự thảo của tôi'},[]]]]]],
+['zul.wgt.Div','aCEP4a',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP5a',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'DBYaQdZSelZAwjAolXLyvQ==')
+}},domExtraAttrs:{'menu-selector':'DBYaQdZSelZAwjAolXLyvQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP6a',{sclass:'expand-sub-menu-name-text',value:'Văn bản trình duyệt'},[]]]]]],
+['zul.wgt.Div','aCEP7a',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP8a',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '7xfsjPtSLdJwBU8U0IgHAA==')
+}},domExtraAttrs:{'menu-selector':'7xfsjPtSLdJwBU8U0IgHAA=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP9a',{sclass:'expand-sub-menu-name-text',value:'Văn bản ký duyệt'},[]]]]]],
+['zul.wgt.Div','aCEPaa',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPba',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'hz+52mQdFV2tSvZbSzEEDg==')
+}},domExtraAttrs:{'menu-selector':'hz+52mQdFV2tSvZbSzEEDg=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPca',{sclass:'expand-sub-menu-name-text',value:'Văn bản ban hành'},[]]]]]],
+['zul.wgt.Div','aCEPda',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPea',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'sLcSi7Dllxp7Jn2DdAwKuA==')
+}},domExtraAttrs:{'menu-selector':'sLcSi7Dllxp7Jn2DdAwKuA=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPfa',{sclass:'expand-sub-menu-name-text',value:'Báo cáo văn bản'},[]]]]]],
+['zul.wgt.Div','aCEPga',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPha',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'MzFeDr6VaZGVGRCMG3743Q==')
+}},domExtraAttrs:{'menu-selector':'MzFeDr6VaZGVGRCMG3743Q=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPia',{sclass:'expand-sub-menu-name-text',value:'Tra cứu văn bản đi của tôi'},[]]]]]],
+['zul.wgt.Div','aCEPja',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPka',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'Krj9GsRIDsboue6vaoWCYA==')
+}},domExtraAttrs:{'menu-selector':'Krj9GsRIDsboue6vaoWCYA=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPla',{sclass:'expand-sub-menu-name-text',value:'Theo dõi văn bản đi'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPcb',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEPdb',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'FqqBmqhcudoRHgjmUYtiBQ==')
+}},domExtraAttrs:{'menu-selector':'FqqBmqhcudoRHgjmUYtiBQ=='
+},sclass:'expand-menu-name font-icon fa-new-document expand-parent-menu'},[
+['zul.wgt.Label','aCEPeb',{sclass:'expand-menu-name-text',value:'VĂN BẢN ĐẾN'},[]]]],
+['zul.wgt.Div','aCEPfb',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEPgb',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPhb',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '14S0FtJXgHwcccYW7/y7mg==')
+}},domExtraAttrs:{'menu-selector':'14S0FtJXgHwcccYW7/y7mg=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPib',{sclass:'expand-sub-menu-name-text',value:'Văn bản liên thông'},[]]]]]],
+['zul.wgt.Div','aCEPjb',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPkb',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'gsUPSLBavOy1ECwKfFe8ww==')
+}},domExtraAttrs:{'menu-selector':'gsUPSLBavOy1ECwKfFe8ww=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPlb',{sclass:'expand-sub-menu-name-text',value:'Văn bản chờ tiếp nhận'},[]]]]]],
+['zul.wgt.Div','aCEPmb',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPnb',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'DhdbOJURFWsEJCSIu6ft4Q==')
+}},domExtraAttrs:{'menu-selector':'DhdbOJURFWsEJCSIu6ft4Q=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPob',{sclass:'expand-sub-menu-name-text',value:'Văn bản chờ xử lý'},[]]]]]],
+['zul.wgt.Div','aCEPpb',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPqb',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'sG7sdr6TN4ejZriR+PyPcw==')
+}},domExtraAttrs:{'menu-selector':'sG7sdr6TN4ejZriR+PyPcw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPrb',{sclass:'expand-sub-menu-name-text',value:'Văn bản đã xử lý'},[]]]]]],
+['zul.wgt.Div','aCEPsb',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPtb',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'l4jv/OJpy+xPr1qsXE/tRg==')
+}},domExtraAttrs:{'menu-selector':'l4jv/OJpy+xPr1qsXE/tRg=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPub',{sclass:'expand-sub-menu-name-text',value:'Văn bản nhận để biết'},[]]]]]],
+['zul.wgt.Div','aCEPvb',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPwb',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'KI+SErXoT/jdmlSqg6olKg==')
+}},domExtraAttrs:{'menu-selector':'KI+SErXoT/jdmlSqg6olKg=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPxb',{sclass:'expand-sub-menu-name-text',value:'Văn bản bị trả lại'},[]]]]]],
+['zul.wgt.Div','aCEPyb',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPzb',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'yaoiL33uzjSyoV8v+hcvkw==')
+}},domExtraAttrs:{'menu-selector':'yaoiL33uzjSyoV8v+hcvkw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP_c',{sclass:'expand-sub-menu-name-text',value:'Tra cứu văn bản đến tôi'},[]]]]]],
+['zul.wgt.Div','aCEP0c',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP1c',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '4f+rik1yjVNyHxNhfzOSQw==')
+}},domExtraAttrs:{'menu-selector':'4f+rik1yjVNyHxNhfzOSQw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP2c',{sclass:'expand-sub-menu-name-text',value:'Báo cáo văn bản'},[]]]]]],
+['zul.wgt.Div','aCEP3c',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP4c',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'H7hCcqCUzlEEoGT1T0NajA==')
+}},domExtraAttrs:{'menu-selector':'H7hCcqCUzlEEoGT1T0NajA=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP5c',{sclass:'expand-sub-menu-name-text',value:'Công khai văn bản'},[]]]]]],
+['zul.wgt.Div','aCEP6c',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP7c',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'ghLP38qHd+Diq4UwZQchDw==')
+}},domExtraAttrs:{'menu-selector':'ghLP38qHd+Diq4UwZQchDw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP8c',{sclass:'expand-sub-menu-name-text',value:'Theo dõi văn bản đến đơn vị'},[]]]]]]]]]],
+['zul.wgt.Div','aCEP8d',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEP9d',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '54mSV/1Pz638yOjMhMl79A==')
+}},domExtraAttrs:{'menu-selector':'54mSV/1Pz638yOjMhMl79A=='
+},sclass:'expand-menu-name font-icon fa-tu-lieu-dung-chung'},[
+['zul.wgt.Label','aCEPad',{sclass:'expand-menu-name-text',value:'KHO TƯ LIỆU DÙNG CHUNG'},[]]]]]],
+['zul.wgt.Div','aCEPgd',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEPhd',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'LSr1NOOnaCkxCQWiVIj9DQ==')
+}},domExtraAttrs:{'menu-selector':'LSr1NOOnaCkxCQWiVIj9DQ=='
+},sclass:'expand-menu-name font-icon fa-book expand-parent-menu'},[
+['zul.wgt.Label','aCEPid',{sclass:'expand-menu-name-text',value:'VĂN BẢN CÔNG KHAI'},[]]]],
+['zul.wgt.Div','aCEPjd',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEPkd',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPld',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'bC8ySvGyamsvxzVTtKiChw==')
+}},domExtraAttrs:{'menu-selector':'bC8ySvGyamsvxzVTtKiChw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPmd',{sclass:'expand-sub-menu-name-text',value:'Văn bản công khai'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPwd',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEPxd',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'Ce8cRxHRHOjhz8eeVRzLOQ==')
+}},domExtraAttrs:{'menu-selector':'Ce8cRxHRHOjhz8eeVRzLOQ=='
+},sclass:'expand-menu-name font-icon fa-menu-thu-vien-ca-nhan expand-parent-menu'},[
+['zul.wgt.Label','aCEPyd',{sclass:'expand-menu-name-text',value:'QUẢN LÝ HỒ SƠ'},[]]]],
+['zul.wgt.Div','aCEPzd',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEP_e',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP0e',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '/AxHdA+sj7PED6BW0jM+2w==')
+}},domExtraAttrs:{'menu-selector':'/AxHdA+sj7PED6BW0jM+2w=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP1e',{sclass:'expand-sub-menu-name-text',value:'Danh mục hồ sơ'},[]]]]]],
+['zul.wgt.Div','aCEP2e',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP3e',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'M8+0DTp5WfTAFVYXnMVH5w==')
+}},domExtraAttrs:{'menu-selector':'M8+0DTp5WfTAFVYXnMVH5w=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP4e',{sclass:'expand-sub-menu-name-text',value:'Danh sách hồ sơ'},[]]]]]],
+['zul.wgt.Div','aCEP5e',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP6e',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '8e1i4DokIZ0bVH9Q0UotPw==')
+}},domExtraAttrs:{'menu-selector':'8e1i4DokIZ0bVH9Q0UotPw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP7e',{sclass:'expand-sub-menu-name-text',value:'Phiếu đề nghị nộp hồ sơ'},[]]]]]],
+['zul.wgt.Div','aCEP8e',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP9e',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'saowhbHpram6JnIRUj5dQw==')
+}},domExtraAttrs:{'menu-selector':'saowhbHpram6JnIRUj5dQw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPae',{sclass:'expand-sub-menu-name-text',value:'Biên bản giao - nhận hồ sơ'},[]]]]]],
+['zul.wgt.Div','aCEPbe',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPce',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'cAAiDMBWg5RxUzyUcA8lsQ==')
+}},domExtraAttrs:{'menu-selector':'cAAiDMBWg5RxUzyUcA8lsQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPde',{sclass:'expand-sub-menu-name-text',value:'Hồ sơ tiếp nhận'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPze',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEP_f',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'XKKTdxWDesBZ85m4IO0OFg==')
+}},domExtraAttrs:{'menu-selector':'XKKTdxWDesBZ85m4IO0OFg=='
+},sclass:'expand-menu-name font-icon fa-new-dep-task expand-parent-menu'},[
+['zul.wgt.Label','aCEP0f',{sclass:'expand-menu-name-text',value:'QUẢN LÝ NHIỆM VỤ'},[]]]],
+['zul.wgt.Div','aCEP1f',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEP2f',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP3f',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'znzp9I36/0IIZiOMcHEj+Q==')
+}},domExtraAttrs:{'menu-selector':'znzp9I36/0IIZiOMcHEj+Q=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP4f',{sclass:'expand-sub-menu-name-text',value:'Danh sách nhiệm vụ'},[]]]]]],
+['zul.wgt.Div','aCEP5f',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP6f',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '353ELaRl2qsGySl3oXXJcQ==')
+}},domExtraAttrs:{'menu-selector':'353ELaRl2qsGySl3oXXJcQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP7f',{sclass:'expand-sub-menu-name-text',value:'Nhiệm vụ chờ phê duyệt'},[]]]]]],
+['zul.wgt.Div','aCEP8f',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP9f',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'lJVgWXlS7tyZR6VyvqipTQ==')
+}},domExtraAttrs:{'menu-selector':'lJVgWXlS7tyZR6VyvqipTQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPaf',{sclass:'expand-sub-menu-name-text',value:'Gửi báo cáo đơn vị'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPqf',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEPrf',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'OCpmhzajJm69OoZaEcqzTw==')
+}},domExtraAttrs:{'menu-selector':'OCpmhzajJm69OoZaEcqzTw=='
+},sclass:'expand-menu-name font-icon fa-new-calendar expand-parent-menu'},[
+['zul.wgt.Label','aCEPsf',{sclass:'expand-menu-name-text',value:'LỊCH HỌP'},[]]]],
+['zul.wgt.Div','aCEPtf',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEPuf',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPvf',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'C9/P8hgFO6GPTDT2rV2c1w==')
+}},domExtraAttrs:{'menu-selector':'C9/P8hgFO6GPTDT2rV2c1w=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPwf',{sclass:'expand-sub-menu-name-text',value:'Danh sách lịch họp'},[]]]]]],
+['zul.wgt.Div','aCEPxf',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPyf',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'C8JgiK/dla2evDML3Iso3A==')
+}},domExtraAttrs:{'menu-selector':'C8JgiK/dla2evDML3Iso3A=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPzf',{sclass:'expand-sub-menu-name-text',value:'Lịch tuần cơ quan'},[]]]]]],
+['zul.wgt.Div','aCEP_g',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP0g',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '97oSWTH3WU4X2ezI+rd+nQ==')
+}},domExtraAttrs:{'menu-selector':'97oSWTH3WU4X2ezI+rd+nQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP1g',{sclass:'expand-sub-menu-name-text',value:'Lịch tuần lãnh đạo'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPhg',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEPig',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'pwVhMbJQQKKOmy/O2Fm4Tw==')
+}},domExtraAttrs:{'menu-selector':'pwVhMbJQQKKOmy/O2Fm4Tw=='
+},sclass:'expand-menu-name font-icon fa-new-category expand-parent-menu'},[
+['zul.wgt.Label','aCEPjg',{sclass:'expand-menu-name-text',value:'DANH MỤC'},[]]]],
+['zul.wgt.Div','aCEPkg',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEPlg',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPmg',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'NX9KLtVY2dt7wRbg1W/XRw==')
+}},domExtraAttrs:{'menu-selector':'NX9KLtVY2dt7wRbg1W/XRw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPng',{sclass:'expand-sub-menu-name-text',value:'Danh mục hình thức văn bản'},[]]]]]],
+['zul.wgt.Div','aCEPog',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPpg',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'wuE27ulKhNhLt93d3of0hg==')
+}},domExtraAttrs:{'menu-selector':'wuE27ulKhNhLt93d3of0hg=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPqg',{sclass:'expand-sub-menu-name-text',value:'Sổ văn bản'},[]]]]]],
+['zul.wgt.Div','aCEPrg',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPsg',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'dc70lnLsTfixwSB83eijKw==')
+}},domExtraAttrs:{'menu-selector':'dc70lnLsTfixwSB83eijKw=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPtg',{sclass:'expand-sub-menu-name-text',value:'Quản lý phạm vi văn bản'},[]]]]]]]]]],
+['zul.wgt.Div','aCEP8h',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEP9h',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'TKAbkaaezhNReaoFXvZACA==')
+}},domExtraAttrs:{'menu-selector':'TKAbkaaezhNReaoFXvZACA=='
+},sclass:'expand-menu-name font-icon fa-new-user expand-parent-menu'},[
+['zul.wgt.Label','aCEPah',{sclass:'expand-menu-name-text',value:'QUẢN TRỊ'},[]]]],
+['zul.wgt.Div','aCEPbh',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEPch',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPdh',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'YHnFHje6ssWpnycL8aKsZg==')
+}},domExtraAttrs:{'menu-selector':'YHnFHje6ssWpnycL8aKsZg=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPeh',{sclass:'expand-sub-menu-name-text',value:'Quản lý nhóm'},[]]]]]],
+['zul.wgt.Div','aCEPfh',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPgh',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '7EBXTvECJaNkpxylKrcAZg==')
+}},domExtraAttrs:{'menu-selector':'7EBXTvECJaNkpxylKrcAZg=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPhh',{sclass:'expand-sub-menu-name-text',value:'Quản lý ảnh con dấu đơn vị'},[]]]]]],
+['zul.wgt.Div','aCEPih',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEPjh',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'cC/r6V55tuj+I2ytA97s+w==')
+}},domExtraAttrs:{'menu-selector':'cC/r6V55tuj+I2ytA97s+w=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEPkh',{sclass:'expand-sub-menu-name-text',value:'Báo cáo tổng hợp'},[]]]]]]]]]],
+['zul.wgt.Div','aCEP_i',{sclass:'expand-menu-item'},[
+['zul.wgt.Div','aCEP0i',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, '7zERtmRmiuCPcV2dOyYQOg==')
+}},domExtraAttrs:{'menu-selector':'7zERtmRmiuCPcV2dOyYQOg=='
+},sclass:'expand-menu-name font-icon fa-menu-quan-ly-nhiem-vu expand-parent-menu'},[
+['zul.wgt.Label','aCEP1i',{sclass:'expand-menu-name-text',value:'TÀI LIỆU CÁ NHÂN'},[]]]],
+['zul.wgt.Div','aCEP2i',{sclass:'expand-sub-menu-list'},[
+['zul.wgt.Div','aCEP3i',{sclass:'expand-sub-menu-item'},[
+['zul.wgt.Div','aCEP4i',{listeners:{onClick:function(event){
+onClickMenuItemExpand(this, 'eJ+996wkoJcrBgvGPQVnFQ==')
+}},domExtraAttrs:{'menu-selector':'eJ+996wkoJcrBgvGPQVnFQ=='
+},sclass:'expand-sub-menu-name font-icon fa-circle'},[
+['zul.wgt.Label','aCEP5i',{sclass:'expand-sub-menu-name-text',value:'Tài liệu cá nhân'},[]]]]]]]]]]]]]],
+['zul.wgt.Div','aCEPu4',{sclass:'left-menu-collapse scrollbarCustomPortal'},[
+['zul.wgt.Div','aCEPv4',{id:'leftMenuCollapse'},[
+['zul.wgt.Div','aCEPj9',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPk9',{sclass:'collapse-menu-icon font-icon fa-submission'},[]],
+['zul.wgt.Div','aCEPl9',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPm9',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPn9',{sclass:'collapse-menu-name-text',value:'PHIẾU TRÌNH'},[]]]],
+['zul.wgt.Div','aCEPo9',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEPp9',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPq9',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'KGKMpuH8Uz1Z/VlbniDrDQ==')
+}},domExtraAttrs:{'menu-selector':'KGKMpuH8Uz1Z/VlbniDrDQ=='
+},sclass:'collapse-sub-menu-name font-icon icon-lich-hop'},[
+['zul.wgt.Label','aCEPr9',{sclass:'collapse-sub-menu-name-text',value:'Phiếu trình của tôi'},[]]]]]],
+['zul.wgt.Div','aCEPs9',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPt9',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'plRSoImoFrcBXQJfpaAt9g==')
+}},domExtraAttrs:{'menu-selector':'plRSoImoFrcBXQJfpaAt9g=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPu9',{sclass:'collapse-sub-menu-name-text',value:'Phiếu trình cần phê duyệt'},[]]]]]],
+['zul.wgt.Div','aCEPv9',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPw9',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'Qa7qp+2nIRvE6S7mZw6nBQ==')
+}},domExtraAttrs:{'menu-selector':'Qa7qp+2nIRvE6S7mZw6nBQ=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPx9',{sclass:'collapse-sub-menu-name-text',value:'Phiếu trình nhận để biết'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEPma',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPna',{sclass:'collapse-menu-icon font-icon fa-new-sign'},[]],
+['zul.wgt.Div','aCEPoa',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPpa',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPqa',{sclass:'collapse-menu-name-text',value:'VĂN BẢN ĐI'},[]]]],
+['zul.wgt.Div','aCEPra',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEPsa',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPta',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'rP0DFddUzrjd1zCkH78ElQ==')
+}},domExtraAttrs:{'menu-selector':'rP0DFddUzrjd1zCkH78ElQ=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-van-ban-trinh-ky'},[
+['zul.wgt.Label','aCEPua',{sclass:'collapse-sub-menu-name-text',value:'Dự thảo của tôi'},[]]]]]],
+['zul.wgt.Div','aCEPva',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPwa',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'DBYaQdZSelZAwjAolXLyvQ==')
+}},domExtraAttrs:{'menu-selector':'DBYaQdZSelZAwjAolXLyvQ=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-van-ban-xet-duyet'},[
+['zul.wgt.Label','aCEPxa',{sclass:'collapse-sub-menu-name-text',value:'Văn bản trình duyệt'},[]]]]]],
+['zul.wgt.Div','aCEPya',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPza',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, '7xfsjPtSLdJwBU8U0IgHAA==')
+}},domExtraAttrs:{'menu-selector':'7xfsjPtSLdJwBU8U0IgHAA=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-van-ban-ky-duyet'},[
+['zul.wgt.Label','aCEP_b',{sclass:'collapse-sub-menu-name-text',value:'Văn bản ký duyệt'},[]]]]]],
+['zul.wgt.Div','aCEP0b',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP1b',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'hz+52mQdFV2tSvZbSzEEDg==')
+}},domExtraAttrs:{'menu-selector':'hz+52mQdFV2tSvZbSzEEDg=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-van-ban-trinh-ky'},[
+['zul.wgt.Label','aCEP2b',{sclass:'collapse-sub-menu-name-text',value:'Văn bản ban hành'},[]]]]]],
+['zul.wgt.Div','aCEP3b',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP4b',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'sLcSi7Dllxp7Jn2DdAwKuA==')
+}},domExtraAttrs:{'menu-selector':'sLcSi7Dllxp7Jn2DdAwKuA=='
+},sclass:'collapse-sub-menu-name font-icon fa-table'},[
+['zul.wgt.Label','aCEP5b',{sclass:'collapse-sub-menu-name-text',value:'Báo cáo văn bản'},[]]]]]],
+['zul.wgt.Div','aCEP6b',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP7b',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'MzFeDr6VaZGVGRCMG3743Q==')
+}},domExtraAttrs:{'menu-selector':'MzFeDr6VaZGVGRCMG3743Q=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-van-ban-trinh-ky'},[
+['zul.wgt.Label','aCEP8b',{sclass:'collapse-sub-menu-name-text',value:'Tra cứu văn bản đi của tôi'},[]]]]]],
+['zul.wgt.Div','aCEP9b',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPab',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'Krj9GsRIDsboue6vaoWCYA==')
+}},domExtraAttrs:{'menu-selector':'Krj9GsRIDsboue6vaoWCYA=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPbb',{sclass:'collapse-sub-menu-name-text',value:'Theo dõi văn bản đi'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEP9c',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPac',{sclass:'collapse-menu-icon font-icon fa-new-document'},[]],
+['zul.wgt.Div','aCEPbc',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPcc',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPdc',{sclass:'collapse-menu-name-text',value:'VĂN BẢN ĐẾN'},[]]]],
+['zul.wgt.Div','aCEPec',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEPfc',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPgc',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, '14S0FtJXgHwcccYW7/y7mg==')
+}},domExtraAttrs:{'menu-selector':'14S0FtJXgHwcccYW7/y7mg=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPhc',{sclass:'collapse-sub-menu-name-text',value:'Văn bản liên thông'},[]]]]]],
+['zul.wgt.Div','aCEPic',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPjc',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'gsUPSLBavOy1ECwKfFe8ww==')
+}},domExtraAttrs:{'menu-selector':'gsUPSLBavOy1ECwKfFe8ww=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPkc',{sclass:'collapse-sub-menu-name-text',value:'Văn bản chờ tiếp nhận'},[]]]]]],
+['zul.wgt.Div','aCEPlc',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPmc',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'DhdbOJURFWsEJCSIu6ft4Q==')
+}},domExtraAttrs:{'menu-selector':'DhdbOJURFWsEJCSIu6ft4Q=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPnc',{sclass:'collapse-sub-menu-name-text',value:'Văn bản chờ xử lý'},[]]]]]],
+['zul.wgt.Div','aCEPoc',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPpc',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'sG7sdr6TN4ejZriR+PyPcw==')
+}},domExtraAttrs:{'menu-selector':'sG7sdr6TN4ejZriR+PyPcw=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPqc',{sclass:'collapse-sub-menu-name-text',value:'Văn bản đã xử lý'},[]]]]]],
+['zul.wgt.Div','aCEPrc',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPsc',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'l4jv/OJpy+xPr1qsXE/tRg==')
+}},domExtraAttrs:{'menu-selector':'l4jv/OJpy+xPr1qsXE/tRg=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPtc',{sclass:'collapse-sub-menu-name-text',value:'Văn bản nhận để biết'},[]]]]]],
+['zul.wgt.Div','aCEPuc',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPvc',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'KI+SErXoT/jdmlSqg6olKg==')
+}},domExtraAttrs:{'menu-selector':'KI+SErXoT/jdmlSqg6olKg=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPwc',{sclass:'collapse-sub-menu-name-text',value:'Văn bản bị trả lại'},[]]]]]],
+['zul.wgt.Div','aCEPxc',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPyc',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'yaoiL33uzjSyoV8v+hcvkw==')
+}},domExtraAttrs:{'menu-selector':'yaoiL33uzjSyoV8v+hcvkw=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPzc',{sclass:'collapse-sub-menu-name-text',value:'Tra cứu văn bản đến tôi'},[]]]]]],
+['zul.wgt.Div','aCEP_d',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP0d',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, '4f+rik1yjVNyHxNhfzOSQw==')
+}},domExtraAttrs:{'menu-selector':'4f+rik1yjVNyHxNhfzOSQw=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEP1d',{sclass:'collapse-sub-menu-name-text',value:'Báo cáo văn bản'},[]]]]]],
+['zul.wgt.Div','aCEP2d',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP3d',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'H7hCcqCUzlEEoGT1T0NajA==')
+}},domExtraAttrs:{'menu-selector':'H7hCcqCUzlEEoGT1T0NajA=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-cong-bo-van-ban'},[
+['zul.wgt.Label','aCEP4d',{sclass:'collapse-sub-menu-name-text',value:'Công khai văn bản'},[]]]]]],
+['zul.wgt.Div','aCEP5d',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP6d',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'ghLP38qHd+Diq4UwZQchDw==')
+}},domExtraAttrs:{'menu-selector':'ghLP38qHd+Diq4UwZQchDw=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEP7d',{sclass:'collapse-sub-menu-name-text',value:'Theo dõi văn bản đến đơn vị'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEPbd',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPcd',{sclass:'collapse-menu-icon font-icon fa-tu-lieu-dung-chung'},[]],
+['zul.wgt.Div','aCEPdd',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPed',{sclass:'collapse-menu-name '},[
+['zul.wgt.Label','aCEPfd',{sclass:'collapse-menu-name-text',value:'KHO TƯ LIỆU DÙNG CHUNG'},[]]]]]]]],
+['zul.wgt.Div','aCEPnd',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPod',{sclass:'collapse-menu-icon font-icon fa-book'},[]],
+['zul.wgt.Div','aCEPpd',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPqd',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPrd',{sclass:'collapse-menu-name-text',value:'VĂN BẢN CÔNG KHAI'},[]]]],
+['zul.wgt.Div','aCEPsd',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEPtd',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPud',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'bC8ySvGyamsvxzVTtKiChw==')
+}},domExtraAttrs:{'menu-selector':'bC8ySvGyamsvxzVTtKiChw=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPvd',{sclass:'collapse-sub-menu-name-text',value:'Văn bản công khai'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEPee',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPfe',{sclass:'collapse-menu-icon font-icon fa-menu-thu-vien-ca-nhan'},[]],
+['zul.wgt.Div','aCEPge',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPhe',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPie',{sclass:'collapse-menu-name-text',value:'QUẢN LÝ HỒ SƠ'},[]]]],
+['zul.wgt.Div','aCEPje',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEPke',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPle',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, '/AxHdA+sj7PED6BW0jM+2w==')
+}},domExtraAttrs:{'menu-selector':'/AxHdA+sj7PED6BW0jM+2w=='
+},sclass:'collapse-sub-menu-name font-icon fa-align-left'},[
+['zul.wgt.Label','aCEPme',{sclass:'collapse-sub-menu-name-text',value:'Danh mục hồ sơ'},[]]]]]],
+['zul.wgt.Div','aCEPne',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPoe',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'M8+0DTp5WfTAFVYXnMVH5w==')
+}},domExtraAttrs:{'menu-selector':'M8+0DTp5WfTAFVYXnMVH5w=='
+},sclass:'collapse-sub-menu-name font-icon fa-file-text-o'},[
+['zul.wgt.Label','aCEPpe',{sclass:'collapse-sub-menu-name-text',value:'Danh sách hồ sơ'},[]]]]]],
+['zul.wgt.Div','aCEPqe',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPre',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, '8e1i4DokIZ0bVH9Q0UotPw==')
+}},domExtraAttrs:{'menu-selector':'8e1i4DokIZ0bVH9Q0UotPw=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPse',{sclass:'collapse-sub-menu-name-text',value:'Phiếu đề nghị nộp hồ sơ'},[]]]]]],
+['zul.wgt.Div','aCEPte',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPue',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'saowhbHpram6JnIRUj5dQw==')
+}},domExtraAttrs:{'menu-selector':'saowhbHpram6JnIRUj5dQw=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPve',{sclass:'collapse-sub-menu-name-text',value:'Biên bản giao - nhận hồ sơ'},[]]]]]],
+['zul.wgt.Div','aCEPwe',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPxe',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'cAAiDMBWg5RxUzyUcA8lsQ==')
+}},domExtraAttrs:{'menu-selector':'cAAiDMBWg5RxUzyUcA8lsQ=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-van-ban-nhan-xet'},[
+['zul.wgt.Label','aCEPye',{sclass:'collapse-sub-menu-name-text',value:'Hồ sơ tiếp nhận'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEPbf',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPcf',{sclass:'collapse-menu-icon font-icon fa-new-dep-task'},[]],
+['zul.wgt.Div','aCEPdf',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPef',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPff',{sclass:'collapse-menu-name-text',value:'QUẢN LÝ NHIỆM VỤ'},[]]]],
+['zul.wgt.Div','aCEPgf',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEPhf',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPif',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'znzp9I36/0IIZiOMcHEj+Q==')
+}},domExtraAttrs:{'menu-selector':'znzp9I36/0IIZiOMcHEj+Q=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-quan-ly-nhiem-vu'},[
+['zul.wgt.Label','aCEPjf',{sclass:'collapse-sub-menu-name-text',value:'Danh sách nhiệm vụ'},[]]]]]],
+['zul.wgt.Div','aCEPkf',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPlf',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, '353ELaRl2qsGySl3oXXJcQ==')
+}},domExtraAttrs:{'menu-selector':'353ELaRl2qsGySl3oXXJcQ=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPmf',{sclass:'collapse-sub-menu-name-text',value:'Nhiệm vụ chờ phê duyệt'},[]]]]]],
+['zul.wgt.Div','aCEPnf',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPof',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'lJVgWXlS7tyZR6VyvqipTQ==')
+}},domExtraAttrs:{'menu-selector':'lJVgWXlS7tyZR6VyvqipTQ=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPpf',{sclass:'collapse-sub-menu-name-text',value:'Gửi báo cáo đơn vị'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEP2g',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEP3g',{sclass:'collapse-menu-icon font-icon fa-new-calendar'},[]],
+['zul.wgt.Div','aCEP4g',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEP5g',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEP6g',{sclass:'collapse-menu-name-text',value:'LỊCH HỌP'},[]]]],
+['zul.wgt.Div','aCEP7g',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEP8g',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP9g',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'C9/P8hgFO6GPTDT2rV2c1w==')
+}},domExtraAttrs:{'menu-selector':'C9/P8hgFO6GPTDT2rV2c1w=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-danh-sach-cuoc-hop'},[
+['zul.wgt.Label','aCEPag',{sclass:'collapse-sub-menu-name-text',value:'Danh sách lịch họp'},[]]]]]],
+['zul.wgt.Div','aCEPbg',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPcg',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'C8JgiK/dla2evDML3Iso3A==')
+}},domExtraAttrs:{'menu-selector':'C8JgiK/dla2evDML3Iso3A=='
+},sclass:'collapse-sub-menu-name font-icon fa-calculator'},[
+['zul.wgt.Label','aCEPdg',{sclass:'collapse-sub-menu-name-text',value:'Lịch tuần cơ quan'},[]]]]]],
+['zul.wgt.Div','aCEPeg',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPfg',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, '97oSWTH3WU4X2ezI+rd+nQ==')
+}},domExtraAttrs:{'menu-selector':'97oSWTH3WU4X2ezI+rd+nQ=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEPgg',{sclass:'collapse-sub-menu-name-text',value:'Lịch tuần lãnh đạo'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEPug',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPvg',{sclass:'collapse-menu-icon font-icon fa-new-category'},[]],
+['zul.wgt.Div','aCEPwg',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPxg',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPyg',{sclass:'collapse-menu-name-text',value:'DANH MỤC'},[]]]],
+['zul.wgt.Div','aCEPzg',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEP_h',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP0h',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'NX9KLtVY2dt7wRbg1W/XRw==')
+}},domExtraAttrs:{'menu-selector':'NX9KLtVY2dt7wRbg1W/XRw=='
+},sclass:'collapse-sub-menu-name font-icon fa-sitemap'},[
+['zul.wgt.Label','aCEP1h',{sclass:'collapse-sub-menu-name-text',value:'Danh mục hình thức văn bản'},[]]]]]],
+['zul.wgt.Div','aCEP2h',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP3h',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'wuE27ulKhNhLt93d3of0hg==')
+}},domExtraAttrs:{'menu-selector':'wuE27ulKhNhLt93d3of0hg=='
+},sclass:'collapse-sub-menu-name font-icon fa-menu-danh-sach-cong-van'},[
+['zul.wgt.Label','aCEP4h',{sclass:'collapse-sub-menu-name-text',value:'Sổ văn bản'},[]]]]]],
+['zul.wgt.Div','aCEP5h',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEP6h',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'dc70lnLsTfixwSB83eijKw==')
+}},domExtraAttrs:{'menu-selector':'dc70lnLsTfixwSB83eijKw=='
+},sclass:'collapse-sub-menu-name font-icon fa-cubes'},[
+['zul.wgt.Label','aCEP7h',{sclass:'collapse-sub-menu-name-text',value:'Quản lý phạm vi văn bản'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEPlh',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEPmh',{sclass:'collapse-menu-icon font-icon fa-new-user'},[]],
+['zul.wgt.Div','aCEPnh',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEPoh',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPph',{sclass:'collapse-menu-name-text',value:'QUẢN TRỊ'},[]]]],
+['zul.wgt.Div','aCEPqh',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEPrh',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPsh',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'YHnFHje6ssWpnycL8aKsZg==')
+}},domExtraAttrs:{'menu-selector':'YHnFHje6ssWpnycL8aKsZg=='
+},sclass:'collapse-sub-menu-name font-icon fa-users'},[
+['zul.wgt.Label','aCEPth',{sclass:'collapse-sub-menu-name-text',value:'Quản lý nhóm'},[]]]]]],
+['zul.wgt.Div','aCEPuh',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPvh',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, '7EBXTvECJaNkpxylKrcAZg==')
+}},domExtraAttrs:{'menu-selector':'7EBXTvECJaNkpxylKrcAZg=='
+},sclass:'collapse-sub-menu-name font-icon fa-cubes '},[
+['zul.wgt.Label','aCEPwh',{sclass:'collapse-sub-menu-name-text',value:'Quản lý ảnh con dấu đơn vị'},[]]]]]],
+['zul.wgt.Div','aCEPxh',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPyh',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'cC/r6V55tuj+I2ytA97s+w==')
+}},domExtraAttrs:{'menu-selector':'cC/r6V55tuj+I2ytA97s+w=='
+},sclass:'collapse-sub-menu-name font-icon fa-cogs'},[
+['zul.wgt.Label','aCEPzh',{sclass:'collapse-sub-menu-name-text',value:'Báo cáo tổng hợp'},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEP6i',{sclass:'collapse-menu-item'},[
+['zul.wgt.Div','aCEP7i',{sclass:'collapse-menu-icon font-icon fa-menu-quan-ly-nhiem-vu'},[]],
+['zul.wgt.Div','aCEP8i',{sclass:'collapse-menu-container left-arrow'},[
+['zul.wgt.Div','aCEP9i',{sclass:'collapse-menu-name  collapse-parent-menu'},[
+['zul.wgt.Label','aCEPai',{sclass:'collapse-menu-name-text',value:'TÀI LIỆU CÁ NHÂN'},[]]]],
+['zul.wgt.Div','aCEPbi',{sclass:'collapse-sub-menu-list scrollbarCustomPortal '},[
+['zul.wgt.Div','aCEPci',{sclass:'collapse-sub-menu-item'},[
+['zul.wgt.Div','aCEPdi',{listeners:{onClick:function(event){
+onClickMenuItemCollapse(this, 'eJ+996wkoJcrBgvGPQVnFQ==')
+}},domExtraAttrs:{'menu-selector':'eJ+996wkoJcrBgvGPQVnFQ=='
+},sclass:'collapse-sub-menu-name font-icon fa-user-plus'},[
+['zul.wgt.Label','aCEPei',{sclass:'collapse-sub-menu-name-text',value:'Tài liệu cá nhân'},[]]]]]]]]]]]]]]]]]]]],
+['zul.wgt.Div','aCEPw4',{id:'mainCenter',sclass:'main-center'},[
+['zul.wgt.Div','aCEPx4',{width:'100%',height:'100%',sclass:'main-content'},[
+['zul.box.Vlayout','aCEPy4',{width:'100%',height:'100%',sclass:'content-panel'},[
+['zul.wgt.Div','aCEPz4',{},[
+['zul.wgt.Div','aCEP_5',{visible:false,style:'background: #fffcfc; border-top: 1px solid #0000001a;'},[
+['zul.wgt.Div','aCEP05',{style:'padding: 6px; text-align: center; padding-top: 8px'},[
+['zul.wgt.Span','aCEP15',{sclass:'fw-bold'},[
+['zul.wgt.Label','aCEP25',{style:'white-space: pre-wrap;',value:'TỶ LỆ PHÁT HÀNH VĂN BẢN ĐIỆN TỬ CỦA CÁC CƠ QUAN, ĐƠN VỊ'},[]]]]]],
+['zul.wgt.Div','aCEP35',{sclass:'marquee-container'},[
+['zul.wgt.Div','aCEP45',{sclass:'marquee-content'},[
+['zul.wgt.Div','aCEP55',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEP65',{sclass:'medal-1st',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEP75',{},[
+['zul.wgt.Label','aCEP85',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEP95',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEPa5',{sclass:'text-success fw-bold'},[
+['zul.wgt.Label','aCEPb5',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEPc5',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEPd5',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEPe5',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPf5',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEPg5',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPh5',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEPi5',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEPj5',{sclass:'medal-1st',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEPk5',{},[
+['zul.wgt.Label','aCEPl5',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEPm5',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEPn5',{sclass:'text-success fw-bold'},[
+['zul.wgt.Label','aCEPo5',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEPp5',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEPq5',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEPr5',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPs5',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEPt5',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPu5',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEPv5',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEPw5',{sclass:'medal-1st',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEPx5',{},[
+['zul.wgt.Label','aCEPy5',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEPz5',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEP_6',{sclass:'text-success fw-bold'},[
+['zul.wgt.Label','aCEP06',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEP16',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEP26',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEP36',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEP46',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEP56',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEP66',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEP76',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEP86',{sclass:'medal-1st',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEP96',{},[
+['zul.wgt.Label','aCEPa6',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEPb6',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEPc6',{sclass:'text-success fw-bold'},[
+['zul.wgt.Label','aCEPd6',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEPe6',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEPf6',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEPg6',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPh6',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEPi6',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPj6',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEPk6',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEPl6',{sclass:'medal-1st',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEPm6',{},[
+['zul.wgt.Label','aCEPn6',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEPo6',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEPp6',{sclass:'text-success fw-bold'},[
+['zul.wgt.Label','aCEPq6',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEPr6',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEPs6',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEPt6',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPu6',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEPv6',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPw6',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEPx6',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEPy6',{sclass:'medal-warn',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEPz6',{},[
+['zul.wgt.Label','aCEP_7',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEP07',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEP17',{sclass:'text-danger fw-bold'},[
+['zul.wgt.Label','aCEP27',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEP37',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEP47',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEP57',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEP67',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEP77',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEP87',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEP97',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEPa7',{sclass:'medal-warn',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEPb7',{},[
+['zul.wgt.Label','aCEPc7',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEPd7',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEPe7',{sclass:'text-danger fw-bold'},[
+['zul.wgt.Label','aCEPf7',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEPg7',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEPh7',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEPi7',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPj7',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEPk7',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPl7',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEPm7',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEPn7',{sclass:'medal-warn',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEPo7',{},[
+['zul.wgt.Label','aCEPp7',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEPq7',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEPr7',{sclass:'text-danger fw-bold'},[
+['zul.wgt.Label','aCEPs7',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEPt7',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEPu7',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEPv7',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPw7',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEPx7',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPy7',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEPz7',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEP_8',{sclass:'medal-warn',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEP08',{},[
+['zul.wgt.Label','aCEP18',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEP28',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEP38',{sclass:'text-danger fw-bold'},[
+['zul.wgt.Label','aCEP48',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEP58',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEP68',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEP78',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEP88',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEP98',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPa8',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]],
+['zul.wgt.Div','aCEPb8',{visible:false,sclass:'marquee-item'},[
+['zul.wgt.Label','aCEPc8',{sclass:'medal-warn',style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Span','aCEPd8',{},[
+['zul.wgt.Label','aCEPe8',{style:'white-space: pre-wrap;',prolog:'\n                                                '},[]],
+['zul.wgt.Label','aCEPf8',{style:'white-space: pre-wrap;',value:':\n                                                '},[]],
+['zul.wgt.Span','aCEPg8',{sclass:'text-danger fw-bold'},[
+['zul.wgt.Label','aCEPh8',{style:'white-space: pre-wrap;',prolog:'\n                                                    '},[]],
+['zul.wgt.Label','aCEPi8',{style:'white-space: pre-wrap;',value:'%\n                                                '},[]]]],
+['zul.wgt.Label','aCEPj8',{style:'white-space: pre-wrap;',value:'\n                                                (Điện tử: '},[]],
+['zul.wgt.Label','aCEPk8',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPl8',{style:'white-space: pre-wrap;',value:'\n                                                / Giấy: '},[]],
+['zul.wgt.Label','aCEPm8',{style:'white-space: pre-wrap;'},[]],
+['zul.wgt.Label','aCEPn8',{style:'white-space: pre-wrap;',value:')\n                                            '},[]]]]]]]]]]]],
+['zul.wgt.Div','aCEPo8',{style:' margin-bottom: -0.3em'},[]]]],
+['zul.tab.Tabbox','aCEPp8',{id:'mainTabbox',vflex:'1'},[
+['zul.tab.Tabs','aCEPq8',{id:'mainTabs'},[]],
+['zul.tab.Tabpanels','aCEPr8',{id:'mainTabpanels',style:'padding: 0;'},[]]]],
+['zul.wgt.Div','aCEPs8',{id:'feedbackWrapper',style:'position: fixed;                                         bottom: 60px;                                         right: 80px;                                         z-index: 9999;                                         display: inline-block; /* changed from flex */                                         text-align: center;                                         cursor: pointer;                                         box-sizing: border-box;'},[]]]]]]]]]],
+['zul.wgt.Div','aCEPt8',{id:'vmSecurityCtrl'},[]],
+['zul.wgt.Div','aCEPu8',{id:'vmBarcodeCtrl'},[]],
+['zul.wgt.Div','aCEPv8',{sclass:'myProgressContainer'},[]],
+['zul.wgt.Div','aCEPw8',{style:'display: flex; align-items: center; display: none;'},[
+['zul.wgt.Button','aCEPx8',{id:'fileUploadComponent',style:'display: none;',autodisable:'self'},[]],
+['zul.utl.Script','aCEPy8',{},[]],
+['zk.Native','aCEPz8',{id:'dwtcontrolContainer',prolog:'<div id="dwtcontrolContainer" style="display:none">',epilog:'</div>'},[]],
+['zul.wgt.Div','aCEP_9',{style:'display: flex'},[
+['zul.box.Hlayout','aCEP09',{id:'scanForm'},[
+['zk.Native','aCEP19',{id:'btnScanFile',prolog:'<input id="btnScanFile" type="button" style="visibility: hidden;" value="Scan" sclass="btn btn-xs btn-primary ace-icon align-top"/>'},[]],
+['zk.Native','aCEP29',{id:'scanReadyNotification',prolog:'<label id="scanReadyNotification" style="display: inline;">\n                        Đang khởi động tool scan ...\n                    ',epilog:'</label>'},[]],
+['zul.wgt.Button','aCEP39',{id:'btnScanFileClose',$onClick:true,sclass:'btn btn-xs',label:'x',autodisable:'self'},[]]]],
+['zk.Native','aCEP49',{id:'lblScanFileInstall',prolog:'<label id="lblScanFileInstall" style="display:none;">',epilog:'</label>'},[]],
+['zul.inp.Textbox','aCEP59',{id:'tbAddFileToListView',style:'display:none;'},[]]]]]]]],
+['zul.utl.Script','aCEPfi',{},[]],
+['zul.utl.Script','aCEPgi',{},[]],
+['zul.utl.Script','aCEPhi',{},[]],
+['zul.utl.Script','aCEPii',{},[]],
+['zul.utl.Script','aCEPji',{},[]],
+['zul.utl.Script','aCEPki',{},[]],
+['zul.utl.Script','aCEPli',{},[]],
+['zul.utl.Script','aCEPmi',{},[]],
+['zul.utl.Script','aCEPni',{},[]],
+['zul.utl.Script','aCEPoi',{},[]],
+['zul.utl.Script','aCEPpi',{},[]],
+['zul.utl.Script','aCEPqi',{},[]],
+['zul.utl.Script','aCEPri',{},[]],
+['zul.utl.Script','aCEPsi',{},[]],
+['zul.utl.Script','aCEPti',{},[]],
+['zul.utl.Script','aCEPui',{},[]],
+['zul.utl.Script','aCEPvi',{},[]],
+['zul.utl.Script','aCEPwi',{},[]],
+['zul.utl.Script','aCEPxi',{},[]],
+['zul.utl.Script','aCEPyi',{},[]],
+['zul.utl.Script','aCEPzi',{},[]],
+['zul.utl.Script','aCEP_j',{},[]],
+['zul.utl.Script','aCEP0j',{},[]],
+['zul.utl.Script','aCEP1j',{},[]],
+['zul.utl.Script','aCEP2j',{},[]],
+['zul.utl.Script','aCEP3j',{},[]],
+['zul.utl.Script','aCEP4j',{},[]],
+['zul.utl.Script','aCEP5j',{},[]],
+['zul.utl.Script','aCEP6j',{},[]],
+['zul.utl.Script','aCEP7j',{},[]],
+['zul.utl.Script','aCEP8j',{},[]],
+['zul.utl.Script','aCEP9j',{},[]],
+['zul.utl.Script','aCEPaj',{},[]],
+['zul.utl.Script','aCEPbj',{},[]],
+['zul.utl.Script','aCEPcj',{},[]],
+['zul.utl.Script','aCEPdj',{},[]],
+['zul.utl.Script','aCEPej',{},[]],
+['zul.utl.Script','aCEPfj',{},[]],
+['zul.utl.Script','aCEPgj',{},[]],
+['zul.utl.Script','aCEPhj',{},[]],
+['zul.utl.Script','aCEPij',{},[]],
+['zul.utl.Script','aCEPjj',{},[]],
+['zul.utl.Script','aCEPkj',{},[]],
+['zul.utl.Script','aCEPlj',{},[]],
+['zul.utl.Script','aCEPmj',{},[]],
+['zul.utl.Script','aCEPnj',{},[]],
+['zul.utl.Script','aCEPoj',{},[]],
+['zul.utl.Script','aCEPpj',{},[]],
+['zul.utl.Script','aCEPqj',{},[]],
+['zul.utl.Script','aCEPrj',{},[]],
+['zul.utl.Script','aCEPsj',{},[]],
+['zul.utl.Script','aCEPtj',{},[]],
+['zul.utl.Script','aCEPuj',{},[]],
+['zul.utl.Script','aCEPvj',{},[]],
+['zul.utl.Script','aCEPwj',{},[]],
+['zul.utl.Script','aCEPxj',{},[]],
+['zul.utl.Script','aCEPyj',{},[]],
+['zul.utl.Script','aCEPzj',{},[]]]],9,
+['clientInfo','["z_827"]',
+'script','["(function(){   var s1 = document.createElement(\'script\');   s1.defer = true;   s1.src = \'https:\\/\\/www.googletagmanager.com\\/gtag\\/js?id=G-928SR5CXBT\';   document.head.appendChild(s1);   var s2 = document.createElement(\'script\');   s2.innerHTML = \\"window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'G-928SR5CXBT\', { \'debug_mode\': true });\\";   document.head.appendChild(s2);})();"]',
+'script','["zk.Desktop.$().autoScreenshot = true;"]',
+'script','["security.initialize(\'https:\\/\\/dhtn.dcs.vn:443\\/app-view\\/SecurityServlet\',\'JSESSIONID=F7F382A027693B1F65DA98EA7CF5E482\',\'1.2.4\',\'1.8.3.3\',\'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAk4WnqtGkC2vCEuSMyeEoKC1JG51IB+F9hEMVBT4vTpzNa8TVMthvfocvSex3FRRJ3vx4ummgk\\/4cNsrqtYUY0yi205KA5Rh0GyAEd2uefaY62Dtc0fouppeh+RML+NO7aFX8tuH3Av1Pqr8hqvvoQtJ2sOwJS9hFe24Ug5mTVDV0EDpTuSNbQbdrUp47HlQQFOMEG5fmsYiX8MWoEiA0eT+FMTTNDXqB8wMX3P3hel6OQB9If+Ybujm6njC3QWndSAS6IQlmQacy1XcUjdHhMX5vhUY9kmzph14dcUVd+N\\/6insXnTugcAQR3VkXoAUlfZ8ZjH1oodfYWDulNI+VxwIDAQAB\')"]',
+'script','["setTimeout(function() { initLeftMenu(); }, 10);"]',
+'script','["initMainPage(\'{\\"theme\\":\\"theme-red-gray\\"}\')"]',
+'script','["zk.load(\'zk.cpsp\');zk.afterLoad(function(){zk.cpsp.start(\'z_827\',2000,30000,5);});"]']);
+
+        var security = initializeSecurityMode();
+
+        function copyToClipboard(clipboard, value) { new
+        Clipboard(clipboard, { text: function(trigger) { return value; }
+        }); }
+    
+
+        function addEventResizeWindow() {
+            var width = window.innerWidth;
+            zAu.send(new zk.Event(zk.Widget.$('$app'), 'onSendWidth', width));
+            window.addEventListener('resize', function () {
+                var width = window.innerWidth;
+                zAu.send(new zk.Event(zk.Widget.$('$app'), 'onSendWidth', width));
+            });
+        }
+        function addEventResize(textboxUuid) {
+            var textbox = document.getElementById(textboxUuid);
+            resizeTextArea(textbox.id);
+            textbox.addEventListener('input', function() {
+                resizeTextArea(textbox.id);
+            });
+        }
+        function resizeTextArea(textboxUuid) {
+            var textbox = document.getElementById(textboxUuid);
+            if (textbox) {
+                textbox.style.height = 'auto';
+                textbox.style.height = (textbox.scrollHeight + 5) + 'px';
+                var cell = textbox.parentNode;
+                while (cell && !cell.className.includes('z-cell')) {
+                    cell = cell.parentNode;
+                }
+                if (cell) {
+                    cell.style.height = 'auto';
+                    var totalHeight = textbox.scrollHeight + 20;
+                    var labels = cell.getElementsByClassName('z-label');
+                    for (var i = 0; i < labels.length; i++) {
+                        totalHeight += labels[i].offsetHeight + 6;
+                    }
+                    var divs = cell.getElementsByTagName('div');
+                    for (var i = 0; i < divs.length; i++) {
+                        totalHeight += divs[i].offsetHeight + 6;
+                    }
+                    var images = cell.getElementsByClassName('signature-image');
+                    for (var i = 0; i < images.length; i++) {
+                        totalHeight += images[i].offsetHeight + 6;
+                    }
+                    cell.style.height = totalHeight + 'px';
+                }
+            }
+        }
+        
+
+        
+  zk.afterMount(function () {
+    // Gọi 1 lần sau khi mount
+    if (window.zWatch && zWatch.fire) {
+      zWatch.fire('onSize');
+    }
+
+    // Debounce resize
+    let resizeTimer = null;
+    const onResize = function () {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        if (window.zWatch && zWatch.fire) zWatch.fire('onSize');
+      }, 150);
+    };
+
+    // Visibility handler (khai báo riêng để còn remove)
+    const onVisibilityChange = function () {
+      if (!document.hidden && window.zWatch && zWatch.fire) zWatch.fire('onSize');
+    };
+
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('orientationchange', onResize, { passive: true });
+    document.addEventListener('visibilitychange', onVisibilityChange, { passive: true });
+
+    // Cleanup đúng hàm
+    window.addEventListener('beforeunload', function () {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    });
+  });
+
+    
+
+        zk.afterLoad("zk", function () {
+        zAu.ajaxTimeout = 60000;
+
+        var oldOnError = zAu._onError;
+        zAu._onError = function (req, code, msg) {
+        console.warn("AJAX Error:", code, "-", msg);
+        };
+        });
+
+        zk.error = function (msg) {
+        console.warn('Custom handling zk error:', msg);
+        };
+    
+
+zk.afterMount(function () {
+
+    function initWrapper(wrapper) {
+    // đánh dấu đã init để tránh bind trùng
+    if (wrapper.__clearInit) return;
+    wrapper.__clearInit = true;
+
+    var tb = wrapper.querySelector('.search-input');
+    var clearBtn = wrapper.querySelector('.clear-btn');
+    if (!tb || !clearBtn) return;
+
+    clearBtn.onclick = function () {
+        tb.value = '';
+        tb.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    function toggleClear() {
+        var hasValue = tb.value && tb.value.length > 0;
+        clearBtn.style.display = hasValue ? 'block' : 'none';
+        tb.classList.toggle('has-clear', hasValue);
+    }
+
+    // init lần đầu
+    toggleClear();
+
+    // bắt khi user gõ
+    tb.addEventListener('input', toggleClear);
+
+    // ===== FIX CHO ZK SET VALUE TỪ SERVER =====
+    if (!tb.__valueHooked) {
+        tb.__valueHooked = true;
+
+        var proto = HTMLInputElement.prototype;
+        var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+
+        Object.defineProperty(tb, 'value', {
+            get: function () {
+                return desc.get.call(this);
+            },
+            set: function (v) {
+                desc.set.call(this, v);
+                toggleClear(); // ZK set → chạy
+            }
+        });
+    }
+}
+
+    // scan định kỳ mỗi 500ms
+    setInterval(function () {
+        var wrappers = document.querySelectorAll('.search-wrapper');
+        wrappers.forEach(initWrapper);
+    }, 500);
+
+});
+
+
+    zk.afterMount(function() {
+        var wrapper = jq("$feedbackWrapper");
+        var btn = jq("$btnFeedBack");
+        var closeBtn = jq("$btnCloseFeedback");
+        var btnSend = jq("$btnSendFeedback");
+
+        var dragging = false;
+        var offsetX, offsetY;
+
+        btnSend.click(function(e) {
+                var wgt = zk.Widget.$('$btnSendFeedback');
+                var autoScreenshot = zk.Desktop.$().autoScreenshot
+                if (wgt) {
+                    if(autoScreenshot && autoScreenshot === true){
+                        // Gửi event 'onScreenshot' đến server
+                        captureAndSend("$btnSendFeedback");
+                    } else {
+                        zAu.send(new zk.Event(wgt, 'onScreenshot', null));
+                    }
+                }
+        });
+
+
+        var isMoved = false;
+        var clickTimer = null;
+        var CLICK_DELAY = 250; // ms để phân biệt single vs double click
+        var MOVE_THRESHOLD = 5; // px, ngưỡng xem là di chuyển hay không
+
+        btn.mousedown(function(e) {
+            dragging = true;
+            isMoved = false;
+            if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
+
+            // khóa kích thước wrapper
+            var rect = wrapper[0].getBoundingClientRect();
+            wrapper.css({
+                width: rect.width + "px",
+                height: rect.height + "px",
+                top: rect.top + "px",
+                left: rect.left + "px",
+                bottom: "auto",
+                right: "auto",
+                display: "inline-block"
+            });
+
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            // track last mouse pos để tính delta
+            var lastX = e.clientX, lastY = e.clientY;
+
+            jq(document).bind("mousemove.drag", function(ev) {
+                if (!dragging) return;
+                var dx = Math.abs(ev.clientX - lastX);
+                var dy = Math.abs(ev.clientY - lastY);
+                // nếu di chuyển vượt threshold -> coi là drag
+                if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
+                    isMoved = true;
+                }
+                lastX = ev.clientX;
+                lastY = ev.clientY;
+
+                var newX = ev.clientX - offsetX;
+                var newY = ev.clientY - offsetY;
+
+                // Giới hạn trong màn hình
+                var maxX = window.innerWidth - wrapper.outerWidth();
+                var maxY = window.innerHeight - wrapper.outerHeight();
+                newX = Math.max(0, Math.min(newX, maxX));
+                newY = Math.max(0, Math.min(newY, maxY));
+
+                wrapper.css({ top: newY + "px", left: newX + "px" });
+
+                // Nếu kéo lên gần top (<=60) -> auto close + hiện btnSend
+                if (newY <= 60) {
+                    dragging = false;
+                    btn.css({ "pointer-events": "" });
+                    wrapper.fadeOut(200, function() {
+                        btnSend.show();
+                    });
+                    jq(document).unbind(".drag");
+                    return;
+                }
+            });
+
+            jq(document).bind("mouseup.drag", function(ev) {
+                // unbind ngay để tránh double xử lý
+                jq(document).unbind(".drag");
+
+                // nếu là drag thì xử lý logic snap và không gửi click
+                if (isMoved) {
+                    dragging = false;
+                    btn.css({ "pointer-events": "" });
+
+                    // --- SNAP về cạnh gần nhất ---
+                    var rect2 = wrapper[0].getBoundingClientRect();
+                    var currentTop = rect2.top;
+                    var currentLeft = rect2.left;
+                    var wrapperWidth = wrapper.outerWidth();
+                    var wrapperHeight = wrapper.outerHeight();
+
+                    // Giới hạn trong màn hình
+                    var maxX = window.innerWidth - wrapperWidth;
+                    var maxY = window.innerHeight - wrapperHeight;
+                    currentLeft = Math.max(0, Math.min(currentLeft, maxX));
+                    currentTop = Math.max(0, Math.min(currentTop, maxY));
+
+                    // Khoảng cách tới 4 cạnh
+                    var distTop = currentTop;
+                    var distBottom = window.innerHeight - (currentTop + wrapperHeight);
+                    var distLeft = currentLeft;
+                    var distRight = window.innerWidth - (currentLeft + wrapperWidth);
+
+                    // Tìm cạnh gần nhất
+                    var minDist = Math.min(distTop, distBottom, distLeft, distRight);
+
+                    var newTop = currentTop;
+                    var newLeft = currentLeft;
+
+                    if (minDist === distTop) {
+                        newTop = 65; // dính cạnh trên
+                    } else if (minDist === distBottom) {
+                        newTop = window.innerHeight - wrapperHeight - 30; // dính cạnh dưới
+                    } else if (minDist === distLeft) {
+                        newLeft = 65; // dính cạnh trái
+                    } else if (minDist === distRight) {
+                        newLeft = window.innerWidth - wrapperWidth - 30; // dính cạnh phải
+                    }
+
+                    // Animate tới vị trí cạnh
+                    wrapper.animate({ top: newTop + "px", left: newLeft + "px" }, 200);
+                    return; // KHÔNG gửi click
+                }
+
+                // nếu không di chuyển => có thể là click (chờ để phân biệt với dblclick)
+                // set timeout để gửi single-click nếu dblclick không xảy ra
+                clickTimer = setTimeout(function() {
+                    clickTimer = null;
+                    // gửi sự kiện onClick lên server bằng zAu
+                    var wgt = zk.Widget.$('$btnFeedBack');
+                    var autoScreenshot = zk.Desktop.$().autoScreenshot
+                    if (wgt) {
+                        if(autoScreenshot && autoScreenshot === true){
+                            captureAndSend("$btnFeedBack")
+                        } else {
+                            zAu.send(new zk.Event(wgt, 'onScreenshot', null));
+                        }
+                    }
+                }, CLICK_DELAY);
+
+                dragging = false;
+                btn.css({ "pointer-events": "" });
+            });
+
+            e.preventDefault();
+        });
+
+        closeBtn.click(function() {
+            wrapper.hide();
+            btnSend.fadeIn(200); // ẩn feedback thì hiện luôn nút gửi
+        });
+    });
+
+//]]>
+</script>
+<noscript>
+<div class="noscript"><p>Sorry, JavaScript must be enabled.<br/>Change your browser options, then <a href="">try again</a>.</p></div>
+</noscript>
+
+</body>
+</html>

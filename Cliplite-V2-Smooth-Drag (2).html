@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClipLite V3 — Video & Audio Editor</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React 18 -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    body { margin: 0; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+    #root, body, html { min-height: 100%; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 99px; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, 10px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .anim-fadein { animation: fadeIn 0.2s ease; }
+    input[type=range] { cursor: pointer; }
+    input[type=color] { cursor: pointer; }
+    .will-change-transform { will-change: transform; }
+    /* snap guide lines */
+    .snap-x { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: #a855f7; pointer-events: none; z-index: 20; opacity: 0.8; }
+    .snap-y { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #a855f7; pointer-events: none; z-index: 20; opacity: 0.8; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function () {
+  'use strict';
+  const { useState, useEffect, useRef, useMemo, useCallback } = React;
+  const h = React.createElement;
+
+  /* =========================================================
+     Helper: Encode AudioBuffer to WAV Blob
+     ========================================================= */
+  function audioBufferToWav(buffer, optStart = 0, optDuration = null) {
+    const numChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+    
+    let startSample = Math.max(0, Math.floor(optStart * sampleRate));
+    let numSamples = optDuration != null 
+      ? Math.min(buffer.length - startSample, Math.floor(optDuration * sampleRate)) 
+      : (buffer.length - startSample);
+    numSamples = Math.max(0, numSamples);
+
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numChannels * bytesPerSample;
+    const dataSize = numSamples * blockAlign;
+    const bufferSize = 44 + dataSize;
+    const arrayBuffer = new ArrayBuffer(bufferSize);
+    const view = new DataView(arrayBuffer);
+
+    function writeString(offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataSize, true);
+
+    let offset = 44;
+    const channels = [];
+    for (let c = 0; c < numChannels; c++) {
+      channels.push(buffer.getChannelData(c));
+    }
+
+    for (let i = 0; i < numSamples; i++) {
+      for (let c = 0; c < numChannels; c++) {
+        let sample = channels[c][startSample + i];
+        sample = Math.max(-1, Math.min(1, sample));
+        let intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(offset, intSample, true);
+        offset += 2;
+      }
+    }
+    return new Blob([arrayBuffer], { type: 'audio/wav' });
+  }
+
+  function ClipLiteApp() {
+
+    // ── Refs ─────────────────────────────────────────────────────────────────
+    const videoRef         = useRef(null);
+    const wrapRef          = useRef(null);
+    const overlayRef       = useRef(null);
+    const containerRef     = useRef(null);
+    const timelineRef      = useRef(null);
+    const layerTrackRef    = useRef(null);
+    const videoInputRef    = useRef(null);
+    const imgInputRef      = useRef(null);
+    const audioInputRef    = useRef(null);
+    const txtRefs          = useRef({});
+    const blurRefs         = useRef({});
+    const ovRefs           = useRef({});
+    const bgAudioElsRef    = useRef({});   // HTMLAudioElement instances for preview
+    const cropRef          = useRef(null);
+    const imgCacheRef      = useRef({});
+    const audioCtxRef      = useRef(null);
+    const videoSourceNode  = useRef(null);
+    const bgAudioSourceNodes = useRef({});
+    const dragRef          = useRef(null);
+    const animRef          = useRef(null);
+    const trimDragRef      = useRef(null);
+    const layerDragRef     = useRef(null);
+    const layerAnimRef     = useRef(null);
+    const historyRef       = useRef([]);
+
+    // ── State ────────────────────────────────────────────────────────────────
+    const [videoSrc,       setVideoSrc]       = useState(null);
+    const [videoFile,      setVideoFile]      = useState(null);
+    const [duration,       setDuration]       = useState(0);
+    const [currentTime,    setCurrentTime]    = useState(0);
+    const [trimStart,      setTrimStart]      = useState(0);
+    const [trimEnd,        setTrimEnd]        = useState(0);
+    const [playing,        setPlaying]        = useState(false);
+    const [texts,          setTexts]          = useState([]);
+    const [blurs,          setBlurs]          = useState([]);
+    const [overlays,       setOverlays]       = useState([]);
+    const [audios,         setAudios]         = useState([]); // BGM audio layers
+    const [videoVolume,    setVideoVolume]    = useState(1);  // 0 - 1
+    const [blurPx,         setBlurPx]         = useState(14);
+    const [selectedId,     setSelectedId]     = useState(null);
+    const [selectedKind,   setSelectedKind]   = useState(null);
+    const [activeTab,      setActiveTab]      = useState('text');
+    const [snapX,          setSnapX]          = useState(false);
+    const [snapY,          setSnapY]          = useState(false);
+    const [progress,       setProgress]       = useState(0);
+    const [ovColor,        setOvColor]        = useState('#3b82f6');
+    const [ovOpacity,      setOvOpacity]      = useState(0.55);
+    const [cropEnabled,    setCropEnabled]    = useState(false);
+    const [cropBox,        setCropBox]        = useState({ x: 15, y: 15, w: 70, h: 70 });
+    const [aspect,         setAspect]         = useState('9:16');
+    const [exporting,      setExporting]      = useState(false);
+    const [extractingAudio,setExtractingAudio]= useState(false);
+    const [isFullscreen,   setIsFullscreen]   = useState(false);
+    const [toast,          setToast]          = useState(null);
+    const [textInput,      setTextInput]      = useState('ClipLite V3');
+    const [dragHandle,     setDragHandle]     = useState(null);
+    const [muted,          setMuted]          = useState(false);
+
+    // ── Derived ──────────────────────────────────────────────────────────────
+    const trimDuration   = Math.max(0.001, trimEnd - trimStart);
+    const selectedText   = texts.find(t => t.id === selectedId);
+    const selectedBlur   = blurs.find(b => b.id === selectedId);
+    const selectedOv     = overlays.find(o => o.id === selectedId);
+    const selectedAudio  = audios.find(a => a.id === selectedId);
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    const fmt = (t) => {
+      if (!isFinite(t)) return '00:00';
+      const m = Math.floor(t / 60);
+      const s = Math.floor(t % 60);
+      const d = Math.floor((t % 1) * 10);
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`;
+    };
+
+    const getOutputSize = useCallback((ratio) => {
+      if (ratio === '16:9') return { w: 1920, h: 1080 };
+      if (ratio === '9:16') return { w: 1080, h: 1920 };
+      if (ratio === '1:1')  return { w: 1080, h: 1080 };
+      const v = videoRef.current;
+      if (v && v.videoWidth > v.videoHeight) return { w: 1920, h: 1080 };
+      return { w: 1080, h: 1920 };
+    }, []);
+
+    const showToast = useCallback((msg) => {
+      setToast(msg);
+      setTimeout(() => setToast(null), 2500);
+    }, []);
+
+    // ── Undo ─────────────────────────────────────────────────────────────────
+    const pushHistory = useCallback(() => {
+      historyRef.current.push({
+        texts: texts.map(t => ({...t})),
+        blurs: blurs.map(b => ({...b})),
+        overlays: overlays.map(o => ({...o})),
+        audios: audios.map(a => ({...a})),
+        cropBox: {...cropBox},
+        cropEnabled,
+        videoVolume,
+      });
+      if (historyRef.current.length > 20) historyRef.current.shift();
+    }, [texts, blurs, overlays, audios, cropBox, cropEnabled, videoVolume]);
+
+    // ── Sync overlay container size to video ─────────────────────────────────
+    const syncSize = useCallback(() => {
+      const v = videoRef.current;
+      const o = overlayRef.current;
+      const c = containerRef.current;
+      if (!v || !o || !c) return;
+      const r = v.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return;
+      o.style.width  = r.width  + 'px';
+      o.style.height = r.height + 'px';
+      c.style.width  = r.width  + 'px';
+      c.style.height = r.height + 'px';
+    }, []);
+
+    // ── Audio Preview Synchronization ─────────────────────────────────────────
+    useEffect(() => {
+      // Sync background audios with video currentTime and playback state
+      audios.forEach(aud => {
+        let el = bgAudioElsRef.current[aud.id];
+        if (!el) {
+          el = new Audio(aud.src);
+          el.preload = 'auto';
+          bgAudioElsRef.current[aud.id] = el;
+        }
+        el.volume = muted ? 0 : (aud.volume ?? 1);
+
+        const shouldPlay = playing && currentTime >= aud.start && currentTime <= aud.end;
+        if (shouldPlay) {
+          const targetOffset = currentTime - aud.start;
+          if (Math.abs(el.currentTime - targetOffset) > 0.15) {
+            el.currentTime = Math.max(0, targetOffset);
+          }
+          if (el.paused) el.play().catch(() => {});
+        } else {
+          if (!el.paused) el.pause();
+        }
+      });
+    }, [currentTime, playing, audios, muted]);
+
+    // ── Effects ──────────────────────────────────────────────────────────────
+    useEffect(() => {
+      const ro = new ResizeObserver(syncSize);
+      if (wrapRef.current)  ro.observe(wrapRef.current);
+      if (videoRef.current) ro.observe(videoRef.current);
+      window.addEventListener('resize', syncSize);
+      return () => { ro.disconnect(); window.removeEventListener('resize', syncSize); };
+    }, [videoSrc, syncSize]);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+      const onKey = (e) => {
+        const tag = document.activeElement?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+        if (e.key === 'Delete' && selectedId) {
+          pushHistory();
+          if (selectedKind === 'text')    setTexts(ts => ts.filter(t => t.id !== selectedId));
+          if (selectedKind === 'blur')    setBlurs(bs => bs.filter(b => b.id !== selectedId));
+          if (selectedKind === 'overlay') {
+            const ov = overlays.find(o => o.id === selectedId);
+            if (ov?.src) { URL.revokeObjectURL(ov.src); delete imgCacheRef.current[ov.id]; }
+            setOverlays(os => os.filter(o => o.id !== selectedId));
+          }
+          if (selectedKind === 'audio') {
+            const a = audios.find(x => x.id === selectedId);
+            if (a?.src) URL.revokeObjectURL(a.src);
+            if (bgAudioElsRef.current[selectedId]) {
+              bgAudioElsRef.current[selectedId].pause();
+              delete bgAudioElsRef.current[selectedId];
+            }
+            setAudios(as => as.filter(x => x.id !== selectedId));
+          }
+          setSelectedId(null); setSelectedKind(null);
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+          e.preventDefault();
+          const snap = historyRef.current.pop();
+          if (snap) {
+            setTexts(snap.texts); setBlurs(snap.blurs); setOverlays(snap.overlays);
+            if (snap.audios) setAudios(snap.audios);
+            if (snap.videoVolume !== undefined) setVideoVolume(snap.videoVolume);
+            setCropBox(snap.cropBox); setCropEnabled(snap.cropEnabled);
+            showToast('Đã hoàn tác');
+          }
+        }
+
+        if (e.key === 'Escape' && isFullscreen) {
+          document.exitFullscreen?.().catch(() => {});
+        }
+      };
+      window.addEventListener('keydown', onKey);
+      return () => window.removeEventListener('keydown', onKey);
+    }, [selectedId, selectedKind, overlays, audios, isFullscreen, pushHistory, showToast]);
+
+    useEffect(() => {
+      const fn = () => setIsFullscreen(!!document.fullscreenElement);
+      document.addEventListener('fullscreenchange', fn);
+      return () => document.removeEventListener('fullscreenchange', fn);
+    }, []);
+
+    useEffect(() => {
+      overlays.forEach(ov => {
+        if (ov.type === 'image' && ov.src && !imgCacheRef.current[ov.id]) {
+          const img = new Image();
+          img.onload = () => { imgCacheRef.current[ov.id] = img; };
+          img.src = ov.src;
+        }
+      });
+    }, [overlays]);
+
+    useEffect(() => {
+      const v = videoRef.current;
+      if (!v || duration === 0) return;
+      if (currentTime < trimStart - 0.01 || currentTime > trimEnd + 0.01) {
+        v.currentTime = trimStart;
+        setCurrentTime(trimStart);
+      }
+    }, [trimStart, trimEnd, duration]);
+
+    // ── Video input ───────────────────────────────────────────────────────────
+    const onVideoInput = useCallback((e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (videoSrc) URL.revokeObjectURL(videoSrc);
+      const url = URL.createObjectURL(file);
+      setVideoFile(file);
+      setVideoSrc(url);
+      setTrimStart(0); setTrimEnd(0);
+      setCurrentTime(0); setPlaying(false);
+      setTexts([]); setBlurs([]);
+      overlays.forEach(ov => { if (ov.src) URL.revokeObjectURL(ov.src); });
+      imgCacheRef.current = {};
+      setOverlays([]);
+      // Clean audios
+      audios.forEach(a => { if (a.src) URL.revokeObjectURL(a.src); });
+      Object.values(bgAudioElsRef.current).forEach(el => el.pause());
+      bgAudioElsRef.current = {};
+      setAudios([]);
+      setSelectedId(null); setSelectedKind(null);
+      historyRef.current = [];
+      setTimeout(syncSize, 100);
+    }, [videoSrc, overlays, audios, syncSize]);
+
+    // ── Audio Input (MP3, WAV, etc.) ──────────────────────────────────────────
+    const onAudioInput = useCallback((e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const src = URL.createObjectURL(file);
+      const tempAudio = new Audio(src);
+      tempAudio.onloadedmetadata = () => {
+        const audioDur = tempAudio.duration || 10;
+        const id = 'aud_' + Date.now();
+        pushHistory();
+        const newAud = {
+          id,
+          name: file.name.replace(/\.[^/.]+$/, ""),
+          src,
+          fileDuration: audioDur,
+          start: trimStart,
+          end: Math.min(trimEnd || duration || audioDur, trimStart + audioDur),
+          volume: 1.0,
+        };
+        setAudios(as => [...as, newAud]);
+        setSelectedId(id);
+        setSelectedKind('audio');
+        setActiveTab('audio');
+        showToast('Đã thêm âm thanh: ' + newAud.name);
+      };
+    }, [trimStart, trimEnd, duration, pushHistory, showToast]);
+
+    const removeAudio = useCallback((id) => {
+      const a = audios.find(x => x.id === id);
+      if (a?.src) URL.revokeObjectURL(a.src);
+      if (bgAudioElsRef.current[id]) {
+        bgAudioElsRef.current[id].pause();
+        delete bgAudioElsRef.current[id];
+      }
+      pushHistory();
+      setAudios(as => as.filter(x => x.id !== id));
+      if (selectedId === id) { setSelectedId(null); setSelectedKind(null); }
+      showToast('Đã xóa âm thanh');
+    }, [audios, selectedId, pushHistory, showToast]);
+
+    // ── Tách âm thanh từ video (Extract Audio to WAV) ─────────────────────────
+    const extractAudioFromVideo = useCallback(async (onlyTrim = false) => {
+      if (!videoSrc) { alert('Vui lòng nhập video trước'); return; }
+      setExtractingAudio(true);
+      showToast('Đang trích xuất âm thanh từ video...');
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const actx = new AudioCtx();
+        const resp = await fetch(videoSrc);
+        const arrayBuffer = await resp.arrayBuffer();
+        const decodedBuffer = await actx.decodeAudioData(arrayBuffer);
+
+        const startSec = onlyTrim ? trimStart : 0;
+        const durSec = onlyTrim ? (trimEnd - trimStart) : decodedBuffer.duration;
+        const wavBlob = audioBufferToWav(decodedBuffer, startSec, durSec);
+
+        const url = URL.createObjectURL(wavBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        const suffix = onlyTrim ? `_trim_${trimStart.toFixed(1)}s-${trimEnd.toFixed(1)}s` : '_full';
+        a.download = `audio_${(videoFile?.name || 'video').replace(/\.[^/.]+$/, "")}${suffix}.wav`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        showToast('✅ Đã tách và tải âm thanh thành công (.wav)!');
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi tách âm thanh: ' + (err?.message || err));
+      } finally {
+        setExtractingAudio(false);
+      }
+    }, [videoSrc, videoFile, trimStart, trimEnd, showToast]);
+
+    const removeOverlay = useCallback((id) => {
+      const ov = overlays.find(o => o.id === id);
+      if (ov?.src) { URL.revokeObjectURL(ov.src); delete imgCacheRef.current[id]; }
+      pushHistory();
+      setOverlays(os => os.filter(o => o.id !== id));
+      if (selectedId === id) { setSelectedId(null); setSelectedKind(null); }
+    }, [overlays, selectedId, pushHistory]);
+
+    const onImageInput = useCallback((e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const src = URL.createObjectURL(file);
+      const id = 'ov_' + Date.now();
+      pushHistory();
+      setOverlays(os => [...os, { id, type: 'image', x: 20, y: 20, w: 35, h: 35, opacity: 1, src, start: trimStart, end: trimEnd || duration || 5 }]);
+      setSelectedId(id); setSelectedKind('overlay'); setActiveTab('overlay');
+    }, [trimStart, trimEnd, duration, pushHistory]);
+
+    const addColorOverlay = useCallback(() => {
+      const id = 'ov_' + Date.now();
+      pushHistory();
+      setOverlays(os => [...os, { id, type: 'color', x: 10, y: 60, w: 40, h: 18, opacity: ovOpacity, color: ovColor, start: trimStart, end: trimEnd || duration || 5 }]);
+      setSelectedId(id); setSelectedKind('overlay');
+    }, [ovColor, ovOpacity, trimStart, trimEnd, duration, pushHistory]);
+
+    const addText = useCallback(() => {
+      if (!textInput.trim()) return;
+      const id = 'txt_' + Date.now();
+      pushHistory();
+      setTexts(ts => [...ts, { id, content: textInput, xPercent: 50, yPercent: 50, fontSize: 36, color: '#ffffff', bold: true, start: trimStart, end: trimEnd || duration, opacity: 1 }]);
+      setSelectedId(id); setSelectedKind('text'); setActiveTab('text');
+    }, [textInput, trimStart, trimEnd, duration, pushHistory]);
+
+    const addBlur = useCallback(() => {
+      const id = 'blur_' + Date.now();
+      pushHistory();
+      setBlurs(bs => [...bs, { id, x: 30, y: 30, w: 30, h: 20, start: trimStart, end: trimEnd || duration || 5 }]);
+      setSelectedId(id); setSelectedKind('blur'); setActiveTab('blur');
+    }, [trimStart, trimEnd, duration, pushHistory]);
+
+    // ── Drag & Resize ────────────────────────────────────────────────────────
+    const startDrag = useCallback((e, id, kind, mode) => {
+      e.preventDefault(); e.stopPropagation();
+      const ovEl = overlayRef.current;
+      if (!ovEl) return;
+      const rect = ovEl.getBoundingClientRect();
+
+      let origX = 0, origY = 0, origW = 0, origH = 0, elemRef = null;
+
+      if (kind === 'text') {
+        const item = texts.find(t => t.id === id); if (!item) return;
+        elemRef = txtRefs.current[id];
+        origX = item.xPercent / 100 * rect.width; origY = item.yPercent / 100 * rect.height;
+        setSelectedId(id); setSelectedKind('text');
+      } else if (kind === 'blur') {
+        const item = blurs.find(b => b.id === id); if (!item) return;
+        elemRef = blurRefs.current[id];
+        origX = item.x / 100 * rect.width; origY = item.y / 100 * rect.height;
+        origW = item.w / 100 * rect.width; origH = item.h / 100 * rect.height;
+        setSelectedId(id); setSelectedKind('blur');
+      } else if (kind === 'overlay') {
+        const item = overlays.find(o => o.id === id); if (!item) return;
+        elemRef = ovRefs.current[id];
+        origX = item.x / 100 * rect.width; origY = item.y / 100 * rect.height;
+        origW = item.w / 100 * rect.width; origH = item.h / 100 * rect.height;
+        setSelectedId(id); setSelectedKind('overlay');
+      } else if (kind === 'crop') {
+        elemRef = cropRef.current;
+        origX = cropBox.x / 100 * rect.width; origY = cropBox.y / 100 * rect.height;
+        origW = cropBox.w / 100 * rect.width; origH = cropBox.h / 100 * rect.height;
+        setSelectedId('crop'); setSelectedKind('crop');
+      }
+
+      dragRef.current = { id, kind, mode, startX: e.clientX, startY: e.clientY, origX, origY, origW, origH, rect, elemRef };
+
+      const onMove = (ev) => {
+        if (!dragRef.current) return;
+        const d = dragRef.current;
+        const dx = ev.clientX - d.startX, dy = ev.clientY - d.startY;
+        if (animRef.current) cancelAnimationFrame(animRef.current);
+        animRef.current = requestAnimationFrame(() => {
+          if (!dragRef.current) return;
+          const W = d.rect.width, H = d.rect.height;
+
+          if (d.kind === 'text') {
+            let nx = d.origX + dx, ny = d.origY + dy;
+            let np = nx / W * 100, nq = ny / H * 100;
+            let sx = false, sy = false;
+            if (Math.abs(np - 50) < 1.8) { np = 50; sx = true; }
+            if (Math.abs(nq - 50) < 1.8) { nq = 50; sy = true; }
+            setSnapX(sx); setSnapY(sy);
+            if (d.elemRef) { d.elemRef.style.left = np + '%'; d.elemRef.style.top = nq + '%'; }
+            d.nextX = np; d.nextY = nq;
+
+          } else if (d.kind === 'blur' || d.kind === 'overlay') {
+            if (d.mode === 'move') {
+              let nx = Math.max(0, Math.min(W - d.origW, d.origX + dx));
+              let ny = Math.max(0, Math.min(H - d.origH, d.origY + dy));
+              if (d.elemRef) { d.elemRef.style.left = nx/W*100+'%'; d.elemRef.style.top = ny/H*100+'%'; }
+              d.nextX = nx/W*100; d.nextY = ny/H*100;
+            } else {
+              let nw = d.origW, nh = d.origH, nx = d.origX, ny = d.origY;
+              const MIN = 20;
+              if (d.mode.includes('r')) nw = Math.max(MIN, d.origW + dx);
+              if (d.mode.includes('b')) nh = Math.max(MIN, d.origH + dy);
+              if (d.mode.includes('l')) { nw = Math.max(MIN, d.origW - dx); nx = d.origX + dx; }
+              if (d.mode.includes('t')) { nh = Math.max(MIN, d.origH - dy); ny = d.origY + dy; }
+              nx = Math.max(0, Math.min(W - nw, nx));
+              ny = Math.max(0, Math.min(H - nh, ny));
+              if (d.elemRef) {
+                d.elemRef.style.left = nx/W*100+'%'; d.elemRef.style.top = ny/H*100+'%';
+                d.elemRef.style.width = nw/W*100+'%'; d.elemRef.style.height = nh/H*100+'%';
+              }
+              d.nextX = nx/W*100; d.nextY = ny/H*100; d.nextW = nw/W*100; d.nextH = nh/H*100;
+            }
+
+          } else if (d.kind === 'crop') {
+            const ar = aspect === '9:16' ? 9/16 : aspect === '16:9' ? 16/9 : aspect === '1:1' ? 1 : null;
+            const MIN = 30;
+            if (d.mode === 'move') {
+              let nx = Math.max(0, Math.min(W - d.origW, d.origX + dx));
+              let ny = Math.max(0, Math.min(H - d.origH, d.origY + dy));
+              if (d.elemRef) { d.elemRef.style.left = nx/W*100+'%'; d.elemRef.style.top = ny/H*100+'%'; }
+              d.nextX = nx/W*100; d.nextY = ny/H*100;
+            } else {
+              let nw = d.origW, nh = d.origH, nx = d.origX, ny = d.origY;
+              if (d.mode === 'br')      { nw = Math.max(MIN, d.origW + dx); nh = ar ? nw/ar : Math.max(MIN, d.origH + dy); }
+              else if (d.mode === 'bl') { nw = Math.max(MIN, d.origW - dx); nx = d.origX+(d.origW-nw); nh = ar ? nw/ar : Math.max(MIN, d.origH + dy); }
+              else if (d.mode === 'tr') { nw = Math.max(MIN, d.origW + dx); if (ar) { nh = nw/ar; ny = d.origY+d.origH-nh; } else { nh = Math.max(MIN, d.origH - dy); ny = d.origY+(d.origH-nh); } }
+              else if (d.mode === 'tl') { nw = Math.max(MIN, d.origW - dx); nx = d.origX+(d.origW-nw); if (ar) { nh = nw/ar; ny = d.origY+d.origH-nh; } else { nh = Math.max(MIN, d.origH - dy); ny = d.origY+(d.origH-nh); } }
+              if (nx < 0)        { nw += nx;   if (ar) nh = nw/ar; nx = 0; }
+              if (ny < 0)        { nh += ny;   if (ar) nw = nh*ar; ny = 0; }
+              if (nx + nw > W)   { nw = W-nx;  if (ar) nh = nw/ar; }
+              if (ny + nh > H)   { nh = H-ny;  if (ar) nw = nh*ar; }
+              nw = Math.max(MIN, nw); nh = Math.max(MIN, nh);
+              nx = Math.max(0, Math.min(W-nw, nx)); ny = Math.max(0, Math.min(H-nh, ny));
+              if (d.elemRef) {
+                d.elemRef.style.left = nx/W*100+'%'; d.elemRef.style.top = ny/H*100+'%';
+                d.elemRef.style.width = nw/W*100+'%'; d.elemRef.style.height = nh/H*100+'%';
+              }
+              d.nextX = nx/W*100; d.nextY = ny/H*100; d.nextW = nw/W*100; d.nextH = nh/H*100;
+            }
+          }
+        });
+      };
+
+      const onUp = () => {
+        if (animRef.current) cancelAnimationFrame(animRef.current);
+        const d = dragRef.current;
+        if (d) {
+          if (d.kind === 'text' && d.nextX !== undefined) {
+            setTexts(ts => ts.map(t => t.id === d.id ? { ...t, xPercent: d.nextX, yPercent: d.nextY } : t));
+          } else if (d.kind === 'blur') {
+            setBlurs(bs => bs.map(b => b.id !== d.id ? b : d.nextW !== undefined ? { ...b, x: d.nextX, y: d.nextY, w: d.nextW, h: d.nextH } : { ...b, x: d.nextX, y: d.nextY }));
+          } else if (d.kind === 'overlay') {
+            setOverlays(os => os.map(o => o.id !== d.id ? o : d.nextW !== undefined ? { ...o, x: d.nextX, y: d.nextY, w: d.nextW, h: d.nextH } : { ...o, x: d.nextX, y: d.nextY }));
+          } else if (d.kind === 'crop' && d.nextX !== undefined) {
+            if (d.nextW !== undefined) setCropBox({ x: d.nextX, y: d.nextY, w: d.nextW, h: d.nextH });
+            else setCropBox(c => ({ ...c, x: d.nextX, y: d.nextY }));
+          }
+        }
+        setSnapX(false); setSnapY(false);
+        dragRef.current = null;
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    }, [texts, blurs, overlays, cropBox, aspect]);
+
+    // ── Trim Drag ────────────────────────────────────────────────────────────
+    const startTrimDrag = useCallback((e, handle) => {
+      e.preventDefault(); e.stopPropagation();
+      if (!timelineRef.current || duration === 0) return;
+      const trackEl = timelineRef.current.querySelector('.track-bg');
+      const rect = (trackEl || timelineRef.current).getBoundingClientRect();
+      setDragHandle(handle);
+      trimDragRef.current = { handle, rect };
+
+      const onMove = (ev) => {
+        if (!trimDragRef.current) return;
+        const frac = Math.max(0, Math.min(1, (ev.clientX - trimDragRef.current.rect.left) / trimDragRef.current.rect.width));
+        const t = frac * duration;
+        if (handle === 'start') {
+          const ns = Math.max(0, Math.min(t, trimEnd - 0.15));
+          setTrimStart(ns);
+          if (currentTime < ns && videoRef.current) { setCurrentTime(ns); videoRef.current.currentTime = ns; }
+        } else if (handle === 'end') {
+          const ne = Math.max(trimStart + 0.15, Math.min(t, duration));
+          setTrimEnd(ne);
+          if (currentTime > ne && videoRef.current) { const ct = ne - 0.05; setCurrentTime(ct); videoRef.current.currentTime = ct; }
+        } else if (handle === 'playhead') {
+          const np = Math.max(trimStart, Math.min(t, trimEnd));
+          setCurrentTime(np);
+          if (videoRef.current) videoRef.current.currentTime = np;
+        }
+      };
+      const onUp = () => {
+        setDragHandle(null);
+        trimDragRef.current = null;
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    }, [duration, trimStart, trimEnd, currentTime]);
+
+    // ── Layer Timeline Drag ──────────────────────────────────────────────────
+    const startLayerDrag = useCallback((e, id, kind, mode) => {
+      e.preventDefault(); e.stopPropagation();
+      if (!layerTrackRef.current) return;
+      const rect = layerTrackRef.current.getBoundingClientRect();
+      setSelectedId(id); setSelectedKind(kind);
+      if (kind === 'text') setActiveTab('text');
+      else if (kind === 'blur') setActiveTab('blur');
+      else if (kind === 'overlay') setActiveTab('overlay');
+      else if (kind === 'audio') setActiveTab('audio');
+
+      const arr = kind === 'text' ? texts : kind === 'blur' ? blurs : kind === 'overlay' ? overlays : audios;
+      const item = arr.find(x => x.id === id); if (!item) return;
+
+      layerDragRef.current = { id, kind, mode, startX: e.clientX, origStart: item.start, origEnd: item.end, trackWidth: rect.width, trimStart, trimDuration };
+
+      const onMove = (ev) => {
+        const d = layerDragRef.current; if (!d) return;
+        const delta = (ev.clientX - d.startX) / d.trackWidth * d.trimDuration;
+        if (layerAnimRef.current) cancelAnimationFrame(layerAnimRef.current);
+        layerAnimRef.current = requestAnimationFrame(() => {
+          if (!layerDragRef.current) return;
+          const { origStart: os, origEnd: oe, mode: m, trimStart: ts, trimDuration: td } = layerDragRef.current;
+          const MIN = 0.2;
+          let ns = os, ne = oe;
+          if (m === 'move') {
+            const dur = oe - os;
+            ns = os + delta; ne = ns + dur;
+            if (ns < ts) { ns = ts; ne = ns + dur; }
+            if (ne > ts + td) { ne = ts + td; ns = ne - dur; }
+          } else {
+            ne = Math.max(os + MIN, oe + delta);
+            if (ne > ts + td) ne = ts + td;
+          }
+          const upd = arr => arr.map(x => x.id === id ? { ...x, start: ns, end: ne } : x);
+          if (kind === 'text')         setTexts(upd);
+          else if (kind === 'blur')    setBlurs(upd);
+          else if (kind === 'overlay') setOverlays(upd);
+          else if (kind === 'audio')   setAudios(upd);
+        });
+      };
+      const onUp = () => {
+        if (layerAnimRef.current) cancelAnimationFrame(layerAnimRef.current);
+        layerDragRef.current = null;
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    }, [texts, blurs, overlays, audios, trimStart, trimDuration]);
+
+    const onBgClick = useCallback((e) => {
+      const t = e.target;
+      if (t === wrapRef.current || t === overlayRef.current || t === containerRef.current || t === videoRef.current || t.classList.contains('preview-bg')) {
+        setSelectedId(null); setSelectedKind(null);
+      }
+    }, []);
+
+    const toggleFullscreen = async () => {
+      try {
+        if (!document.fullscreenElement) await wrapRef.current?.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch {}
+    };
+
+    // ── Layer items for timeline ─────────────────────────────────────────────
+    const layerItems = useMemo(() => {
+      const arr = [];
+      texts.forEach(t => arr.push({ id: t.id, kind: 'text', label: (t.content.slice(0,18) || 'Text'), color: '#a855f7', start: t.start, end: t.end }));
+      blurs.forEach(b => arr.push({ id: b.id, kind: 'blur', label: 'Blur', color: '#eab308', start: b.start, end: b.end }));
+      overlays.forEach(o => arr.push({ id: o.id, kind: 'overlay', label: o.type === 'image' ? 'Img phủ' : 'Màu phủ', color: '#3b82f6', start: o.start, end: o.end }));
+      audios.forEach(a => arr.push({ id: a.id, kind: 'audio', label: '🎵 ' + (a.name.slice(0,16) || 'Nhạc'), color: '#10b981', start: a.start, end: a.end }));
+      return arr.sort((a, b) => a.start - b.start);
+    }, [texts, blurs, overlays, audios]);
+
+    // ── Export Video With Audio Mixing ────────────────────────────────────────
+    const exportWithCanvas = useCallback(async (outSize) => {
+      const video = videoRef.current;
+      if (!video) throw new Error('no video');
+      const canvas = document.createElement('canvas');
+      canvas.width = outSize.w; canvas.height = outSize.h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('no ctx');
+
+      const stream = canvas.captureStream(30);
+
+      // Setup AudioContext for mixing video original audio + all background MP3 audios
+      let activeAudioEls = [];
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          if (audioCtxRef.current?.state === 'closed' || !audioCtxRef.current) {
+            audioCtxRef.current = new AudioCtx();
+          }
+          const actx = audioCtxRef.current;
+          if (actx.state === 'suspended') await actx.resume();
+          const dest = actx.createMediaStreamDestination();
+
+          // 1. Original Video Audio
+          if (!videoSourceNode.current) {
+            videoSourceNode.current = actx.createMediaElementSource(video);
+          }
+          const videoGain = actx.createGain();
+          videoGain.gain.value = videoVolume;
+          videoSourceNode.current.connect(videoGain);
+          videoGain.connect(dest);
+          videoGain.connect(actx.destination);
+
+          // 2. Extra BGM Audios
+          audios.forEach(aud => {
+            const audEl = new Audio(aud.src);
+            audEl.currentTime = Math.max(0, trimStart - aud.start);
+            const audSource = actx.createMediaElementSource(audEl);
+            const audGain = actx.createGain();
+            audGain.gain.value = aud.volume ?? 1;
+            audSource.connect(audGain);
+            audGain.connect(dest);
+            audGain.connect(actx.destination);
+            activeAudioEls.push({ el: audEl, start: aud.start, end: aud.end });
+          });
+
+          dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+        }
+      } catch (err) {
+        console.warn('Audio mixing setup warning:', err);
+      }
+
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+      const chunks = [];
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+
+      return new Promise((resolve, reject) => {
+        recorder.ondataavailable = ev => { if (ev.data.size > 0) chunks.push(ev.data); };
+        recorder.onerror = reject;
+        recorder.onstop = () => {
+          activeAudioEls.forEach(item => item.el.pause());
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = `cliplite_${Date.now()}.webm`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+          resolve();
+        };
+
+        video.currentTime = trimStart;
+        video.muted = false;
+
+        const onSeeked = () => {
+          video.removeEventListener('seeked', onSeeked);
+          recorder.start(100);
+          video.play().catch(() => {});
+
+          // Start playing BGM audio elements if within range
+          activeAudioEls.forEach(item => {
+            if (video.currentTime >= item.start && video.currentTime <= item.end) {
+              item.el.currentTime = Math.max(0, video.currentTime - item.start);
+              item.el.play().catch(() => {});
+            }
+          });
+
+          const useRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+
+          const drawFrame = () => {
+            if (video.currentTime >= trimEnd - 0.05 || video.ended) {
+              recorder.stop(); video.pause();
+              activeAudioEls.forEach(item => item.el.pause());
+              setProgress(100);
+              return;
+            }
+
+            // Sync BGM elements playback
+            activeAudioEls.forEach(item => {
+              const inRange = video.currentTime >= item.start && video.currentTime <= item.end;
+              if (inRange && item.el.paused) {
+                item.el.currentTime = Math.max(0, video.currentTime - item.start);
+                item.el.play().catch(() => {});
+              } else if (!inRange && !item.el.paused) {
+                item.el.pause();
+              }
+            });
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight;
+            if (cropEnabled) {
+              sx = cropBox.x / 100 * video.videoWidth;
+              sy = cropBox.y / 100 * video.videoHeight;
+              sw = cropBox.w / 100 * video.videoWidth;
+              sh = cropBox.h / 100 * video.videoHeight;
+            }
+            try { ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height); } catch {}
+
+            overlays.forEach(ov => {
+              if (video.currentTime < ov.start || video.currentTime > ov.end) return;
+              const x = ov.x/100*canvas.width, y = ov.y/100*canvas.height;
+              const w = ov.w/100*canvas.width, hh = ov.h/100*canvas.height;
+              ctx.save(); ctx.globalAlpha = ov.opacity;
+              if (ov.type === 'color' && ov.color) {
+                ctx.fillStyle = ov.color; ctx.fillRect(x, y, w, hh);
+              } else if (ov.type === 'image') {
+                const img = imgCacheRef.current[ov.id];
+                if (img && img.complete && img.naturalWidth > 0) {
+                  try { ctx.drawImage(img, x, y, w, hh); } catch {}
+                } else {
+                  ctx.fillStyle = '#444'; ctx.fillRect(x, y, w, hh);
+                }
+              }
+              ctx.restore();
+            });
+
+            blurs.forEach(bl => {
+              if (video.currentTime < bl.start || video.currentTime > bl.end) return;
+              const x = bl.x/100*canvas.width, y = bl.y/100*canvas.height;
+              const w = bl.w/100*canvas.width, hh = bl.h/100*canvas.height;
+              ctx.save(); ctx.filter = `blur(${blurPx}px)`;
+              try { ctx.drawImage(canvas, x, y, w, hh, x, y, w, hh); } catch {}
+              ctx.restore();
+              ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(x, y, w, hh);
+            });
+
+            texts.forEach(txt => {
+              if (video.currentTime < txt.start || video.currentTime > txt.end) return;
+              const tx = txt.xPercent/100*canvas.width, ty = txt.yPercent/100*canvas.height;
+              const fs = Math.max(12, txt.fontSize/100*canvas.width*0.09);
+              ctx.save();
+              ctx.globalAlpha = txt.opacity;
+              ctx.font = `${txt.bold?'700':'400'} ${fs}px Inter, sans-serif`;
+              ctx.fillStyle = txt.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+              ctx.fillText(txt.content, tx, ty);
+              ctx.restore();
+            });
+
+            const pct = (video.currentTime - trimStart) / (trimEnd - trimStart) * 100;
+            setProgress(Math.min(99, Math.max(0, pct)));
+
+            if (useRVFC) video.requestVideoFrameCallback(drawFrame);
+            else requestAnimationFrame(drawFrame);
+          };
+
+          if (useRVFC) video.requestVideoFrameCallback(drawFrame);
+          else requestAnimationFrame(drawFrame);
+        };
+
+        video.addEventListener('seeked', onSeeked);
+        video.currentTime = trimStart;
+      });
+    }, [trimStart, trimEnd, cropEnabled, cropBox, overlays, blurs, texts, audios, videoVolume, blurPx]);
+
+    const doExport = useCallback(async () => {
+      if (!videoRef.current || !videoSrc) { alert('Vui lòng nhập video trước'); return; }
+      const outSize = getOutputSize(aspect);
+      setExporting(true); setProgress(1);
+      try {
+        await exportWithCanvas(outSize);
+      } catch (err) {
+        console.error(err); alert('Xuất lỗi: ' + (err?.message || err));
+      } finally {
+        setExporting(false); setProgress(0);
+      }
+    }, [videoSrc, aspect, getOutputSize, exportWithCanvas]);
+
+    // ── Resize handle helper ───────────────────────────────────────────────────
+    const resizeHandle = (kind, id, pos, cursor, color) =>
+      h('div', {
+        key: pos,
+        className: `absolute w-3 h-3 rounded-[2px] ${cursor}`,
+        style: {
+          background: color,
+          ...(pos.includes('t') ? { top: '-6px' } : { bottom: '-6px' }),
+          ...(pos.includes('l') ? { left: '-6px' } : { right: '-6px' }),
+        },
+        onPointerDown: (e) => startDrag(e, id, kind, pos),
+      });
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    const outSize = getOutputSize(aspect);
+
+    return h('div', { className: 'min-h-screen bg-[#0f0f0f] text-white flex flex-col select-none', style: { fontFamily: 'Inter, ui-sans-serif, system-ui' } },
+
+      // ── Header ──────────────────────────────────────────────────────────────
+      h('header', { className: 'h-14 flex items-center justify-between px-4 border-b border-zinc-800 bg-[#0f0f0f] sticky top-0 z-30', style: { display: isFullscreen ? 'none' : 'flex' } },
+        h('div', { className: 'flex items-center gap-3' },
+          h('div', { className: 'w-8 h-8 rounded-lg bg-[#a855f7] flex items-center justify-center font-black text-[13px]' }, 'CL'),
+          h('div', {},
+            h('div', { className: 'font-bold tracking-tight leading-none flex items-center gap-1.5' },
+              'ClipLite V3',
+              h('span', { className: 'px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' }, 'Audio OK')
+            ),
+            h('div', { className: 'text-[10px] text-zinc-500 tracking-widest uppercase' }, 'Video & Audio Editor'),
+          ),
+          h('div', { className: 'hidden md:flex ml-6 items-center gap-2 text-[11px]' },
+            h('span', { className: 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400' }, 'DRAG 60FPS'),
+            h('span', { className: 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400' }, 'TÁCH ÂM THANH'),
+            h('span', { className: 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400' }, 'CHÈN MP3'),
+            h('span', { className: 'px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400' }, 'CTRL+Z UNDO'),
+          ),
+        ),
+        h('div', { className: 'flex items-center gap-2' },
+          h('input', { ref: videoInputRef, type: 'file', accept: 'video/*', className: 'hidden', onChange: onVideoInput }),
+          h('input', { ref: imgInputRef, type: 'file', accept: 'image/*', className: 'hidden', onChange: onImageInput }),
+          h('input', { ref: audioInputRef, type: 'file', accept: 'audio/*', className: 'hidden', onChange: onAudioInput }),
+          h('button', { onClick: () => { showToast('Đang mở chọn video...'); videoInputRef.current?.click(); }, className: 'h-9 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-sm font-medium transition' }, 'Nhập video'),
+          h('button', { onClick: doExport, className: 'h-9 px-5 rounded-lg bg-[#a855f7] hover:bg-[#9333ea] text-white text-sm font-bold shadow-[0_0_20px_rgba(168,85,247,0.3)] transition' }, 'Xuất 1080p'),
+        ),
+      ),
+
+      // ── Main ────────────────────────────────────────────────────────────────
+      h('div', { className: 'flex flex-1 flex-col lg:flex-row overflow-hidden', style: { height: isFullscreen ? '100vh' : undefined } },
+
+        // ── Left: Preview + Timeline ─────────────────────────────────────────
+        h('div', { className: 'flex-1 flex flex-col bg-[#0a0a0a] min-w-0' },
+
+          // Preview area
+          h('div', { ref: wrapRef, onPointerDown: onBgClick, className: 'flex-1 relative flex items-center justify-center overflow-hidden p-4 lg:p-6 bg-[radial-gradient(circle_at_center,#1a1a1a_0%,#0a0a0a_70%)] preview-bg' },
+
+            // Empty state
+            !videoSrc && h('div', { className: 'text-center max-w-[420px] border border-dashed border-zinc-700 rounded-2xl p-10 bg-[#141414]' },
+              h('div', { className: 'w-12 h-12 mx-auto rounded-xl bg-zinc-800 flex items-center justify-center mb-4', style: { fontSize: '24px' } }, '🎬'),
+              h('h2', { className: 'text-lg font-bold mb-2' }, 'Kéo thả mượt, hỗ trợ âm thanh'),
+              h('p', { className: 'text-sm text-zinc-400 mb-5' }, 'Nhập video, tách nhạc gốc, thêm file MP3/WAV, thêm chữ, blur, crop. Timeline quản lý đa lớp mượt mà.'),
+              h('button', { onClick: () => { showToast('Chọn file video từ máy'); videoInputRef.current?.click(); }, className: 'px-5 py-2.5 rounded-lg bg-white text-black font-semibold text-sm' }, 'Chọn video'),
+            ),
+
+            // Video + overlay container
+            h('div', { ref: containerRef, className: 'relative preview-bg', style: { display: videoSrc ? 'block' : 'none' } },
+              h('video', {
+                ref: videoRef,
+                src: videoSrc || undefined,
+                className: 'block max-w-[85vw] lg:max-w-full max-h-[58vh] lg:max-h-[68vh] object-contain bg-black',
+                playsInline: true,
+                muted,
+                onLoadedMetadata: (e) => {
+                  const v = e.currentTarget;
+                  setDuration(v.duration); setTrimEnd(v.duration);
+                  v.currentTime = 0; setCurrentTime(0);
+                  setTimeout(syncSize, 50);
+                },
+                onTimeUpdate: (e) => {
+                  const v = e.currentTarget, ct = v.currentTime;
+                  if (trimEnd > trimStart) {
+                    if (ct >= trimEnd - 0.05) { v.currentTime = trimStart; setCurrentTime(trimStart); return; }
+                    if (ct < trimStart - 0.1) { v.currentTime = trimStart; setCurrentTime(trimStart); return; }
+                  }
+                  if (!dragHandle) setCurrentTime(ct);
+                },
+                onPlay:  () => setPlaying(true),
+                onPause: () => setPlaying(false),
+                onClick: () => { if (!videoRef.current) return; videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause(); },
+              }),
+
+              // Overlay container
+              h('div', { ref: overlayRef, className: 'absolute left-0 top-0 overflow-hidden touch-none preview-bg', onPointerDown: onBgClick },
+                snapX && h('div', { className: 'snap-x' }),
+                snapY && h('div', { className: 'snap-y' }),
+
+                // Text layers
+                texts.map(txt => {
+                  const visible = txt.start <= currentTime && currentTime <= txt.end;
+                  return h('div', {
+                    key: txt.id,
+                    ref: el => { txtRefs.current[txt.id] = el; },
+                    className: `absolute px-2 py-0.5 leading-none whitespace-nowrap cursor-move will-change-transform ${selectedId === txt.id ? 'outline outline-2 outline-[#a855f7] outline-offset-2' : ''}`,
+                    style: {
+                      left: `${txt.xPercent}%`, top: `${txt.yPercent}%`,
+                      transform: 'translate(-50%, -50%)',
+                      fontSize: `${txt.fontSize}px`, color: txt.color,
+                      fontWeight: txt.bold ? 700 : 400,
+                      textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 1px 0 rgba(0,0,0,0.8)',
+                      opacity: visible ? txt.opacity : 0.22,
+                      zIndex: selectedId === txt.id ? 30 : 10,
+                    },
+                    onPointerDown: e => startDrag(e, txt.id, 'text', 'move'),
+                    onClick: e => { e.stopPropagation(); setSelectedId(txt.id); setSelectedKind('text'); setActiveTab('text'); },
+                  }, txt.content);
+                }),
+
+                // Overlay layers
+                overlays.map(ov => {
+                  const visible = ov.start <= currentTime && currentTime <= ov.end;
+                  return h('div', {
+                    key: ov.id,
+                    ref: el => { ovRefs.current[ov.id] = el; },
+                    className: `absolute cursor-move group ${selectedId === ov.id ? 'ring-2 ring-blue-400' : 'ring-1 ring-white/20'}`,
+                    style: {
+                      left: `${ov.x}%`, top: `${ov.y}%`, width: `${ov.w}%`, height: `${ov.h}%`,
+                      opacity: visible ? ov.opacity : 0.2,
+                      background: ov.type === 'color' ? ov.color : undefined,
+                      zIndex: selectedId === ov.id ? 28 : 13, overflow: 'hidden',
+                    },
+                    onPointerDown: e => startDrag(e, ov.id, 'overlay', 'move'),
+                    onClick: e => { e.stopPropagation(); setSelectedId(ov.id); setSelectedKind('overlay'); setActiveTab('overlay'); },
+                  },
+                    ov.type === 'image' && ov.src && h('img', { src: ov.src, alt: 'overlay', className: 'w-full h-full object-cover pointer-events-none', draggable: false }),
+                    resizeHandle('overlay', ov.id, 'tl', 'cursor-nw-resize', '#60a5fa'),
+                    resizeHandle('overlay', ov.id, 'tr', 'cursor-ne-resize', '#60a5fa'),
+                    resizeHandle('overlay', ov.id, 'bl', 'cursor-sw-resize', '#60a5fa'),
+                    resizeHandle('overlay', ov.id, 'br', 'cursor-se-resize', '#60a5fa'),
+                  );
+                }),
+
+                // Blur layers
+                blurs.map(bl => {
+                  const visible = bl.start <= currentTime && currentTime <= bl.end;
+                  return h('div', {
+                    key: bl.id,
+                    ref: el => { blurRefs.current[bl.id] = el; },
+                    className: `absolute border border-yellow-400/80 cursor-move group ${selectedId === bl.id ? 'ring-2 ring-yellow-400' : ''}`,
+                    style: {
+                      left: `${bl.x}%`, top: `${bl.y}%`, width: `${bl.w}%`, height: `${bl.h}%`,
+                      backdropFilter: `blur(${blurPx}px)`, WebkitBackdropFilter: `blur(${blurPx}px)`,
+                      background: 'rgba(0,0,0,0.15)',
+                      opacity: visible ? 1 : 0.25, zIndex: selectedId === bl.id ? 25 : 12,
+                    },
+                    onPointerDown: e => startDrag(e, bl.id, 'blur', 'move'),
+                    onClick: e => { e.stopPropagation(); setSelectedId(bl.id); setSelectedKind('blur'); setActiveTab('blur'); },
+                  },
+                    resizeHandle('blur', bl.id, 'tl', 'cursor-nw-resize', '#facc15'),
+                    resizeHandle('blur', bl.id, 'tr', 'cursor-ne-resize', '#facc15'),
+                    resizeHandle('blur', bl.id, 'bl', 'cursor-sw-resize', '#facc15'),
+                    resizeHandle('blur', bl.id, 'br', 'cursor-se-resize', '#facc15'),
+                  );
+                }),
+
+                // Crop box
+                cropEnabled && h('div', {
+                  ref: cropRef,
+                  className: `absolute border-2 border-white border-dashed cursor-move ${selectedId === 'crop' ? 'ring-2 ring-white/50' : ''}`,
+                  style: {
+                    left: `${cropBox.x}%`, top: `${cropBox.y}%`, width: `${cropBox.w}%`, height: `${cropBox.h}%`,
+                    boxShadow: '0 0 0 9999px rgba(0,0,0,0.55)', zIndex: 20,
+                  },
+                  onPointerDown: e => startDrag(e, 'crop', 'crop', 'move'),
+                  onClick: e => { e.stopPropagation(); setSelectedId('crop'); setSelectedKind('crop'); setActiveTab('crop'); },
+                },
+                  resizeHandle('crop', 'crop', 'tl', 'cursor-nw-resize', 'white'),
+                  resizeHandle('crop', 'crop', 'tr', 'cursor-ne-resize', 'white'),
+                  resizeHandle('crop', 'crop', 'bl', 'cursor-sw-resize', 'white'),
+                  resizeHandle('crop', 'crop', 'br', 'cursor-se-resize', 'white'),
+                  h('div', { className: 'absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none' },
+                    ...[0,1,2,3,4,5,6,7,8].map(i =>
+                      h('div', { key: i, className: 'border border-white/20' })
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Top-right buttons
+            videoSrc && h('div', { className: 'absolute top-3 right-3 flex gap-2 z-20' },
+              h('button', {
+                onClick: () => { setMuted(m => !m); },
+                className: 'w-9 h-9 rounded-lg bg-black/70 border border-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-black/90 transition text-base',
+                title: muted ? 'Bật âm thanh' : 'Tắt âm thanh',
+              }, muted ? '🔇' : '🔊'),
+              h('button', { onClick: toggleFullscreen, className: 'w-9 h-9 rounded-lg bg-black/70 border border-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-black/90 transition', title: isFullscreen ? 'Thoát full' : 'Full màn hình' },
+                isFullscreen
+                  ? h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'white', strokeWidth: 2 }, h('path', { d: 'M9 9L4 4M4 4H8M4 4V8M15 9L20 4M20 4H16M20 4V8M9 15L4 20M4 20H8M4 20V16M15 15L20 20M20 20H16M20 20V16' }))
+                  : h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'white', strokeWidth: 2 }, h('path', { d: 'M4 8V4H8M16 4H20V8M4 16V20H8M16 20H20V16' }))
+              ),
+            ),
+
+            // Playback controls (bottom)
+            videoSrc && h('div', { className: 'absolute bottom-3 left-3 right-3 lg:left-6 lg:right-6 flex items-center gap-2 pointer-events-none' },
+              h('button', {
+                onClick: () => { if (!videoRef.current) return; videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause(); },
+                className: 'pointer-events-auto w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-bold shadow-lg',
+              }, playing ? '❚❚' : '▶'),
+              h('div', { className: 'px-3 py-1 rounded-full bg-black/70 border border-white/10 text-[11px] text-zinc-300' },
+                fmt(currentTime), ' / ', fmt(duration), ' • ', fmt(trimStart), '→', fmt(trimEnd), ' loop • Bấm nền bỏ chọn • Delete xóa • Ctrl+Z hoàn tác'
+              ),
+            ),
+          ),
+
+          // ── Trim Timeline ─────────────────────────────────────────────────
+          h('div', { ref: timelineRef, className: 'bg-[#111111] border-t border-zinc-800 px-4 py-4', style: { display: isFullscreen ? 'none' : 'block' } },
+            h('div', { className: 'flex items-center justify-between mb-2' },
+              h('div', { className: 'text-[11px] uppercase tracking-widest text-zinc-500 font-semibold' }, 'Timeline cắt video'),
+              h('div', { className: 'text-[11px] text-zinc-400' }, fmt(trimStart), ' → ', fmt(trimEnd), ' • ', (trimEnd - trimStart || 0).toFixed(1), 's'),
+            ),
+            h('div', { className: 'relative h-10 flex items-center' },
+              h('div', { className: 'track-bg relative w-full h-2 bg-zinc-800 rounded-full' },
+                h('div', { className: 'absolute h-full bg-[#a855f7] rounded-full', style: { left: `${duration ? trimStart/duration*100 : 0}%`, width: `${duration ? (trimEnd-trimStart)/duration*100 : 0}%` } }),
+                h('div', { className: 'absolute top-1/2 -translate-y-1/2 w-1 h-6 bg-red-500 rounded-full z-10', style: { left: `${duration ? currentTime/duration*100 : 0}%` } }),
+              ),
+              // Start handle
+              h('div', {
+                className: 'absolute w-6 h-6 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.5)] cursor-ew-resize flex items-center justify-center border-2 border-[#a855f7] z-20 -translate-x-1/2 top-1/2 -translate-y-1/2',
+                style: { left: `${duration ? trimStart/duration*100 : 0}%` },
+                onPointerDown: e => startTrimDrag(e, 'start'),
+              },
+                h('div', { className: 'w-1.5 h-1.5 bg-[#a855f7] rounded-full' }),
+                dragHandle === 'start' && h('div', { className: 'absolute -top-9 left-1/2 -translate-x-1/2 bg-black text-white text-[11px] px-2 py-1 rounded border border-zinc-700 whitespace-nowrap' }, fmt(trimStart)),
+              ),
+              // End handle
+              h('div', {
+                className: 'absolute w-6 h-6 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.5)] cursor-ew-resize flex items-center justify-center border-2 border-[#a855f7] z-20 -translate-x-1/2 top-1/2 -translate-y-1/2',
+                style: { left: `${duration ? trimEnd/duration*100 : 100}%` },
+                onPointerDown: e => startTrimDrag(e, 'end'),
+              },
+                h('div', { className: 'w-1.5 h-1.5 bg-[#a855f7] rounded-full' }),
+                dragHandle === 'end' && h('div', { className: 'absolute -top-9 left-1/2 -translate-x-1/2 bg-black text-white text-[11px] px-2 py-1 rounded border border-zinc-700 whitespace-nowrap' }, fmt(trimEnd)),
+              ),
+              h('div', {
+                className: 'absolute inset-0 z-10',
+                onPointerDown: e => {
+                  if (!timelineRef.current || duration === 0) return;
+                  const trackEl = timelineRef.current.querySelector('.track-bg');
+                  if (!trackEl) return;
+                  const r = trackEl.getBoundingClientRect();
+                  const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+                  const t = Math.max(trimStart, Math.min(frac * duration, trimEnd));
+                  setCurrentTime(t);
+                  if (videoRef.current) videoRef.current.currentTime = t;
+                  startTrimDrag(e, 'playhead');
+                },
+              }),
+            ),
+            h('div', { className: 'flex gap-2 mt-1' },
+              h('input', {
+                type: 'range', min: 0, max: duration || 100, step: 0.01, value: currentTime,
+                onChange: e => { const t = parseFloat(e.target.value); setCurrentTime(t); if (videoRef.current) videoRef.current.currentTime = t; },
+                className: 'flex-1 accent-[#a855f7] h-1',
+              }),
+            ),
+
+            // ── Layer Timeline ──────────────────────────────────────────────
+            h('div', { className: 'mt-4' },
+              h('div', { className: 'flex items-center justify-between mb-2' },
+                h('div', { className: 'text-[11px] uppercase tracking-widest text-zinc-500 font-semibold' }, 'Layers timeline • kéo để đổi thời lượng'),
+                h('div', { className: 'text-[10px] text-zinc-600' }, layerItems.length, ' lớp'),
+              ),
+              h('div', { ref: layerTrackRef, className: 'relative w-full bg-[#1a1a1a] border border-zinc-800 rounded-lg p-2 min-h-[84px] overflow-hidden' },
+                h('div', { className: 'absolute inset-0 flex pointer-events-none' },
+                  Array.from({ length: 10 }).map((_, i) => h('div', { key: i, className: 'flex-1 border-r border-zinc-800/40 last:border-0' })),
+                ),
+                h('div', { className: 'absolute top-0 bottom-0 w-px bg-red-500/80 z-10 pointer-events-none', style: { left: `${trimDuration ? (currentTime - trimStart) / trimDuration * 100 : 0}%` } }),
+                h('div', { className: 'relative space-y-1.5' },
+                  layerItems.length === 0 && h('div', { className: 'text-[11px] text-zinc-600 py-3 text-center' }, 'Chưa có lớp - thêm chữ, mờ, lớp phủ hoặc nhạc'),
+                  layerItems.map(item => {
+                    const displayStart = Math.max(item.start, trimStart);
+                    const displayEnd   = Math.min(item.end, trimEnd);
+                    if (displayEnd <= displayStart) return null;
+                    const left  = (displayStart - trimStart) / trimDuration * 100;
+                    const width = Math.max(2, (displayEnd - displayStart) / trimDuration * 100);
+                    const isSelected = selectedId === item.id;
+                    return h('div', { key: item.id, className: 'relative h-[22px]' },
+                      h('div', {
+                        className: `absolute h-full rounded-md flex items-center px-2 text-[11px] font-medium cursor-move select-none border transition ${isSelected ? 'border-white ring-1 ring-white/30 z-[5]' : 'border-white/10'}`,
+                        style: {
+                          left: `${left}%`, width: `${width}%`,
+                          background: `${item.color}33`,
+                          borderLeft: `3px solid ${item.color}`,
+                          color: item.color === '#a855f7' ? '#d8b4fe' : item.color === '#eab308' ? '#fde68a' : item.color === '#10b981' ? '#a7f3d0' : '#93c5fd',
+                        },
+                        onPointerDown: e => startLayerDrag(e, item.id, item.kind, 'move'),
+                        onClick: e => { e.stopPropagation(); setSelectedId(item.id); setSelectedKind(item.kind); },
+                      },
+                        h('span', { className: 'truncate flex-1' }, item.label),
+                        h('span', { className: 'ml-1 text-[9px] opacity-60' }, (item.end - item.start).toFixed(1), 's'),
+                        h('div', {
+                          className: 'absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize flex items-center justify-center hover:bg-white/10 rounded-r-md',
+                          onPointerDown: e => startLayerDrag(e, item.id, item.kind, 'resize'),
+                        }, h('div', { className: 'w-0.5 h-3 bg-white/40 rounded' })),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              h('div', { className: 'flex gap-2 mt-2 text-[10px] text-zinc-500' },
+                h('span', { className: 'flex items-center gap-1' }, h('span', { className: 'w-2 h-2 rounded-sm bg-[#a855f7]' }), 'Chữ'),
+                h('span', { className: 'flex items-center gap-1' }, h('span', { className: 'w-2 h-2 rounded-sm bg-yellow-500' }), 'Mờ'),
+                h('span', { className: 'flex items-center gap-1' }, h('span', { className: 'w-2 h-2 rounded-sm bg-blue-500' }), 'Phủ'),
+                h('span', { className: 'flex items-center gap-1' }, h('span', { className: 'w-2 h-2 rounded-sm bg-emerald-500' }), 'Nhạc'),
+                h('span', { className: 'ml-auto' }, 'Kéo thân: di chuyển • kéo mép phải: đổi thời lượng'),
+              ),
+            ),
+          ),
+        ),
+
+        // ── Right: Control Panel ───────────────────────────────────────────
+        h('div', { className: 'w-full lg:w-[360px] bg-[#181818] border-t lg:border-t-0 lg:border-l border-zinc-800 flex flex-col max-h-[55vh] lg:max-h-none', style: { display: isFullscreen ? 'none' : 'flex' } },
+
+          // Tabs (Thêm tab Âm thanh)
+          h('div', { className: 'flex border-b border-zinc-800' },
+            ['crop', 'text', 'blur', 'overlay', 'audio'].map(tab =>
+              h('button', {
+                key: tab,
+                onClick: () => setActiveTab(tab),
+                className: `flex-1 h-11 text-[12px] font-semibold uppercase tracking-wide transition ${activeTab === tab ? 'bg-[#222222] text-white border-b-2 border-[#a855f7]' : 'text-zinc-500 hover:text-zinc-300'}`,
+              }, tab === 'crop' ? 'Cắt' : tab === 'text' ? 'Chữ' : tab === 'blur' ? 'Mờ' : tab === 'overlay' ? 'Phủ' : 'Nhạc'),
+            ),
+          ),
+
+          // Panel content
+          h('div', { className: 'flex-1 overflow-y-auto p-4 space-y-5' },
+
+            // ── Crop tab ───────────────────────────────────────────────────
+            activeTab === 'crop' && h('div', { className: 'space-y-4' },
+              h('div', {},
+                h('div', { className: 'text-[11px] uppercase tracking-widest text-zinc-500 font-semibold mb-2' }, 'Tỉ lệ khung'),
+                h('div', { className: 'grid grid-cols-4 gap-2' },
+                  ['9:16', '16:9', '1:1', 'free'].map(r =>
+                    h('button', { key: r, onClick: () => setAspect(r), className: `h-10 rounded-lg border text-[12px] font-bold transition ${aspect === r ? 'bg-[#a855f7] border-[#a855f7] text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'}` }, r),
+                  ),
+                ),
+              ),
+              h('button', {
+                onClick: () => setCropEnabled(v => !v),
+                className: `w-full h-11 rounded-lg font-semibold text-sm transition ${cropEnabled ? 'bg-white text-black' : 'bg-zinc-800 border border-zinc-700 text-zinc-300'}`,
+              }, cropEnabled ? '✓ Đang bật khung cắt' : 'Bật khung cắt'),
+              cropEnabled && h('div', { className: 'space-y-3 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800' },
+                h('div', { className: 'text-[11px] text-zinc-400' }, 'Kéo khung ở preview để di chuyển. Kéo góc để đổi size. Tỉ lệ ', aspect, ' sẽ khóa khung.'),
+                h('div', { className: 'grid grid-cols-2 gap-2 text-[11px]' },
+                  ['x','y','w','h'].map(k =>
+                    h('label', { key: k, className: 'space-y-1' },
+                      h('span', { className: 'text-zinc-500' }, k.toUpperCase(), ' ', cropBox[k].toFixed(1), '%'),
+                      h('input', { type: 'range', min: k === 'w' || k === 'h' ? 10 : 0, max: 90, value: cropBox[k], onChange: e => setCropBox(c => ({ ...c, [k]: parseFloat(e.target.value) })), className: 'w-full accent-white' }),
+                    ),
+                  ),
+                ),
+              ),
+              h('div', { className: 'bg-[#1f1f1f] p-3 rounded-xl border border-zinc-800 text-[12px] text-zinc-400 leading-relaxed' },
+                'Xuất sẽ scale về ', outSize.w, 'x', outSize.h, ' • Preview loop ', fmt(trimStart), '→', fmt(trimEnd),
+              ),
+            ),
+
+            // ── Text tab ───────────────────────────────────────────────────
+            activeTab === 'text' && h('div', { className: 'space-y-4' },
+              h('div', { className: 'flex gap-2' },
+                h('input', { value: textInput, onChange: e => setTextInput(e.target.value), placeholder: 'Nhập chữ...', className: 'flex-1 h-10 px-3 rounded-lg bg-zinc-900 border border-zinc-800 text-sm outline-none focus:border-[#a855f7]' }),
+                h('button', { onClick: addText, className: 'h-10 px-4 rounded-lg bg-[#a855f7] font-semibold text-sm' }, 'Thêm'),
+              ),
+              h('div', { className: 'space-y-2 max-h-[160px] overflow-y-auto pr-1' },
+                texts.length === 0 && h('div', { className: 'text-[12px] text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg' }, 'Chưa có chữ nào'),
+                texts.map(txt =>
+                  h('div', { key: txt.id, className: `group flex items-center justify-between p-2.5 rounded-lg border text-[12px] cursor-pointer transition ${selectedId === txt.id ? 'bg-[#2a1f3d] border-[#a855f7]' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`, onClick: () => { setSelectedId(txt.id); setSelectedKind('text'); } },
+                    h('div', { className: 'truncate flex-1 mr-2' }, txt.content, ' • ', txt.fontSize, 'px'),
+                    h('button', { onClick: e => { e.stopPropagation(); pushHistory(); setTexts(ts => ts.filter(t => t.id !== txt.id)); if (selectedId === txt.id) { setSelectedId(null); setSelectedKind(null); } }, className: 'opacity-60 hover:opacity-100 w-6 h-6 rounded bg-zinc-800 flex items-center justify-center' }, '✕'),
+                  ),
+                ),
+              ),
+              selectedText && h('div', { className: 'space-y-4 bg-zinc-900 p-3 rounded-xl border border-zinc-800' },
+                h('div', { className: 'text-[11px] uppercase tracking-widest text-zinc-500 font-bold' }, 'Chỉnh: ', selectedText.content),
+                h('label', { className: 'block space-y-1' },
+                  h('span', { className: 'text-[11px] text-zinc-400' }, 'Nội dung'),
+                  h('input', { value: selectedText.content, onChange: e => setTexts(ts => ts.map(t => t.id === selectedText.id ? { ...t, content: e.target.value } : t)), className: 'w-full h-9 px-2 rounded bg-black border border-zinc-700 text-sm' }),
+                ),
+                h('label', { className: 'block space-y-1' },
+                  h('span', { className: 'text-[11px] text-zinc-400' }, 'Cỡ chữ ', selectedText.fontSize, 'px'),
+                  h('input', { type: 'range', min: 12, max: 120, value: selectedText.fontSize, onChange: e => setTexts(ts => ts.map(t => t.id === selectedText.id ? { ...t, fontSize: parseInt(e.target.value) } : t)), className: 'w-full accent-[#a855f7]' }),
+                ),
+                h('div', { className: 'flex gap-2' },
+                  h('label', { className: 'flex-1' },
+                    h('span', { className: 'text-[11px] text-zinc-400 block mb-1' }, 'Màu'),
+                    h('input', { type: 'color', value: selectedText.color, onChange: e => setTexts(ts => ts.map(t => t.id === selectedText.id ? { ...t, color: e.target.value } : t)), className: 'w-full h-9 rounded bg-black border border-zinc-700' }),
+                  ),
+                  h('button', { onClick: () => setTexts(ts => ts.map(t => t.id === selectedText.id ? { ...t, bold: !t.bold } : t)), className: `flex-1 h-9 mt-[18px] rounded font-bold text-sm border ${selectedText.bold ? 'bg-white text-black border-white' : 'bg-zinc-800 border-zinc-700'}` }, 'B'),
+                ),
+                h('label', { className: 'block space-y-1' },
+                  h('span', { className: 'text-[11px] text-zinc-400' }, 'Độ mờ đục ', Math.round(selectedText.opacity * 100), '%'),
+                  h('input', { type: 'range', min: 0, max: 100, value: Math.round(selectedText.opacity * 100), onChange: e => setTexts(ts => ts.map(t => t.id === selectedText.id ? { ...t, opacity: parseInt(e.target.value)/100 } : t)), className: 'w-full accent-white' }),
+                ),
+                h('div', { className: 'text-[11px] text-zinc-500' }, 'Kéo chữ trên preview • thời lượng kéo ở Layers timeline'),
+              ),
+            ),
+
+            // ── Blur tab ───────────────────────────────────────────────────
+            activeTab === 'blur' && h('div', { className: 'space-y-4' },
+              h('button', { onClick: addBlur, className: 'w-full h-11 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-semibold text-sm hover:bg-yellow-500/15' }, '+ Thêm vùng mờ'),
+              h('label', { className: 'block space-y-1' },
+                h('span', { className: 'text-[11px] text-zinc-400' }, 'Cường độ mờ ', blurPx, 'px'),
+                h('input', { type: 'range', min: 0, max: 30, value: blurPx, onChange: e => setBlurPx(parseInt(e.target.value)), className: 'w-full accent-yellow-400' }),
+              ),
+              h('div', { className: 'space-y-2' },
+                blurs.length === 0 && h('div', { className: 'text-[12px] text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg' }, 'Chưa có vùng mờ'),
+                blurs.map(bl =>
+                  h('div', { key: bl.id, className: `flex items-center justify-between p-2.5 rounded-lg border text-[12px] ${selectedId === bl.id ? 'bg-yellow-950/30 border-yellow-500/50' : 'bg-zinc-900 border-zinc-800'}` },
+                    h('div', {}, 'Mờ ', bl.x.toFixed(0), '%,', bl.y.toFixed(0), '% • ', bl.w.toFixed(0), 'x', bl.h.toFixed(0), '%'),
+                    h('button', { onClick: () => { pushHistory(); setBlurs(bs => bs.filter(b => b.id !== bl.id)); if (selectedId === bl.id) { setSelectedId(null); setSelectedKind(null); } }, className: 'w-6 h-6 rounded bg-zinc-800 flex items-center justify-center' }, '✕'),
+                  ),
+                ),
+              ),
+              selectedBlur && h('div', { className: 'bg-zinc-900 p-3 rounded-xl border border-zinc-800 text-[11px] text-zinc-400' },
+                'Đang chọn blur • thời lượng chỉnh ở Layers timeline • ', fmt(selectedBlur.start), '→', fmt(selectedBlur.end),
+              ),
+            ),
+
+            // ── Overlay tab ────────────────────────────────────────────────
+            activeTab === 'overlay' && h('div', { className: 'space-y-4' },
+              h('div', { className: 'grid grid-cols-2 gap-2' },
+                h('button', { onClick: () => imgInputRef.current?.click(), className: 'h-11 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 font-semibold text-[13px] hover:bg-blue-500/15' }, '+ Ảnh phủ'),
+                h('button', { onClick: addColorOverlay, className: 'h-11 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 font-semibold text-[13px] hover:bg-zinc-700' }, '+ Màu phủ'),
+              ),
+              h('div', { className: 'bg-zinc-900 p-3 rounded-xl border border-zinc-800 space-y-3' },
+                h('div', { className: 'text-[11px] uppercase tracking-widest text-zinc-500 font-semibold' }, 'Tạo màu phủ'),
+                h('div', { className: 'flex gap-2 items-end' },
+                  h('label', { className: 'flex-1 space-y-1' },
+                    h('span', { className: 'text-[11px] text-zinc-400' }, 'Màu'),
+                    h('input', { type: 'color', value: ovColor, onChange: e => setOvColor(e.target.value), className: 'w-full h-9 rounded bg-black border border-zinc-700' }),
+                  ),
+                  h('label', { className: 'flex-1 space-y-1' },
+                    h('span', { className: 'text-[11px] text-zinc-400' }, 'Đục ', Math.round(ovOpacity * 100), '%'),
+                    h('input', { type: 'range', min: 0, max: 100, value: Math.round(ovOpacity * 100), onChange: e => setOvOpacity(parseInt(e.target.value)/100), className: 'w-full accent-blue-500' }),
+                  ),
+                ),
+                h('div', { className: 'h-10 rounded-lg border border-zinc-700', style: { background: ovColor, opacity: ovOpacity } }),
+              ),
+              h('div', { className: 'space-y-2 max-h-[200px] overflow-y-auto' },
+                overlays.length === 0 && h('div', { className: 'text-[12px] text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg' }, 'Chưa có lớp phủ'),
+                overlays.map(ov =>
+                  h('div', { key: ov.id, className: `flex items-center gap-2 p-2.5 rounded-lg border text-[12px] cursor-pointer ${selectedId === ov.id ? 'bg-blue-950/40 border-blue-500/50' : 'bg-zinc-900 border-zinc-800'}`, onClick: () => { setSelectedId(ov.id); setSelectedKind('overlay'); } },
+                    h('div', { className: 'w-8 h-8 rounded bg-black border border-zinc-800 overflow-hidden flex-shrink-0' },
+                      ov.type === 'image' && ov.src ? h('img', { src: ov.src, className: 'w-full h-full object-cover' }) : h('div', { className: 'w-full h-full', style: { background: ov.color } }),
+                    ),
+                    h('div', { className: 'flex-1 truncate' }, ov.type === 'image' ? 'Ảnh' : 'Màu', ' ', ov.x.toFixed(0), '%,', ov.y.toFixed(0), '% • ', Math.round(ov.opacity * 100), '%'),
+                    h('button', { onClick: e => { e.stopPropagation(); removeOverlay(ov.id); }, className: 'w-6 h-6 rounded bg-zinc-800 flex items-center justify-center' }, '✕'),
+                  ),
+                ),
+              ),
+              selectedOv && h('div', { className: 'bg-zinc-900 p-3 rounded-xl border border-zinc-800 space-y-3' },
+                h('div', { className: 'text-[11px] uppercase tracking-widest text-zinc-500 font-bold' }, 'Chỉnh lớp phủ'),
+                h('label', { className: 'block space-y-1' },
+                  h('span', { className: 'text-[11px] text-zinc-400' }, 'Độ mờ đục ', Math.round(selectedOv.opacity * 100), '%'),
+                  h('input', { type: 'range', min: 0, max: 100, value: Math.round(selectedOv.opacity * 100), onChange: e => setOverlays(os => os.map(o => o.id === selectedOv.id ? { ...o, opacity: parseInt(e.target.value)/100 } : o)), className: 'w-full accent-blue-400' }),
+                ),
+                selectedOv.type === 'color' && h('label', { className: 'block space-y-1' },
+                  h('span', { className: 'text-[11px] text-zinc-400' }, 'Màu'),
+                  h('input', { type: 'color', value: selectedOv.color || '#3b82f6', onChange: e => setOverlays(os => os.map(o => o.id === selectedOv.id ? { ...o, color: e.target.value } : o)), className: 'w-full h-9 rounded bg-black border border-zinc-700' }),
+                ),
+                h('div', { className: 'text-[11px] text-zinc-500' }, fmt(selectedOv.start), '→', fmt(selectedOv.end), ' • kéo ở Layers timeline để đổi thời lượng'),
+              ),
+            ),
+
+            // ── Audio tab (TÁCH ÂM THANH & THÊM MP3) ────────────────────────
+            activeTab === 'audio' && h('div', { className: 'space-y-5' },
+
+              // 1. Quản lý âm thanh video gốc
+              h('div', { className: 'bg-zinc-900 p-3.5 rounded-xl border border-zinc-800 space-y-3' },
+                h('div', { className: 'text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center justify-between' },
+                  h('span', {}, 'Âm thanh video gốc'),
+                  h('span', { className: 'text-zinc-500 text-[10px]' }, Math.round(videoVolume * 100), '%'),
+                ),
+                h('div', { className: 'flex items-center gap-3' },
+                  h('button', {
+                    onClick: () => setVideoVolume(v => v === 0 ? 1 : 0),
+                    className: `h-8 px-2.5 rounded text-xs font-semibold border transition ${videoVolume === 0 ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-zinc-800 text-zinc-300 border-zinc-700'}`,
+                  }, videoVolume === 0 ? 'Đã tắt tiếng' : 'Đang bật'),
+                  h('input', {
+                    type: 'range', min: 0, max: 100, value: Math.round(videoVolume * 100),
+                    onChange: e => setVideoVolume(parseInt(e.target.value) / 100),
+                    className: 'flex-1 accent-emerald-400',
+                  }),
+                ),
+                // Nút tách âm thanh
+                h('div', { className: 'pt-2 border-t border-zinc-800 flex flex-col gap-2' },
+                  h('div', { className: 'text-[11px] text-zinc-500' }, 'Trích xuất âm thanh từ file video:'),
+                  h('div', { className: 'grid grid-cols-2 gap-2' },
+                    h('button', {
+                      disabled: extractingAudio || !videoSrc,
+                      onClick: () => extractAudioFromVideo(false),
+                      className: 'h-9 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold transition disabled:opacity-50 flex items-center justify-center gap-1.5',
+                    }, extractingAudio ? 'Đang tách...' : '⬇ Tách toàn bộ'),
+                    h('button', {
+                      disabled: extractingAudio || !videoSrc,
+                      onClick: () => extractAudioFromVideo(true),
+                      className: 'h-9 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold transition disabled:opacity-50 flex items-center justify-center gap-1.5',
+                    }, extractingAudio ? 'Đang tách...' : '✂ Tách đoạn cắt'),
+                  ),
+                ),
+              ),
+
+              // 2. Thêm file nhạc MP3 ngoài
+              h('div', { className: 'space-y-3' },
+                h('button', {
+                  onClick: () => audioInputRef.current?.click(),
+                  className: 'w-full h-11 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-bold text-[13px] flex items-center justify-center gap-2 transition shadow-lg',
+                }, '🎵 + Thêm âm thanh (MP3 / WAV)'),
+                
+                // Danh sách các layer audio
+                h('div', { className: 'space-y-2 max-h-[190px] overflow-y-auto' },
+                  audios.length === 0 && h('div', { className: 'text-[12px] text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg' }, 'Chưa có file âm thanh bổ sung'),
+                  audios.map(a =>
+                    h('div', {
+                      key: a.id,
+                      className: `flex items-center gap-2 p-2.5 rounded-lg border text-[12px] cursor-pointer transition ${selectedId === a.id ? 'bg-emerald-950/40 border-emerald-500/50' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`,
+                      onClick: () => { setSelectedId(a.id); setSelectedKind('audio'); },
+                    },
+                      h('div', { className: 'w-7 h-7 rounded bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm flex-shrink-0' }, '🎵'),
+                      h('div', { className: 'flex-1 truncate' },
+                        h('div', { className: 'font-semibold text-zinc-200 truncate' }, a.name),
+                        h('div', { className: 'text-[10px] text-zinc-500' }, fmt(a.start), ' → ', fmt(a.end), ' • Âm lượng ', Math.round((a.volume ?? 1) * 100), '%'),
+                      ),
+                      h('button', {
+                        onClick: (e) => { e.stopPropagation(); removeAudio(a.id); },
+                        className: 'w-6 h-6 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white',
+                      }, '✕'),
+                    ),
+                  ),
+                ),
+
+                // Chỉnh sửa layer audio đang chọn
+                selectedAudio && h('div', { className: 'bg-zinc-900 p-3.5 rounded-xl border border-zinc-800 space-y-3' },
+                  h('div', { className: 'text-[11px] uppercase tracking-widest text-emerald-400 font-bold truncate' }, 'Chỉnh: ', selectedAudio.name),
+                  h('label', { className: 'block space-y-1' },
+                    h('div', { className: 'flex justify-between text-[11px] text-zinc-400' },
+                      h('span', {}, 'Âm lượng nhạc'),
+                      h('span', { className: 'text-zinc-500' }, Math.round((selectedAudio.volume ?? 1) * 100), '%'),
+                    ),
+                    h('input', {
+                      type: 'range', min: 0, max: 100, value: Math.round((selectedAudio.volume ?? 1) * 100),
+                      onChange: e => setAudios(as => as.map(x => x.id === selectedAudio.id ? { ...x, volume: parseInt(e.target.value) / 100 } : x)),
+                      className: 'w-full accent-emerald-400',
+                    }),
+                  ),
+                  h('div', { className: 'text-[11px] text-zinc-500' },
+                    'Kéo thanh màu xanh ở Layers timeline để đổi thời điểm phát và độ dài bài hát.'
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Status bar
+          h('div', { className: 'p-3 border-t border-zinc-800 bg-[#141414] text-[11px] text-zinc-500' },
+            h('div', { className: 'flex justify-between' }, h('span', {}, 'Output'), h('span', { className: 'text-zinc-300' }, videoSrc ? `${outSize.w}x${outSize.h}` : '--')),
+            h('div', { className: 'flex justify-between mt-1' }, h('span', {}, 'Layers'), h('span', { className: 'text-zinc-300' }, texts.length + blurs.length + overlays.length + audios.length, ' layers')),
+            h('div', { className: 'flex justify-between mt-1' }, h('span', {}, 'Loop Trim'), h('span', { className: 'text-[#a855f7]' }, videoSrc ? `${fmt(trimStart)}→${fmt(trimEnd)}` : '--')),
+            h('div', { className: 'flex justify-between mt-1' }, h('span', {}, 'Undo'), h('span', { className: 'text-zinc-400' }, historyRef.current.length, ' states • Ctrl+Z')),
+          ),
+        ),
+      ),
+
+      // ── Export modal ───────────────────────────────────────────────────────
+      exporting && h('div', { className: 'fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-50 p-4' },
+        h('div', { className: 'bg-zinc-900 border border-zinc-800 p-6 rounded-2xl w-full max-w-[380px] shadow-2xl' },
+          h('h3', { className: 'text-base font-bold mb-1' }, 'Đang xuất video...'),
+          h('p', { className: 'text-[12px] text-zinc-400 mb-4' }, 'Canvas ', outSize.w, 'x', outSize.h, ' • Hòa âm video + MP3 • Burn layer'),
+          h('div', { className: 'h-2.5 bg-zinc-800 rounded-full overflow-hidden' },
+            h('div', { className: 'h-full bg-[#a855f7] transition-all duration-150', style: { width: `${progress}%` } }),
+          ),
+          h('div', { className: 'flex justify-between mt-2 text-[12px]' },
+            h('span', { className: 'text-zinc-500' }, progress.toFixed(1), '%'),
+            h('span', { className: 'text-zinc-400' }, fmt(trimStart + (trimEnd - trimStart) * (progress / 100)), ' / ', fmt(trimEnd)),
+          ),
+          h('div', { className: 'mt-4 text-[11px] text-zinc-500 leading-relaxed' }, 'Đang xử lý xuất video với độ phân giải cao và trộn âm thanh đa luồng.'),
+        ),
+      ),
+
+      // ── Toast notification ─────────────────────────────────────────────────
+      toast && h('div', { className: 'fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-white text-black text-[13px] font-medium px-4 py-2.5 rounded-full shadow-xl border border-zinc-200 anim-fadein' }, toast),
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(h(React.StrictMode, null, h(ClipLiteApp, null)));
+
+})();
+</script>
+</body>
+</html>

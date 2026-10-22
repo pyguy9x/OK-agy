@@ -1,0 +1,130 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "omniroute/pol/qwen-coder",
+  "provider": {
+    "omniroute": {
+      "name": "OmniRoute Free Stack (Kiro die)",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://localhost:20128/v1",
+        "apiKey": "sk-54c3bc926b35c33c-9da705-4d734042"
+      },
+      "models": {
+        "auto": {
+          "name": "🤖 auto (Best - tự chọn)"
+        },
+        "auto/coding": {
+          "name": "💻 auto/coding - CODE NGON NHAT"
+        },
+        "auto/fast": {
+          "name": "⚡ auto/fast (Nhanh nhất)"
+        },
+        "cerebras/llama-3.3-70b": {
+          "name": "Cerebras Llama 70B Fastest FREE"
+        },
+        "groq/llama-3.3-70b-versatile": {
+          "name": "Groq Llama 3.3 70B Fast FREE"
+        },
+        "if/deepseek-r1": {
+          "name": "Qoder DeepSeek R1 FREE"
+        },
+        "if/kimi-k2-thinking": {
+          "name": "🔥 Qoder Kimi K2 Thinking FREE UNLIMITED"
+        },
+        "if/minimax-m2.1": {
+          "name": "Qoder MiniMax M2.1 FREE"
+        },
+        "if/qwen3-coder-plus": {
+          "name": "Qoder Qwen3 Coder Plus FREE UNLIMITED"
+        },
+        "lc/LongCat-Flash-Chat": {
+          "name": "LongCat Flash Chat FREE"
+        },
+        "lc/LongCat-Flash-Lite": {
+          "name": "💥 LongCat Flash Lite 50M/day FREE"
+        },
+        "nvidia/llama-3.3-70b-instruct": {
+          "name": "NVIDIA Llama 70B FREE"
+        },
+        "nvidia/moonshotai/kimi-k2.5": {
+          "name": "NVIDIA Kimi K2.5 FREE"
+        },
+        "pol/claude": {
+          "name": "Pollinations Claude FREE - 0 key"
+        },
+        "pol/claude-large": {
+          "name": "pol/claude-large - Claude Opus FREE"
+        },
+        "pol/deepseek": {
+          "name": "Pollinations DeepSeek FREE"
+        },
+        "pol/deepseek-r1": {
+          "name": "pol/deepseek-r1 - R1 Thinking FREE"
+        },
+        "pol/gemini": {
+          "name": "Pollinations Gemini FREE"
+        },
+        "pol/gemini-large": {
+          "name": "pol/gemini-large FREE"
+        },
+        "pol/glm": {
+          "name": "pol/glm - GLM 4.7 FREE"
+        },
+        "pol/grok": {
+          "name": "pol/grok - Grok FREE"
+        },
+        "pol/grok-large": {
+          "name": "pol/grok-large - Grok Large FREE"
+        },
+        "pol/kimi": {
+          "name": "pol/kimi - Kimi K2 FREE"
+        },
+        "pol/llama": {
+          "name": "Pollinations Llama 4 FREE"
+        },
+        "pol/minimax": {
+          "name": "pol/minimax - MiniMax M2 FREE"
+        },
+        "pol/mistral": {
+          "name": "pol/mistral - Mistral FREE"
+        },
+        "pol/mistral-large": {
+          "name": "pol/mistral-large - Mistral Large FREE"
+        },
+        "pol/nova": {
+          "name": "pol/nova - Amazon Nova FREE"
+        },
+        "pol/nova-fast": {
+          "name": "pol/nova-fast - Nova Fast FREE"
+        },
+        "pol/openai": {
+          "name": "Pollinations GPT-5 FREE"
+        },
+        "pol/openai-audio": {
+          "name": "pol/openai-audio - Audio FREE"
+        },
+        "pol/openai-large": {
+          "name": "pol/openai-large - GPT-5 Large FREE"
+        },
+        "pol/perplexity-fast": {
+          "name": "pol/perplexity-fast - Perplexity Fast FREE"
+        },
+        "pol/qwen": {
+          "name": "pol/qwen - Qwen3 FREE"
+        },
+        "pol/qwen-coder": {
+          "name": "💻 pol/qwen-coder - Qwen Coder FREE"
+        },
+        "pol/qwen-safety": {
+          "name": "pol/qwen-safety - Qwen Safety FREE"
+        },
+        "qw/qwen3-coder-flash": {
+          "name": "Qwen3 Coder Flash UNLIMITED"
+        },
+        "qw/qwen3-coder-plus": {
+          "name": "Qwen3 Coder Plus UNLIMITED"
+        }
+      }
+    }
+  }
+}
