@@ -83,13 +83,16 @@ body { font-family: var(--sans); background: var(--giay); color: var(--ink); fon
 /* Table */
 .tbl-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--r); }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
-thead { background: #f8fafc; position: sticky; top: 56px; z-index: 10; }
+thead { background: #f8fafc; }
+thead th { background: #f8fafc; line-height: 1.35; }
 th { padding: 10px 6px; font-size: 11.5px; font-weight: 700; color: var(--ink-2); text-align: center; border-bottom: 2px solid var(--rule); white-space: nowrap; }
 th.left { text-align: left; padding-left: 10px; }
-tbody tr { border-bottom: 1px solid #f1f3f5; transition: background 0.1s; }
-tbody tr:hover { background: #f9fafb; }
+tbody tr { border-bottom: 1px solid #f1f3f5; transition: background 0.12s, box-shadow 0.12s; }
+tbody tr:hover { background: #fef3c7; box-shadow: inset 4px 0 0 var(--cam); }
+tbody tr:focus-within { background: #fde68a; box-shadow: inset 4px 0 0 var(--son); }
 tbody tr.group-header { background: #fef2f2; }
-tbody tr.group-header td { font-weight: 700; color: var(--son-d); padding: 8px 10px; font-size: 13px; }
+tbody tr.group-header:hover, tbody tr.group-header:focus-within { background: #fee2e2; box-shadow: none; }
+tbody tr.group-header td { font-weight: 700; color: var(--son-d); padding: 10px; font-size: 13px; line-height: 1.45; }
 td { padding: 4px 3px; text-align: center; vertical-align: middle; }
 td.left { text-align: left; padding-left: 6px; }
 
@@ -127,6 +130,18 @@ td select:focus { border-color: var(--son); }
 /* Stats bar */
 .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 0; font-size: 13px; color: var(--muted); border-top: 1px solid var(--rule); margin-top: 12px; }
 .stats-bar b { color: var(--ink); }
+
+/* Password gate modal (shown before saving to Firebase) */
+.pw-overlay { position: fixed; inset: 0; background: rgba(20,10,10,0.5); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 16px; }
+.pw-overlay.show { display: flex; }
+.pw-box { background: #fff; border-radius: 12px; padding: 24px 24px 20px; width: 380px; max-width: 94vw; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border-top: 4px solid var(--son); }
+.pw-box h3 { font-size: 16px; color: var(--son-d); margin-bottom: 6px; }
+.pw-box p { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+.pw-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--r-s); font-size: 14px; font-family: var(--sans); outline: none; }
+.pw-box input:focus { border-color: var(--son); box-shadow: 0 0 0 2px rgba(179,20,28,0.12); }
+.pw-err { display: none; color: #dc2626; font-size: 12.5px; font-weight: 600; margin-top: 8px; }
+.pw-err.show { display: block; }
+.pw-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
 /* Responsive */
 @media(max-width:768px) {
@@ -194,7 +209,7 @@ td select:focus { border-color: var(--son); }
       </div>
       <div class="config-field">
         <label>Tên Đảng bộ:</label>
-        <input type="text" id="cfgOrg" value="Đảng bộ xã Mậu A - Huyện Văn Yên" oninput="markDirty()">
+        <input type="text" id="cfgOrg" value="Đảng bộ xã Mậu A" oninput="markDirty()">
       </div>
       <div class="config-field">
         <label>🏆 Xếp hạng tỉnh:</label>
@@ -233,6 +248,7 @@ td select:focus { border-color: var(--son); }
             <th style="width:65px">Đã nộp</th>
             <th style="width:65px">Chưa kê khai</th>
             <th style="width:80px">Tỷ lệ HT</th>
+            <th style="width:115px">Số tiền (đ)</th>
             <th style="width:40px"></th>
           </tr>
         </thead>
@@ -250,6 +266,20 @@ td select:focus { border-color: var(--son); }
 
 <!-- Toast -->
 <div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<!-- Password gate: required before saving to Firebase -->
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-box">
+    <h3>🔒 Nhập mật khẩu để lưu</h3>
+    <p>Dữ liệu chỉ được đồng bộ lên Firebase khi nhập đúng mật khẩu.</p>
+    <input type="password" id="pwInput" placeholder="Mật khẩu" autocomplete="current-password" onkeydown="if(event.key==='Enter')confirmPwSave(); if(event.key==='Escape')closePwModal();">
+    <div class="pw-err" id="pwErr">❌ Sai mật khẩu, vui lòng thử lại.</div>
+    <div class="pw-acts">
+      <button class="btn" type="button" onclick="closePwModal()">Hủy</button>
+      <button class="btn green" type="button" onclick="confirmPwSave()">💾 Lưu lên Firebase</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ==========================================
@@ -323,7 +353,47 @@ async function loadFromFirebase() {
   }
 }
 
+// ==========================================
+// PASSWORD GATE FOR SAVING
+// Chi luu BAN BAM SHA-256 cua mat khau trong source, khong luu mat khau goc.
+// ==========================================
+const SAVE_PASS_HASH = '19cf0d2f4adeae1c74d9d04794a03c4f7377b6643bca211e4d5c3d6c3226f7b6';
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+let pwResolver = null;
+function askSavePassword() {
+  return new Promise(res => {
+    pwResolver = res;
+    document.getElementById('pwErr').classList.remove('show');
+    const inp = document.getElementById('pwInput');
+    inp.value = '';
+    document.getElementById('pwOverlay').classList.add('show');
+    setTimeout(() => inp.focus(), 50);
+  });
+}
+function closePwModal() {
+  document.getElementById('pwOverlay').classList.remove('show');
+  if (pwResolver) { pwResolver(false); pwResolver = null; }
+}
+async function confirmPwSave() {
+  const val = document.getElementById('pwInput').value.trim();
+  let ok = false;
+  try { ok = (await sha256Hex(val)) === SAVE_PASS_HASH; } catch (e) { ok = false; }
+  if (ok) {
+    document.getElementById('pwOverlay').classList.remove('show');
+    if (pwResolver) { pwResolver(true); pwResolver = null; }
+  } else {
+    document.getElementById('pwErr').classList.add('show');
+    document.getElementById('pwInput').select();
+  }
+}
+
 async function saveToFirebase() {
+  if (!(await askSavePassword())) { toast('Đã hủy lưu.'); return; }
   collectFromTable();
   // Auto-calc rates
   units.forEach(u => {
@@ -368,7 +438,7 @@ function renderTable() {
   const tbody = document.getElementById('tableBody');
 
   if (units.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="11" style="padding:30px; color:var(--muted); text-align:center;">Chưa có dữ liệu. Bấm <b>"📥 Nạp dữ liệu mặc định"</b> hoặc <b>"🔄 Tải từ Firebase"</b></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" style="padding:30px; color:var(--muted); text-align:center;">Chưa có dữ liệu. Bấm <b>"📥 Nạp dữ liệu mặc định"</b> hoặc <b>"🔄 Tải từ Firebase"</b></td></tr>';
     updateStats();
     return;
   }
@@ -380,11 +450,11 @@ function renderTable() {
   let html = '';
 
   if (g1.length > 0) {
-    html += '<tr class="group-header"><td colspan="11">I. ĐẢNG BỘ, CHI BỘ CƠ QUAN (' + g1.length + ' đơn vị)</td></tr>';
+    html += '<tr class="group-header"><td colspan="12">I. ĐẢNG BỘ, CHI BỘ CƠ QUAN (' + g1.length + ' đơn vị)</td></tr>';
     g1.forEach((u, i) => { html += unitRow(u, i, 'g1'); });
   }
   if (g2.length > 0) {
-    html += '<tr class="group-header"><td colspan="11">II. CHI BỘ THÔN (' + g2.length + ' đơn vị)</td></tr>';
+    html += '<tr class="group-header"><td colspan="12">II. CHI BỘ THÔN (' + g2.length + ' đơn vị)</td></tr>';
     g2.forEach((u, i) => { html += unitRow(u, i, 'g2'); });
   }
 
@@ -416,11 +486,19 @@ function unitRow(u, idx, gKey) {
     <td><input type="number" value="${u.approved_paid}" data-field="approved_paid" min="0" oninput="markDirty()"></td>
     <td><input type="number" value="${u.not_declared}" data-field="not_declared" min="0" oninput="markDirty()"></td>
     <td><span class="rate-display ${rcls}">${(rate*100).toFixed(rate>=0.999||rate===0?0:1)}%</span></td>
+    <td><input type="text" inputmode="numeric" value="${(u.amount || 0).toLocaleString('vi-VN')}" data-field="amount" style="width:115px" oninput="fmtMoneyInput(this)"></td>
     <td><button class="row-del" onclick="deleteUnit('${esc(u.name)}')" title="Xóa đơn vị">✕</button></td>
   </tr>`;
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Định dạng ô nhập số tiền: gõ 5031000 -> tự thành 5.031.000
+function fmtMoneyInput(el) {
+  const digits = el.value.replace(/[^\d]/g, '');
+  el.value = digits === '' ? '' : Number(digits).toLocaleString('vi-VN');
+  markDirty();
+}
 
 // ==========================================
 // TABLE DATA COLLECTION
@@ -435,7 +513,8 @@ function collectFromTable() {
     inputs.forEach(inp => {
       const field = inp.dataset.field;
       if (!field) return;
-      if (inp.type === 'number') obj[field] = parseInt(inp.value) || 0;
+      if (field === 'amount') obj[field] = parseInt(String(inp.value).replace(/[^\d]/g, '')) || 0;
+      else if (inp.type === 'number') obj[field] = parseInt(inp.value) || 0;
       else obj[field] = inp.value.trim();
     });
     // Calc rate
@@ -457,6 +536,7 @@ function addUnit(group) {
     name: '',
     total_dv: 0, exempt: 0, pending_review: 0,
     approved_unpaid: 0, approved_paid: 0, not_declared: 0,
+    amount: 0,
     rate: 0
   });
   renderTable();
@@ -498,6 +578,7 @@ function updateStats() {
   const tot = units.reduce((s,u) => s + (u.total_dv||0), 0);
   const paid = units.reduce((s,u) => s + (u.approved_paid||0), 0);
   const exempt = units.reduce((s,u) => s + (u.exempt||0), 0);
+  const money = units.reduce((s,u) => s + (u.amount||0), 0);
   const done = units.filter(u => u.rate >= 0.999).length;
   const rate = tot > 0 ? ((paid + exempt) / tot * 100).toFixed(1) : '0';
 
@@ -507,7 +588,8 @@ function updateStats() {
     Đã nộp: <b style="color:var(--ngoc)">${paid.toLocaleString('vi')}</b> &nbsp;·&nbsp;
     Miễn giảm: <b>${exempt}</b> &nbsp;·&nbsp;
     Tỷ lệ: <b style="color:var(--son)">${rate}%</b> &nbsp;·&nbsp;
-    Hoàn thành 100%: <b style="color:var(--ngoc)">${done}/${units.length}</b>
+    Hoàn thành 100%: <b style="color:var(--ngoc)">${done}/${units.length}</b> &nbsp;·&nbsp;
+    Tổng tiền: <b style="color:var(--son)">${money.toLocaleString('vi')} đ</b>
   `;
 }
 

@@ -69,7 +69,7 @@
       --body: var(--sans);
       --display: var(--serif);
       
-      --wrap: 1240px;
+      --wrap: 1800px;
       --r: 12px;
       --r-s: 8px;
       --r-l: 16px;
@@ -85,6 +85,9 @@
       -webkit-text-size-adjust: 100%;
     }
 
+    html, body {
+      overflow-x: clip;
+    }
     body {
       font-family: var(--body);
       color: var(--ink);
@@ -142,20 +145,24 @@
       align-items: center;
       justify-content: space-between;
       height: 64px;
-      gap: 16px;
+      gap: 10px;
+      flex-wrap: nowrap;
+      /* Header dung khung rong rieng de vua 1 dong tren man 1920x1080 */
+      max-width: 1800px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 9px;
       text-decoration: none;
       color: #fff;
-      flex-shrink: 0;
+      flex-shrink: 1;
+      min-width: 0;
     }
     .brand-logo {
-      width: 42px;
-      height: 42px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       background: radial-gradient(circle, #e9cf7a 0%, #c9a227 70%, #8c6a0c 100%);
       display: flex;
@@ -176,7 +183,8 @@
       flex-direction: column;
     }
     .brand-text .sub {
-      font-size: 11px;
+      font-size: 10.5px;
+      white-space: nowrap;
       font-weight: 600;
       color: var(--vang-l);
       letter-spacing: 0.08em;
@@ -184,7 +192,8 @@
     }
     .brand-text .title {
       font-family: var(--serif);
-      font-size: 16px;
+      font-size: 14.5px;
+      white-space: nowrap;
       font-weight: 700;
       letter-spacing: 0.02em;
       color: #fff;
@@ -195,7 +204,9 @@
     nav.tabs {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
+      min-width: 0;
+      flex-shrink: 1;
     }
     .tab-btn {
       display: inline-flex;
@@ -205,17 +216,18 @@
       border: 0;
       color: rgba(255, 255, 255, 0.85);
       font-family: var(--sans);
-      font-size: 13.5px;
+      font-size: 12.5px;
       font-weight: 600;
-      padding: 8px 14px;
+      padding: 7px 9px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
       white-space: nowrap;
     }
     .tab-btn svg {
-      width: 17px;
-      height: 17px;
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
       stroke-width: 2;
     }
     .tab-btn:hover {
@@ -232,8 +244,9 @@
     .bar-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 7px;
       flex-shrink: 0;
+      white-space: nowrap;
     }
     .livepill {
       display: inline-flex;
@@ -241,9 +254,10 @@
       gap: 7px;
       background: rgba(0, 0, 0, 0.25);
       border: 1px solid rgba(233, 207, 122, 0.4);
-      padding: 5px 11px;
+      padding: 5px 10px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 11.5px;
+      white-space: nowrap;
       color: var(--vang-l);
     }
     .ldot {
@@ -512,6 +526,42 @@
       grid-template-columns: repeat(6, 1fr);
       gap: 16px;
     }
+    /* Tong tien: mot muc header don gian, gon 1 dong duoi luoi KPI */
+    .money-header {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      padding: 12px 18px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 5px solid #d97706;
+      border-radius: var(--r);
+      color: var(--ink);
+    }
+    .money-header .mh-icon {
+      width: 30px; height: 30px; flex-shrink: 0;
+      border-radius: 8px;
+      background: #d97706; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .money-header .mh-icon svg { width: 17px; height: 17px; }
+    .money-header .mh-label {
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      color: #92400e;
+    }
+    .money-header .mh-value {
+      font-size: 22px; font-weight: 800; color: #92400e;
+      white-space: nowrap; letter-spacing: -0.01em;
+    }
+    .money-header .mh-value small { font-size: 14px; font-weight: 700; }
+    .money-header .mh-avg {
+      margin-left: auto;
+      font-size: 13px; color: var(--muted); white-space: nowrap;
+    }
+    .money-header .mh-avg b { color: var(--ink); }
     .kpi-card {
       border-radius: var(--r-l);
       padding: 18px 16px 16px;
@@ -1350,6 +1400,28 @@
       margin-top: auto;
     }
 
+    /* Header fit: man hinh 1920x1080 (ke ca scale Windows 125-150%) van vua 1 dong */
+    @media (max-width: 1500px) {
+      .brand-text .title { font-size: 13.5px; }
+      .brand-text .sub { font-size: 10px; }
+      .tab-btn { font-size: 12px; padding: 6px 7px; gap: 5px; }
+      .livepill { font-size: 11px; padding: 4px 8px; }
+      header.bar .wrap { gap: 6px; padding: 0 12px; }
+      .bar-right .btn { padding: 6px 9px; font-size: 12px; }
+    }
+    @media (max-width: 1280px) {
+      .brand-text .sub { display: none; }
+      .tab-btn svg { display: none; }
+    }
+
+    /* Bang chi tiet: nen nhe o man vua de khong can cuon ngang */
+    @media (max-width: 1500px) {
+      table.data-table { font-size: 13px; }
+      table.data-table th { padding: 10px 7px; font-size: 12px; }
+      table.data-table td { padding: 10px 7px; }
+      .mini-progress { min-width: 92px; }
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .kpi-grid { grid-template-columns: repeat(3, 1fr); }
@@ -1928,6 +2000,15 @@
             <div class="kpi-sub">Chiếm <b id="kpiNotDeclaredRate">54.0%</b> ĐV</div>
             <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiNotDeclaredBar" style="width:54%;"></div></div>
           </div>
+
+        </div>
+
+        <!-- Tổng tiền đã thu: mục header đơn giản -->
+        <div class="money-header" title="Tổng số tiền đảng phí đã thu qua DVC">
+          <span class="mh-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></svg></span>
+          <span class="mh-label">Tổng tiền đã thu</span>
+          <span class="mh-value"><span id="kpiMoney">113.714.000</span><small> đ</small></span>
+          <span class="mh-avg">Bình quân: <b><span id="kpiMoneyAvg">70.673</span> đ</b> / ĐV đã nộp</span>
         </div>
       </div>
 
@@ -1965,7 +2046,7 @@
                 </div>
                 <div>
                   <h3>Top 03 đơn vị thu tiền cao nhất</h3>
-                  <p>Đơn vị có số lượng đảng viên nộp tiền thực tế cao nhất</p>
+                  <p>Đơn vị có tổng số tiền đảng phí thu được cao nhất trong kỳ</p>
                 </div>
               </div>
               <span class="top3-month-badge" id="paidMonthBadge" style="background:var(--vang-bg); color:var(--vang-d); border-color:var(--vang-l);">
@@ -2200,6 +2281,7 @@
                   <th class="text-right" onclick="sortTable('pending_review')">Chưa duyệt ⇕</th>
                   <th class="text-right" onclick="sortTable('approved_unpaid')">Duyệt, chưa nộp ⇕</th>
                   <th class="text-right" onclick="sortTable('approved_paid')">Đã nộp ⇕</th>
+                  <th class="text-right" onclick="sortTable('amount')">Số tiền đã thu ⇕</th>
                   <th class="text-right" onclick="sortTable('not_declared')">Chưa kê khai ⇕</th>
                   <th onclick="sortTable('rate')">Tiến độ thực tế ⇕</th>
                   <th class="text-center">Thao tác</th>
@@ -2208,6 +2290,13 @@
               <tbody id="unitsTableBody">
                 <!-- Rendered by JS -->
               </tbody>
+              <tfoot>
+                <tr style="background:#fffbeb; border-top:2px solid var(--rule); font-weight:700;">
+                  <td colspan="8" class="text-right" style="padding:11px 10px; color:var(--ink)">Tổng số tiền các đơn vị đang hiển thị:</td>
+                  <td class="text-right" style="padding:11px 10px; white-space:nowrap; color:#b45309" id="filteredMoneyTotal">0 đ</td>
+                  <td colspan="3"></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
           <div style="margin-top:12px; font-size:12.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center;">
@@ -3253,6 +3342,7 @@
       const approved_unpaid = data.reduce((s, x) => s + (x.approved_unpaid || 0), 0);
       const approved_paid = data.reduce((s, x) => s + (x.approved_paid || 0), 0);
       const not_declared = data.reduce((s, x) => s + (x.not_declared || 0), 0);
+      const total_amount = data.reduce((s, x) => s + (x.amount || 0), 0);
       
       const finished_units = data.filter(x => x.rate >= 0.999).length;
       const rate = total_dv > 0 ? (approved_paid + exempt) / total_dv : 0;
@@ -3273,7 +3363,7 @@
       const g2_done = g2.filter(x => x.rate >= 0.999).length;
 
       return {
-        total_dv, exempt, pending_review, approved_unpaid, approved_paid, not_declared,
+        total_dv, exempt, pending_review, approved_unpaid, approved_paid, not_declared, total_amount,
         finished_units, rate,
         g1: { count: g1.length, dv: g1_dv, paid: g1_paid, rate: g1_rate, done: g1_done },
         g2: { count: g2.length, dv: g2_dv, paid: g2_paid + g2_exempt, rate: g2_rate, done: g2_done }
@@ -3354,9 +3444,9 @@
       }
 
       // 4. Top 03 Đơn vị thu tiền cao nhất
-      // Sắp xếp ưu tiên theo số lượng đảng viên thực tế đã nộp tiền (approved_paid)
+      // Sắp xếp theo tổng số tiền thu được (amount); phụ: số ĐV đã nộp, tỷ lệ
       const paidUnits = [...currentUnits];
-      paidUnits.sort((a, b) => (b.approved_paid - a.approved_paid) || (b.rate - a.rate) || (b.total_dv - a.total_dv));
+      paidUnits.sort((a, b) => ((b.amount || 0) - (a.amount || 0)) || (b.approved_paid - a.approved_paid) || (b.rate - a.rate));
       const top3Paid = paidUnits.slice(0, 3);
 
       const elPaidList = document.getElementById('top3PaidList');
@@ -3379,8 +3469,8 @@
               </div>
             </div>
             <div class="top3-score" style="color:var(--ngoc-d); display:flex; flex-direction:column; align-items:flex-end;">
-              <span style="font-size:14px; font-weight:800;">${nf(u.approved_paid)} ĐV</span>
-              <span style="font-size:11px; font-weight:600; color:var(--muted);">${pct(u.rate)}</span>
+              <span style="font-size:15px; font-weight:800;">${nf(u.amount || 0)} đ</span>
+              <span style="font-size:11px; font-weight:600; color:var(--muted);">${nf(u.approved_paid)} ĐV · ${pct(u.rate)}</span>
             </div>
           </div>
         `).join('');
@@ -3430,6 +3520,9 @@
       animateCount('kpiNotDeclared', t.not_declared);
       document.getElementById('kpiNotDeclaredRate').innerText = pct(t.not_declared / t.total_dv);
       document.getElementById('kpiNotDeclaredBar').style.width = (t.not_declared / t.total_dv * 100) + '%';
+      animateCount('kpiMoney', t.total_amount);
+      const moneyAvgEl = document.getElementById('kpiMoneyAvg');
+      if (moneyAvgEl) moneyAvgEl.innerText = t.approved_paid > 0 ? nf(Math.round(t.total_amount / t.approved_paid)) : '0';
 
       // Summary text
       renderSummaryText(t);
@@ -3685,6 +3778,8 @@
       });
 
       document.getElementById('filteredCount').innerText = filtered.length;
+      const moneyTotalEl = document.getElementById('filteredMoneyTotal');
+      if (moneyTotalEl) moneyTotalEl.innerText = nf(filtered.reduce((s, x) => s + (x.amount || 0), 0)) + ' đ';
 
       tbody.innerHTML = filtered.map(u => {
         let statusBadge = '';
@@ -3719,6 +3814,7 @@
             <td class="text-right">${u.pending_review > 0 ? `<b style="color:var(--xanh)">${u.pending_review}</b>` : '0'}</td>
             <td class="text-right">${u.approved_unpaid > 0 ? `<b style="color:var(--cam)">${u.approved_unpaid}</b>` : '0'}</td>
             <td class="text-right"><b style="color:var(--ngoc-d)">${nf(u.approved_paid)}</b></td>
+            <td class="text-right" style="white-space:nowrap">${(u.amount || 0) > 0 ? `<b style="color:#b45309">${nf(u.amount || 0)} đ</b>` : '<span style="color:var(--muted)">0 đ</span>'}</td>
             <td class="text-right" style="color:var(--muted)">${u.not_declared > 0 ? `<b style="color:var(--xam)">${nf(u.not_declared)}</b>` : '0'}</td>
             <td>
               <div class="mini-progress">
@@ -3867,6 +3963,7 @@
           'Chưa duyệt': u.pending_review,
           'Đã duyệt, chưa nộp': u.approved_unpaid,
           'Đã duyệt, đã nộp': u.approved_paid,
+          'Số tiền đã thu (đ)': u.amount || 0,
           'Chưa kê khai trên DVC': u.not_declared,
           'Tỷ lệ hoàn thành thực tế': (u.rate * 100).toFixed(2) + '%'
         }));

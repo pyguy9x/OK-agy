@@ -1,0 +1,4102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#8c0f16">
+  <meta name="description" content="Hệ thống theo dõi tiến độ thu nộp đảng phí trên Cổng Dịch vụ công theo Công văn số 1085.">
+  <title>Hệ thống theo dõi tiến độ nộp Đảng phí · Dịch vụ công</title>
+
+  <!-- Google Fonts: Be Vietnam Pro & Noto Serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Serif:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- SheetJS for client-side Excel import/export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* =========================================================
+       THEME báo cáo ĐẢNG - PHONG CÁCH BẢO THẮNG / LÀO CAI
+       Nền giấy ngà thanh lịch, đỏ son cờ Đảng, chỉ vàng kim,
+       chữ Noto Serif cho tiêu đề trang trọng, Be Vietnam Pro cho số liệu.
+       ========================================================= */
+    :root {
+      --son: #b3141c;
+      --son-d: #8c0f16;
+      --son-dd: #650a10;
+      --son-l: #d4262e;
+      --son-bg: #fff5f5;
+      
+      --vang: #c9a227;
+      --vang-d: #a37f17;
+      --vang-l: #e9cf7a;
+      --vang-bg: #fbf4dc;
+      
+      --ngoc: #1e7a4c;
+      --ngoc-d: #145836;
+      --ngoc-l: #34d399;
+      --ngoc-bg: #e3f1e8;
+      
+      --cam: #d97706;
+      --cam-l: #fbbf24;
+      --cam-bg: #fef3c7;
+      
+      --xanh: #2563eb;
+      --xanh-l: #60a5fa;
+      --xanh-bg: #eff6ff;
+      
+      --xam: #64748b;
+      --xam-l: #cbd5e1;
+      --xam-bg: #f8fafc;
+      
+      --giay: #f5f6f8;
+      --giay-subtle: #fafafb;
+      --paper: #ffffff;
+      
+      --ink: #1c1d1f;
+      --ink-2: #374151;
+      --muted: #6b7280;
+      --rule: #e5e7eb;
+      --rule-2: #f1f3f5;
+      
+      --serif: 'Noto Serif', Georgia, 'Times New Roman', serif;
+      --sans: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --body: var(--sans);
+      --display: var(--serif);
+      
+      --wrap: 1240px;
+      --r: 12px;
+      --r-s: 8px;
+      --r-l: 16px;
+      --sh-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --sh: 0 4px 16px -2px rgba(140, 15, 22, 0.08), 0 2px 6px -1px rgba(0,0,0,0.04);
+      --sh-lg: 0 12px 32px -4px rgba(140, 15, 22, 0.12), 0 4px 12px -2px rgba(0,0,0,0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--body);
+      color: var(--ink);
+      background-color: var(--giay);
+      line-height: 1.55;
+      font-size: 14.5px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Thanh thông báo WebView Zalo */
+    .zalobar {
+      background: #0068ff;
+      color: #fff;
+      font-size: 13px;
+      padding: 8px 16px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .zalobar.on { display: flex; }
+    .zalobar button {
+      background: rgba(255,255,255,0.25);
+      color: #fff;
+      border: 0;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Header Bar */
+    header.bar {
+      background: linear-gradient(135deg, var(--son-dd) 0%, var(--son-d) 50%, var(--son) 100%);
+      color: #ffffff;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 12px rgba(90, 13, 19, 0.35);
+      border-bottom: 2px solid var(--vang);
+    }
+
+    .wrap {
+      max-width: var(--wrap);
+      margin: 0 auto;
+      padding: 0 18px;
+      width: 100%;
+    }
+
+    header.bar .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      gap: 10px;
+      flex-wrap: nowrap;
+      /* Header dung khung rong rieng de vua 1 dong tren man 1920x1080 */
+      max-width: 1560px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      color: #fff;
+      flex-shrink: 1;
+      min-width: 0;
+    }
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #e9cf7a 0%, #c9a227 70%, #8c6a0c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      border: 1.5px solid #fff;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .brand-logo svg {
+      width: 28px;
+      height: 28px;
+      fill: #8c0f16;
+    }
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .brand-text .sub {
+      font-size: 10.5px;
+      white-space: nowrap;
+      font-weight: 600;
+      color: var(--vang-l);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .brand-text .title {
+      font-family: var(--serif);
+      font-size: 14.5px;
+      white-space: nowrap;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #fff;
+      line-height: 1.25;
+    }
+
+    /* Navigation Tabs */
+    nav.tabs {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      min-width: 0;
+      flex-shrink: 1;
+    }
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: 0;
+      color: rgba(255, 255, 255, 0.85);
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 7px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .tab-btn svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      stroke-width: 2;
+    }
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      box-shadow: inset 0 0 0 1px rgba(233, 207, 122, 0.6);
+    }
+
+    /* Header right actions */
+    .bar-right {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .livepill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(233, 207, 122, 0.4);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      white-space: nowrap;
+      color: var(--vang-l);
+    }
+    .ldot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border-radius: var(--r-s);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--rule);
+      background: #fff;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: var(--giay);
+      border-color: #cbd5e1;
+      color: var(--ink);
+    }
+    .btn.solid {
+      background: var(--son);
+      color: #fff;
+      border-color: var(--son);
+    }
+    .btn.solid:hover {
+      background: var(--son-d);
+      border-color: var(--son-d);
+    }
+    .btn.gold {
+      background: linear-gradient(135deg, #c9a227 0%, #b08d1e 100%);
+      color: #fff;
+      border-color: #c9a227;
+    }
+    .btn.gold:hover {
+      background: #a37f17;
+    }
+    .btn.sm {
+      padding: 5px 9px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+    .btn.icon-only {
+      padding: 7px;
+    }
+
+    /* Main Container & Page Switch */
+    main {
+      flex: 1;
+      padding-bottom: 40px;
+    }
+    .page-section {
+      display: none;
+      animation: fadeIn 0.25s ease forwards;
+    }
+    .page-section.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =========================================================
+       HERO BANNER
+       ========================================================= */
+    .hero {
+      background: linear-gradient(180deg, #fff 0%, #fbfbfc 100%);
+      border-bottom: 1px solid var(--rule);
+      padding: 28px 0 24px;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--son) 0%, var(--vang) 50%, var(--son) 100%);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 28px;
+      align-items: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--son);
+      background: var(--son-bg);
+      border: 1px solid rgba(179, 20, 28, 0.15);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--son-dd);
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .hero-lede {
+      color: var(--ink-2);
+      font-size: 14.5px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      border: 1px solid var(--rule);
+      padding: 8px 14px;
+      border-radius: var(--r);
+      box-shadow: var(--sh-sm);
+      font-size: 13px;
+    }
+    .hero-badge b {
+      font-size: 15px;
+      color: var(--son-d);
+    }
+
+    /* Donut Circular Gauge Widget */
+    .donut-card {
+      background: #ffffff;
+      border: 1px solid var(--rule);
+      border-radius: var(--r-l);
+      padding: 20px 22px;
+      box-shadow: var(--sh);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .donut-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--rule-2);
+      padding-bottom: 10px;
+    }
+    .donut-head h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .donut-head span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .donut-body {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .donut-visual {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      flex-shrink: 0;
+    }
+    .donut-visual svg {
+      transform: rotate(-90deg);
+      width: 140px;
+      height: 140px;
+    }
+    .donut-visual circle {
+      fill: none;
+      stroke-width: 14;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s ease;
+    }
+    .donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .donut-pct {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--son-d);
+      font-family: var(--sans);
+      line-height: 1.1;
+    }
+    .donut-lbl {
+      font-size: 10.5px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex: 1;
+      font-size: 12.5px;
+    }
+    .leg-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .leg-tag {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--ink-2);
+    }
+    .leg-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .leg-val {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* =========================================================
+       KPI STRIP CARDS
+       ========================================================= */
+    .strip-section {
+      margin-top: 24px;
+      margin-bottom: 24px;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+    /* Tong tien: mot muc header don gian, gon 1 dong duoi luoi KPI */
+    .money-header {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      padding: 12px 18px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 5px solid #d97706;
+      border-radius: var(--r);
+      color: var(--ink);
+    }
+    .money-header .mh-icon {
+      width: 30px; height: 30px; flex-shrink: 0;
+      border-radius: 8px;
+      background: #d97706; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .money-header .mh-icon svg { width: 17px; height: 17px; }
+    .money-header .mh-label {
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      color: #92400e;
+    }
+    .money-header .mh-value {
+      font-size: 22px; font-weight: 800; color: #92400e;
+      white-space: nowrap; letter-spacing: -0.01em;
+    }
+    .money-header .mh-value small { font-size: 14px; font-weight: 700; }
+    .money-header .mh-avg {
+      margin-left: auto;
+      font-size: 13px; color: var(--muted); white-space: nowrap;
+    }
+    .money-header .mh-avg b { color: var(--ink); }
+    .kpi-card {
+      border-radius: var(--r-l);
+      padding: 18px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0,0,0,0.06);
+    }
+    /* Dynamic Shimmer light sweep across cards */
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 40%;
+      height: 200%;
+      background: linear-gradient(
+        60deg,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.25) 50%,
+        rgba(255, 255, 255, 0) 80%
+      );
+      transform: rotate(25deg);
+      pointer-events: none;
+      animation: kpiShimmer 6s infinite;
+    }
+    @keyframes kpiShimmer {
+      0% { left: -70%; }
+      30% { left: 140%; }
+      100% { left: 140%; }
+    }
+    .kpi-card:hover {
+      transform: translateY(-6px) scale(1.02);
+    }
+    
+    /* 6 VIBRANT THEMES */
+    /* 1. Đỏ son Ruby rực rỡ */
+    .kpi-card.c-red {
+      background: linear-gradient(140deg, #dc2626 0%, #b91c1c 45%, #880e14 100%);
+      box-shadow: 0 10px 28px -4px rgba(220, 38, 38, 0.42), 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .kpi-card.c-red:hover {
+      box-shadow: 0 16px 36px -4px rgba(220, 38, 38, 0.6), 0 6px 14px rgba(0,0,0,0.15);
+    }
+    /* 2. Xanh lục bảo Emerald rực rỡ */
+    .kpi-card.c-green {
+      background: linear-gradient(140deg, #10b981 0%, #059669 45%, #044e36 100%);
+      box-shadow: 0 10px 28px -4px rgba(16, 185, 129, 0.42), 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .kpi-card.c-green:hover {
+      box-shadow: 0 16px 36px -4px rgba(16, 185, 129, 0.6), 0 6px 14px rgba(0,0,0,0.15);
+    }
+    /* 3. Vàng hổ phách Amber Gold rực rỡ */
+    .kpi-card.c-gold {
+      background: linear-gradient(140deg, #f59e0b 0%, #d97706 45%, #92400e 100%);
+      box-shadow: 0 10px 28px -4px rgba(245, 158, 11, 0.42), 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .kpi-card.c-gold:hover {
+      box-shadow: 0 16px 36px -4px rgba(245, 158, 11, 0.6), 0 6px 14px rgba(0,0,0,0.15);
+    }
+    /* 4. Cam san hô Coral Fire rực rỡ */
+    .kpi-card.c-amber {
+      background: linear-gradient(140deg, #f97316 0%, #ea580c 45%, #9a3412 100%);
+      box-shadow: 0 10px 28px -4px rgba(249, 115, 22, 0.42), 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .kpi-card.c-amber:hover {
+      box-shadow: 0 16px 36px -4px rgba(249, 115, 22, 0.6), 0 6px 14px rgba(0,0,0,0.15);
+    }
+    /* 5. Xanh dương Sapphire rực rỡ */
+    .kpi-card.c-blue {
+      background: linear-gradient(140deg, #3b82f6 0%, #2563eb 45%, #1e40af 100%);
+      box-shadow: 0 10px 28px -4px rgba(59, 130, 246, 0.42), 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .kpi-card.c-blue:hover {
+      box-shadow: 0 16px 36px -4px rgba(59, 130, 246, 0.6), 0 6px 14px rgba(0,0,0,0.15);
+    }
+    /* 6. Tím dạ quang Neon Purple rực rỡ */
+    .kpi-card.c-gray {
+      background: linear-gradient(140deg, #8b5cf6 0%, #7c3aed 45%, #581c87 100%);
+      box-shadow: 0 10px 28px -4px rgba(139, 92, 246, 0.42), 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .kpi-card.c-gray:hover {
+      box-shadow: 0 16px 36px -4px rgba(139, 92, 246, 0.6), 0 6px 14px rgba(0,0,0,0.15);
+    }
+
+    /* CARD HEADER & ICON */
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .kpi-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.95);
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    }
+    .kpi-icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    .kpi-icon-wrap svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    /* VIBRANT CRISP NUMBERS */
+    .kpi-num {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff !important;
+      line-height: 1.1;
+      margin-bottom: 6px;
+      font-family: var(--sans);
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .kpi-sub b {
+      color: #ffffff;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.22);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .kpi-bar {
+      height: 5px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 999px;
+      margin-top: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .kpi-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: #ffffff !important;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      transition: width 1s ease;
+    }
+
+    /* =========================================================
+       PANEL & CARD LAYOUT
+       ========================================================= */
+    .panel {
+      background: #ffffff;
+      border: 1px solid var(--rule);
+      border-radius: var(--r-l);
+      box-shadow: var(--sh-sm);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .panel.pad {
+      padding: 22px 24px;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .panel-header h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--son-dd);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-header p.sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .panel-acts {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Summary / Text Box */
+    .summary-box {
+      background: #fdfdf9;
+      border: 1px solid #ebdcb2;
+      border-left: 4px solid var(--vang);
+      padding: 16px 18px;
+      border-radius: var(--r-s);
+      font-size: 14px;
+      color: var(--ink-2);
+      line-height: 1.65;
+      margin-bottom: 12px;
+    }
+    .summary-hint {
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Funnel / Pipeline Breakdown */
+    .funnel-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .funnel-step {
+      display: grid;
+      grid-template-columns: 200px 1fr 130px;
+      align-items: center;
+      gap: 16px;
+    }
+    .step-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--giay);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-track {
+      background: #f1f5f9;
+      height: 16px;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .step-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.8s ease;
+    }
+    .step-stat {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .step-stat small {
+      font-weight: 500;
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    /* 2 Columns: Group Comparison & Leaders/Remind */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    /* Group comparison card */
+    .group-card {
+      border: 1px solid var(--rule);
+      border-radius: var(--r);
+      padding: 16px 18px;
+      background: #fafafb;
+      margin-bottom: 12px;
+    }
+    .group-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .group-title {
+      font-weight: 700;
+      font-size: 14.5px;
+      color: var(--son-d);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .group-rate {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .group-bar {
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .group-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--son) 0%, var(--vang) 100%);
+    }
+    .group-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .group-stats b {
+      display: block;
+      color: var(--ink);
+      font-size: 13.5px;
+    }
+
+    /* Leaderboard list & Remind list */
+    .leader-list, .remind-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .leader-item, .remind-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-radius: var(--r-s);
+      border: 1px solid var(--rule-2);
+      background: #fff;
+      font-size: 13px;
+      transition: all 0.15s ease;
+    }
+    .leader-item:hover, .remind-item:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .item-rank {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .item-rank.gold {
+      background: var(--vang-bg);
+      color: var(--vang-d);
+      border: 1px solid var(--vang-l);
+    }
+    .item-rank.red {
+      background: var(--son-bg);
+      color: var(--son);
+      border: 1px solid rgba(179,20,28,0.2);
+    }
+    .item-name {
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .rate-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .rate-pill.success { background: var(--ngoc-bg); color: var(--ngoc-d); }
+    .rate-pill.warning { background: var(--cam-bg); color: #92400e; }
+    .rate-pill.danger { background: #fef2f2; color: #b91c1c; }
+
+    /* Column Chart */
+    .chart-container {
+      width: 100%;
+      height: 280px;
+      position: relative;
+      margin-top: 15px;
+    }
+    .chart-bars-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 220px;
+      padding-bottom: 25px;
+      border-bottom: 1px solid var(--rule);
+      position: relative;
+    }
+    .col-bar-group {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .col-bar {
+      width: 100%;
+      max-width: 18px;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.6s ease, filter 0.2s ease;
+      min-height: 2px;
+    }
+    .col-bar-group:hover .col-bar {
+      filter: brightness(1.15);
+      transform: scaleY(1.02);
+      transform-origin: bottom;
+    }
+    .col-bar.c-100 { background: var(--ngoc); }
+    .col-bar.c-med { background: var(--cam); }
+    .col-bar.c-low { background: var(--son-l); }
+    .col-bar.c-zero { background: #cbd5e1; }
+
+    /* =========================================================
+       PAGE 2: ĐƠN VỊ TRỰC THUỘC (UNITS TABLE)
+       ========================================================= */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+      max-width: 420px;
+    }
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+    }
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 36px;
+      border: 1px solid var(--rule);
+      border-radius: var(--r-s);
+      font-size: 13.5px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .search-input:focus {
+      border-color: var(--son);
+      box-shadow: 0 0 0 3px rgba(179, 20, 28, 0.1);
+    }
+    .filter-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .pill-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border: 1px solid var(--rule);
+      background: #fff;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pill-btn:hover {
+      background: var(--giay);
+      border-color: #cbd5e1;
+    }
+    .pill-btn.active {
+      background: var(--son-d);
+      color: #fff;
+      border-color: var(--son-d);
+    }
+
+    /* Table styles */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--rule);
+      border-radius: var(--r);
+      background: #fff;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13.5px;
+    }
+    table.data-table thead {
+      background: #f8fafc;
+      border-bottom: 2px solid var(--rule);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    table.data-table th {
+      padding: 12px 10px;
+      font-weight: 700;
+      color: var(--ink-2);
+      font-size: 12.5px;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    table.data-table th:hover {
+      background: #eff2f6;
+    }
+    table.data-table th.text-right, table.data-table td.text-right {
+      text-align: right;
+    }
+    table.data-table th.text-center, table.data-table td.text-center {
+      text-align: center;
+    }
+    table.data-table tbody tr {
+      border-bottom: 1px solid var(--rule-2);
+      transition: background 0.12s ease;
+    }
+    table.data-table tbody tr:hover {
+      background: #fbfcfe;
+    }
+    table.data-table td {
+      padding: 11px 10px;
+      color: var(--ink-2);
+      vertical-align: middle;
+    }
+    table.data-table td.unit-name {
+      font-weight: 600;
+      color: var(--ink);
+      max-width: 280px;
+    }
+    .mini-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 110px;
+    }
+    .mini-progress-track {
+      flex: 1;
+      height: 7px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .mini-progress-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+    .mini-progress-pct {
+      font-weight: 700;
+      font-size: 12px;
+      width: 44px;
+      text-align: right;
+    }
+
+    /* =========================================================
+       PAGE 3: BÁO CÁO báo cáo (REPORT DOCUMENT)
+       ========================================================= */
+    .document-page {
+      background: #fff;
+      border: 1px solid var(--rule);
+      border-radius: var(--r-l);
+      box-shadow: var(--sh);
+      padding: 44px 50px;
+      max-width: 900px;
+      margin: 0 auto;
+      font-family: 'Times New Roman', var(--serif);
+      color: #111;
+      line-height: 1.6;
+    }
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      font-size: 14.5px;
+    }
+    .doc-header-left, .doc-header-right {
+      text-align: center;
+    }
+    .doc-header-left p, .doc-header-right p {
+      margin-bottom: 2px;
+    }
+    .doc-header-left b, .doc-header-right b {
+      text-transform: uppercase;
+    }
+    .doc-line {
+      width: 120px;
+      height: 1px;
+      background: #111;
+      margin: 4px auto 0;
+    }
+    .doc-title {
+      text-align: center;
+      margin: 30px 0 24px;
+    }
+    .doc-title h1 {
+      font-size: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .doc-title p {
+      font-size: 14px;
+      font-style: italic;
+    }
+    .doc-section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 20px 0 10px;
+      text-transform: uppercase;
+    }
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px;
+      font-size: 13.5px;
+    }
+    .doc-table th, .doc-table td {
+      border: 1px solid #333;
+      padding: 7px 8px;
+    }
+    .doc-table th {
+      background: #f4f4f4;
+      font-weight: 700;
+      text-align: center;
+    }
+    .doc-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 14.5px;
+    }
+    .doc-signer {
+      width: 250px;
+    }
+    .doc-signer p.pos {
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 60px;
+    }
+
+    /* =========================================================
+       PAGE 4: NHẬP EXCEL (IMPORT)
+       ========================================================= */
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      border-radius: var(--r-l);
+      padding: 40px 20px;
+      text-align: center;
+      background: #fafafb;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--son);
+      background: var(--son-bg);
+    }
+    .drop-zone svg {
+      width: 48px;
+      height: 48px;
+      color: var(--son);
+      margin-bottom: 12px;
+    }
+
+    /* =========================================================
+       MODALS & TOAST NOTIFICATION
+       ========================================================= */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal-card {
+      background: #fff;
+      border-radius: var(--r-l);
+      box-shadow: var(--sh-lg);
+      max-width: 560px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      animation: modalZoom 0.2s ease forwards;
+    }
+    @keyframes modalZoom {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 12px;
+    }
+    .modal-head h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--son-dd);
+    }
+    .modal-close {
+      background: transparent;
+      border: 0;
+      font-size: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1c1d1f;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: var(--r-s);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      font-size: 13.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 3000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .toast svg {
+      width: 18px;
+      height: 18px;
+      color: var(--vang-l);
+    }
+
+    /* Tooltip */
+    .chart-tooltip {
+      position: absolute;
+      background: rgba(28, 29, 31, 0.95);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 50;
+      display: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* Footer */
+    footer.app-footer {
+      background: #ffffff;
+      border-top: 1px solid var(--rule);
+      padding: 20px 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: auto;
+    }
+
+    /* Header fit: man hinh 1920x1080 (ke ca scale Windows 125-150%) van vua 1 dong */
+    @media (max-width: 1500px) {
+      .brand-text .title { font-size: 13.5px; }
+      .brand-text .sub { font-size: 10px; }
+      .tab-btn { font-size: 12px; padding: 6px 7px; gap: 5px; }
+      .livepill { font-size: 11px; padding: 4px 8px; }
+      header.bar .wrap { gap: 6px; padding: 0 12px; }
+      .bar-right .btn { padding: 6px 9px; font-size: 12px; }
+    }
+    @media (max-width: 1280px) {
+      .brand-text .sub { display: none; }
+      .tab-btn svg { display: none; }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+      .hero-grid { grid-template-columns: 1fr; }
+      .grid-2col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      header.bar .wrap { height: auto; padding: 10px 14px; flex-wrap: wrap; }
+      nav.tabs { order: 3; width: 100%; overflow-x: auto; padding-bottom: 4px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .funnel-step { grid-template-columns: 1fr; gap: 4px; }
+      .step-stat { text-align: left; }
+      .document-page { padding: 20px 16px; }
+    }
+
+    /* Print Styles */
+    @media print {
+      header.bar, .zalobar, nav.tabs, .bar-right, .panel-acts, .toolbar, .drop-zone, footer.app-footer, .btn {
+        display: none !important;
+      }
+      body { background: #fff !important; color: #000 !important; font-size: 12pt; }
+      .page-section { display: none !important; }
+      #reports { display: block !important; }
+      .document-page {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+    }
+
+    /* =========================================================
+       XẾP HẠNG TỈNH & TOP 03 ĐƠN VỊ
+       ========================================================= */
+    .province-rank-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      background: linear-gradient(135deg, #fffcf5 0%, #fff7ed 50%, #ffffff 100%);
+      border: 1.5px solid #f2cf78;
+      border-left: 5px solid var(--son);
+      border-radius: var(--r);
+      padding: 10px 18px;
+      margin-top: 10px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(201, 162, 39, 0.16), 0 1px 3px rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    .province-rank-box::after {
+      content: '';
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 70px;
+      height: 70px;
+      background: radial-gradient(circle, rgba(201, 162, 39, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .pr-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fef08a 0%, #facc15 100%);
+      border: 2px solid #ca8a04;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(202, 138, 4, 0.35);
+      color: #854d0e;
+      position: relative;
+    }
+    .pr-icon-wrap svg {
+      width: 24px;
+      height: 24px;
+    }
+    .pr-content {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .pr-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pr-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--son-d);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .pr-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--son-dd);
+      font-family: var(--sans);
+      line-height: 1.1;
+      display: inline-flex;
+      align-items: baseline;
+    }
+    .pr-val small {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-left: 1px;
+    }
+    .pr-badge {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pr-progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pr-bar {
+      width: 140px;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .pr-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--vang) 0%, var(--son) 100%);
+      transition: width 0.8s ease;
+    }
+    .pr-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pr-sub b {
+      color: var(--ink);
+    }
+
+    /* TOP 03 GRIDS */
+    .top3-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .top3-card {
+      background: #ffffff;
+      border: 1px solid var(--rule);
+      border-radius: var(--r-l);
+      padding: 20px 22px;
+      box-shadow: var(--sh-sm);
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .top3-card:hover {
+      box-shadow: var(--sh);
+      border-color: #cbd5e1;
+    }
+    .top3-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3.5px;
+    }
+    .top3-card.c-proc::before { background: linear-gradient(90deg, #2563eb, #38bdf8); }
+    .top3-card.c-paid::before { background: linear-gradient(90deg, var(--son), var(--vang)); }
+
+    .top3-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--rule-2);
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .top3-head-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .top3-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .top3-icon.blue { background: var(--xanh-bg); color: var(--xanh); }
+    .top3-icon.gold { background: var(--vang-bg); color: #92400e; }
+    .top3-icon svg { width: 20px; height: 20px; }
+
+    .top3-head h3 {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.25;
+    }
+    .top3-head p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .top3-month-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--son-bg);
+      color: var(--son);
+      border: 1px solid rgba(179,20,28,0.18);
+    }
+
+    .top3-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .top3-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--r-s);
+      background: #fafafb;
+      border: 1px solid var(--rule-2);
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .top3-item:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      transform: translateX(3px);
+    }
+    .medal-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 800;
+      flex-shrink: 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+    }
+    .medal-1 { background: linear-gradient(135deg, #fef08a 0%, #eab308 100%); color: #78350f; border: 1.5px solid #facc15; }
+    .medal-2 { background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); color: #334155; border: 1.5px solid #94a3b8; }
+    .medal-3 { background: linear-gradient(135deg, #ffedd5 0%, #fdba74 100%); color: #7c2d12; border: 1.5px solid #fb923c; }
+
+    .top3-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .top3-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    .top3-sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .top3-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+    }
+    .top3-bar {
+      flex: 1;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .top3-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+    .top3-score {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--ink);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .top3-grid { grid-template-columns: 1fr; }
+      .province-rank-box { flex-direction: column; align-items: flex-start; }
+      .pr-progress-wrap { width: 100%; flex-wrap: wrap; }
+      .pr-bar { width: 100%; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Zalo Notification Bar -->
+  <div class="zalobar" id="zalobar">
+    <span>⚠️ Đang mở trong ứng dụng Zalo. Để tải báo cáo Excel hoặc in mượt mà, hãy bấm nút <b>⋯</b> ở góc trên và chọn <b>“Mở bằng trình duyệt”</b>.</span>
+    <button type="button" onclick="document.getElementById('zalobar').classList.remove('on')">Đã hiểu</button>
+  </div>
+
+  <!-- Header Bar -->
+  <header class="bar">
+    <div class="wrap">
+      <div class="brand">
+        <div class="brand-logo" title="Cờ Đảng Cộng sản Việt Nam">
+          <svg viewBox="0 0 24 24">
+            <!-- Party Hammer & Sickle Emblem -->
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.5l-2.5-2.5 1.5-1.5 2.5 2.5-1.5 1.5zm3.8-5.3l-1.4 1.4-1.4-1.4 1.4-1.4c.8-.8 2-.8 2.8 0 .8.8.8 2 0 2.8l-1.4-1.4zm-4.3-1.7l1.4 1.4-3.5 3.5-1.4-1.4 3.5-3.5z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="sub">ĐẢNG BỘ XÃ MẬU A</span>
+          <span class="title">HỆ THỐNG THEO DÕI NỘP ĐẢNG PHÍ</span>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Điều hướng chính">
+        <button class="tab-btn active" data-target="overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Tổng quan
+        </button>
+        <button class="tab-btn" data-target="units">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Đơn vị trực thuộc (<span id="tabUnitCount">50</span>)
+        </button>
+        <button class="tab-btn" data-target="reports">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Xuất báo cáo
+        </button>
+        <button class="tab-btn" data-target="import">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Nhập Excel
+        </button>
+      </nav>
+
+      <div class="bar-right">
+        <div class="livepill" title="Thời gian chốt số liệu báo cáo">
+          <span class="ldot"></span>
+          <span id="headerDate">Cập nhật 20h ngày 20/10/2026</span>
+        </div>
+        <button class="btn sm" onclick="window.print()" title="In báo cáo">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          In
+        </button>
+        <button class="btn sm gold" onclick="exportToExcel()" title="Tải file Excel">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Tải Excel
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- ========================================== -->
+    <!-- SECTION 1: TỔNG QUAN (OVERVIEW)            -->
+    <!-- ========================================== -->
+    <section class="page-section active" id="overview">
+      <!-- HERO BANNER -->
+      <div class="hero">
+        <div class="wrap">
+          <div class="hero-grid">
+            <div>
+              <div class="hero-eyebrow">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="heroDateBadge">BẢNG ĐIỀU HÀNH TIẾN ĐỘ THỜI GIAN THỰC</span>
+              </div>
+              <h1 id="heroTitle">TIẾN ĐỘ TRIỂN KHAI NỘP ĐẢNG PHÍ TRÊN DỊCH VỤ CÔNG</h1>
+
+              <!-- WIDGET XẾP HẠNG TOÀN TỈNH -->
+              <div class="province-rank-box" id="provRankBox">
+                <div class="pr-icon-wrap" title="Xếp hạng tỉnh">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                    <path d="M4 22h16"/>
+                    <path d="M10 14.66V17c0 .55-.45 1-1 1H7"/>
+                    <path d="M14 14.66V17c0 .55.45 1 1 1h2"/>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                  </svg>
+                </div>
+                <div class="pr-content">
+                  <div class="pr-header">
+                    <span class="pr-label">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                      XẾP HẠNG TOÀN TỈNH:
+                    </span>
+                    <span class="pr-val"><span id="provRankNum">45</span><small id="provRankDenom">/103</small></span>
+                    <span class="pr-badge" id="provRankBadge">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                      Đang bứt phá
+                    </span>
+                  </div>
+                  <div class="pr-progress-wrap">
+                    <div class="pr-bar"><div class="pr-fill" id="provRankBar" style="width: 56.3%;"></div></div>
+                    <span class="pr-sub" id="provRankSub">Vượt <b>58</b> Đảng bộ trực thuộc tỉnh · Top 43% toàn tỉnh Lào Cai</span>
+                  </div>
+                </div>
+              </div>
+
+              
+              <div class="hero-badges">
+                <div class="hero-badge">
+                  <span>Toàn Đảng bộ:</span>
+                  <b id="heroOverallRate">37.51%</b>
+                </div>
+                <div class="hero-badge">
+                  <span>Đơn vị về đích 100%:</span>
+                  <b id="heroFinishedUnits">20 / 50</b>
+                </div>
+                <div class="hero-badge">
+                  <span>Đảng viên đã giải quyết:</span>
+                  <b id="heroPaidMembers">952 / 2,538</b>
+                </div>
+              </div>
+            </div>
+
+            <!-- Donut circular widget -->
+            <div class="donut-card">
+              <div class="donut-head">
+                <h3>Tỷ lệ hoàn thành toàn Đảng bộ</h3>
+                <span>(Bao gồm nộp & miễn giảm)</span>
+              </div>
+              <div class="donut-body">
+                <div class="donut-visual">
+                  <svg viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="54" stroke="#e2e8f0"></circle>
+                    <circle id="donutCircle" cx="70" cy="70" r="54" stroke="var(--son)" stroke-dasharray="339.29" stroke-dashoffset="212"></circle>
+                  </svg>
+                  <div class="donut-center">
+                    <span class="donut-pct" id="donutPctText">37.5%</span>
+                    <span class="donut-lbl">Hoàn thành</span>
+                  </div>
+                </div>
+
+                <div class="donut-legend">
+                  <div class="leg-row">
+                    <div class="leg-tag"><span class="leg-dot" style="background:var(--ngoc)"></span>Đã nộp thành công</div>
+                    <span class="leg-val" id="legPaid">874</span>
+                  </div>
+                  <div class="leg-row">
+                    <div class="leg-tag"><span class="leg-dot" style="background:var(--vang)"></span>Được miễn giảm</div>
+                    <span class="leg-val" id="legExempt">78</span>
+                  </div>
+                  <div class="leg-row">
+                    <div class="leg-tag"><span class="leg-dot" style="background:var(--cam)"></span>Đã duyệt, chưa nộp</div>
+                    <span class="leg-val" id="legAppUnpaid">148</span>
+                  </div>
+                  <div class="leg-row">
+                    <div class="leg-tag"><span class="leg-dot" style="background:var(--xanh)"></span>Chưa phê duyệt</div>
+                    <span class="leg-val" id="legPending">119</span>
+                  </div>
+                  <div class="leg-row">
+                    <div class="leg-tag"><span class="leg-dot" style="background:var(--xam)"></span>Chưa kê khai DVC</div>
+                    <span class="leg-val" id="legNotDeclared">1,371</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI METRIC STRIP -->
+      <div class="wrap strip-section">
+        <div class="kpi-grid">
+          <!-- Card 1: Tổng Đảng viên -->
+          <div class="kpi-card c-red" title="Tổng số đảng viên toàn Đảng bộ">
+            <div class="kpi-top">
+              <span class="kpi-label">Tổng số Đảng viên</span>
+              <div class="kpi-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+            </div>
+            <span class="kpi-num" id="kpiTotalMembers">2,538</span>
+            <div class="kpi-sub">Toàn Đảng bộ: <b>50 chi bộ</b></div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%;"></div></div>
+          </div>
+
+          <!-- Card 2: Đã duyệt, đã nộp -->
+          <div class="kpi-card c-green" title="Đảng viên đã hoàn thành nộp tiền qua DVC">
+            <div class="kpi-top">
+              <span class="kpi-label">Đã duyệt, đã nộp</span>
+              <div class="kpi-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <span class="kpi-num" id="kpiPaid">874</span>
+            <div class="kpi-sub">Đạt tỷ lệ: <b id="kpiPaidRate">34.4%</b></div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiPaidBar" style="width:34.4%;"></div></div>
+          </div>
+
+          <!-- Card 3: Miễn giảm đảng phí -->
+          <div class="kpi-card c-gold" title="Đảng viên thuộc diện miễn giảm đảng phí">
+            <div class="kpi-top">
+              <span class="kpi-label">Miễn giảm đảng phí</span>
+              <div class="kpi-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+            </div>
+            <span class="kpi-num" id="kpiExempt">78</span>
+            <div class="kpi-sub">Tỷ lệ: <b id="kpiExemptRate">3.1%</b></div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiExemptBar" style="width:3.1%;"></div></div>
+          </div>
+
+          <!-- Card 4: Đã duyệt, chưa nộp -->
+          <div class="kpi-card c-amber" title="Hồ sơ đã duyệt, chờ đảng viên nộp tiền">
+            <div class="kpi-top">
+              <span class="kpi-label">Đã duyệt, chưa nộp</span>
+              <div class="kpi-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+            </div>
+            <span class="kpi-num" id="kpiAppUnpaid">148</span>
+            <div class="kpi-sub">Cần đôn đốc thanh toán</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiAppUnpaidBar" style="width:5.8%;"></div></div>
+          </div>
+
+          <!-- Card 5: Hồ sơ chưa duyệt -->
+          <div class="kpi-card c-blue" title="Hồ sơ đảng viên kê khai đang chờ chi ủy phê duyệt">
+            <div class="kpi-top">
+              <span class="kpi-label">Hồ sơ chưa duyệt</span>
+              <div class="kpi-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+            </div>
+            <span class="kpi-num" id="kpiPending">119</span>
+            <div class="kpi-sub">Chi ủy cần duyệt gấp</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiPendingBar" style="width:4.7%;"></div></div>
+          </div>
+
+          <!-- Card 6: Chưa kê khai DVC -->
+          <div class="kpi-card c-gray" title="Đảng viên chưa kê khai thông tin trên cổng DVC">
+            <div class="kpi-top">
+              <span class="kpi-label">Chưa kê khai DVC</span>
+              <div class="kpi-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+            </div>
+            <span class="kpi-num" id="kpiNotDeclared">1,371</span>
+            <div class="kpi-sub">Chiếm <b id="kpiNotDeclaredRate">54.0%</b> ĐV</div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiNotDeclaredBar" style="width:54%;"></div></div>
+          </div>
+
+        </div>
+
+        <!-- Tổng tiền đã thu: mục header đơn giản -->
+        <div class="money-header" title="Tổng số tiền đảng phí đã thu qua DVC">
+          <span class="mh-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></svg></span>
+          <span class="mh-label">Tổng tiền đã thu</span>
+          <span class="mh-value"><span id="kpiMoney">113.714.000</span><small> đ</small></span>
+          <span class="mh-avg">Bình quân: <b><span id="kpiMoneyAvg">70.673</span> đ</b> / ĐV đã nộp</span>
+        </div>
+      </div>
+
+      <!-- TOP 03 SECTION -->
+      <div class="wrap">
+        <div class="top3-grid">
+          <!-- Top 03 Dẫn đầu về triển khai thủ tục -->
+          <div class="top3-card c-proc">
+            <div class="top3-head">
+              <div class="top3-head-title">
+                <div class="top3-icon blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>
+                </div>
+                <div>
+                  <h3>Top 03 dẫn đầu về triển khai thủ tục</h3>
+                  <p>Tỷ lệ đảng viên đã hoàn thành kê khai hồ sơ trên DVC</p>
+                </div>
+              </div>
+              <span class="top3-month-badge" id="procMonthBadge">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Kỳ hiện tại
+              </span>
+            </div>
+            <div class="top3-list" id="top3ProcedureList">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Top 03 Hoàn thành thu đảng phí trong kỳ -->
+          <div class="top3-card c-paid">
+            <div class="top3-head">
+              <div class="top3-head-title">
+                <div class="top3-icon gold">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+                </div>
+                <div>
+                  <h3>Top 03 đơn vị thu tiền cao nhất</h3>
+                  <p>Đơn vị có tổng số tiền đảng phí thu được cao nhất trong kỳ</p>
+                </div>
+              </div>
+              <span class="top3-month-badge" id="paidMonthBadge" style="background:var(--vang-bg); color:var(--vang-d); border-color:var(--vang-l);">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Tháng 10/2026
+              </span>
+            </div>
+            <div class="top3-list" id="top3PaidList">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PIPELINE / FUNNEL PROGRESS -->
+      <div class="wrap">
+        <div class="panel pad">
+          <div class="panel-header">
+            <div>
+              <h2>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Tiến trình hồ sơ đảng phí trên Cổng Dịch vụ công
+              </h2>
+              <p class="sub">Theo dõi chuyển dịch 4 bước: Kê khai hồ sơ → Duyệt chi ủy → Thanh toán → Hoàn thành</p>
+            </div>
+          </div>
+
+          <div class="funnel-container" id="funnelContainer">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 COLUMNS: GROUP COMPARISON & LEADERS / REMIND -->
+      <div class="wrap">
+        <div class="grid-2col">
+          <!-- Left: Group comparison -->
+          <div class="panel pad">
+            <div class="panel-header">
+              <h2>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                So sánh tiến độ 2 Khối trực thuộc
+              </h2>
+            </div>
+
+            <!-- Group 1: Cơ quan -->
+            <div class="group-card">
+              <div class="group-card-head">
+                <span class="group-title">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  I. Đảng bộ, Chi bộ Cơ quan
+                </span>
+                <span class="group-rate" id="group1Rate">61.56%</span>
+              </div>
+              <div class="group-bar">
+                <div class="group-bar-fill" id="group1Bar" style="width: 61.56%;"></div>
+              </div>
+              <div class="group-stats">
+                <div>Đơn vị: <b id="group1Count">30 chi bộ</b></div>
+                <div>Tổng ĐV: <b id="group1DV">913</b></div>
+                <div>Đã nộp: <b id="group1Paid">562</b></div>
+                <div>Về đích 100%: <b id="group1Done">18 đơn vị</b></div>
+              </div>
+            </div>
+
+            <!-- Group 2: Thôn -->
+            <div class="group-card">
+              <div class="group-card-head">
+                <span class="group-title">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  II. Chi bộ Thôn
+                </span>
+                <span class="group-rate" id="group2Rate" style="color: #b45309">24.00%</span>
+              </div>
+              <div class="group-bar">
+                <div class="group-bar-fill" id="group2Bar" style="width: 24.00%; background: linear-gradient(90deg, #d97706, #fbbf24);"></div>
+              </div>
+              <div class="group-stats">
+                <div>Đơn vị: <b id="group2Count">20 chi bộ</b></div>
+                <div>Tổng ĐV: <b id="group2DV">1,625</b></div>
+                <div>Đã giải quyết: <b id="group2Paid">390</b></div>
+                <div>Về đích 100%: <b id="group2Done">2 đơn vị</b></div>
+              </div>
+            </div>
+
+            <div style="font-size:12.5px; color:var(--muted); line-height:1.5; margin-top:8px;">
+              📌 <b>Nhận xét:</b> Khối Cơ quan đạt tiến độ vượt trội với 18/30 đơn vị hoàn thành 100%. Khối Thôn số lượng đảng viên đông (1,625 ĐV), cần chi ủy các thôn tập trung hướng dẫn đảng viên kê khai trên ứng dụng Dịch vụ công.
+            </div>
+          </div>
+
+          <!-- Right: Leaders & Reminders -->
+          <div class="panel pad">
+            <div class="panel-header">
+              <h2>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+                Vinh danh & Đôn đốc tiến độ
+              </h2>
+              <div class="filter-pills">
+                <button class="pill-btn active" id="tabPodiumBtn" onclick="switchPodiumTab('lead')">Dẫn đầu (100%)</button>
+                <button class="pill-btn" id="tabRemindBtn" onclick="switchPodiumTab('remind')">Cần đôn đốc</button>
+              </div>
+            </div>
+
+            <div id="podiumLeadContainer" class="leader-list">
+              <!-- Rendered by JS -->
+            </div>
+            <div id="podiumRemindContainer" class="remind-list" style="display:none">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE BAR CHART OF 50 UNITS -->
+      <div class="wrap">
+        <div class="panel pad">
+          <div class="panel-header">
+            <div>
+              <h2>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Biểu đồ tiến độ chi tiết 50 đơn vị
+              </h2>
+              <p class="sub">Di chuột hoặc chạm vào từng cột để xem thông tin chi tiết</p>
+            </div>
+            <div class="filter-pills">
+              <button class="pill-btn active" onclick="filterChart('all', this)">Tất cả (50)</button>
+              <button class="pill-btn" onclick="filterChart('ĐẢNG BỘ, CHI BỘ CƠ QUAN', this)">Khối Cơ quan (30)</button>
+              <button class="pill-btn" onclick="filterChart('CHI BỘ THÔN', this)">Khối Thôn (20)</button>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <div class="chart-bars-wrap" id="chartBars">
+              <!-- Rendered by JS -->
+            </div>
+            <div class="chart-tooltip" id="chartTooltip"></div>
+          </div>
+          
+          <div style="display:flex; justify-content:center; gap:20px; font-size:12px; margin-top:12px; color:var(--muted)">
+            <span style="display:flex; align-items:center; gap:6px"><span style="width:10px; height:10px; border-radius:2px; background:var(--ngoc)"></span> Hoàn thành 100%</span>
+            <span style="display:flex; align-items:center; gap:6px"><span style="width:10px; height:10px; border-radius:2px; background:var(--cam)"></span> Đạt từ 50% đến dưới 100%</span>
+            <span style="display:flex; align-items:center; gap:6px"><span style="width:10px; height:10px; border-radius:2px; background:var(--son-l)"></span> Dưới 50%</span>
+            <span style="display:flex; align-items:center; gap:6px"><span style="width:10px; height:10px; border-radius:2px; background:#cbd5e1"></span> Chưa có nộp (0%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY & DIRECTIVE BOX -->
+      <div class="wrap">
+        <div class="panel pad">
+          <div class="panel-header">
+            <div>
+              <h2>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Tóm tắt tình hình & Dự thảo đôn đốc
+              </h2>
+              <p class="sub">Tự động tổng hợp từ số liệu thực tế để gửi nhanh qua Zalo, Telegram điều hành</p>
+            </div>
+            <div class="panel-acts">
+              <button class="btn solid" onclick="openRemindModal()" type="button">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Đôn đốc đơn vị chưa đạt
+              </button>
+              <button class="btn" onclick="copySummaryText()" type="button">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Sao chép báo cáo
+              </button>
+            </div>
+          </div>
+
+          <div class="summary-box" id="summaryTextContent">
+            Đang tải dữ liệu tóm tắt...
+          </div>
+          <p class="summary-hint">💡 Đoạn văn bản trên được tự động chuẩn hóa số liệu theo mẫu báo cáo của cấp ủy. Quý đồng chí có thể nhấn <b>"Sao chép báo cáo"</b> để dán trực tiếp vào nhóm điều hành hoặc nhóm Zalo chi ủy.</p>
+        </div>
+      </div>
+
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: ĐƠN VỊ TRỰC THUỘC (UNITS LIST) -->
+    <!-- ========================================== -->
+    <section class="page-section" id="units">
+      <div class="wrap" style="padding-top: 24px;">
+        <div class="panel pad">
+          <div class="panel-header">
+            <div>
+              <h2>Danh sách chi tiết tiến độ 50 chi bộ, đảng bộ</h2>
+              <p class="sub">Theo dõi chi tiết từng chỉ số kê khai, duyệt và nộp đảng phí</p>
+            </div>
+            <div class="panel-acts">
+              <button class="btn sm" onclick="exportToExcel()">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Xuất file Excel
+              </button>
+            </div>
+          </div>
+
+          <!-- Toolbar: Search, Filters -->
+          <div class="toolbar">
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="unitSearchInput" class="search-input" placeholder="Tìm tên chi bộ, cơ quan, thôn..." oninput="handleSearch(this.value)">
+            </div>
+
+            <div class="filter-pills">
+              <button class="pill-btn active" onclick="applyGroupFilter('all', this)">Tất cả khối</button>
+              <button class="pill-btn" onclick="applyGroupFilter('ĐẢNG BỘ, CHI BỘ CƠ QUAN', this)">Khối Cơ quan</button>
+              <button class="pill-btn" onclick="applyGroupFilter('CHI BỘ THÔN', this)">Khối Thôn</button>
+            </div>
+
+            <div class="filter-pills">
+              <button class="pill-btn active" onclick="applyStatusFilter('all', this)">Tất cả tiến độ</button>
+              <button class="pill-btn" onclick="applyStatusFilter('100', this)">Đạt 100%</button>
+              <button class="pill-btn" onclick="applyStatusFilter('mid', this)">50% - 99%</button>
+              <button class="pill-btn" onclick="applyStatusFilter('low', this)">Dưới 50%</button>
+              <button class="pill-btn" onclick="applyStatusFilter('zero', this)">Chưa nộp (0%)</button>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="table-responsive">
+            <table class="data-table" id="unitsTable">
+              <thead>
+                <tr>
+                  <th class="text-center" onclick="sortTable('stt')">STT ⇕</th>
+                  <th onclick="sortTable('name')">Tên chi bộ, đảng bộ trực thuộc ⇕</th>
+                  <th class="text-center" onclick="sortTable('group')">Khối ⇕</th>
+                  <th class="text-right" onclick="sortTable('total_dv')">Tổng ĐV ⇕</th>
+                  <th class="text-right" onclick="sortTable('exempt')">Miễn giảm ⇕</th>
+                  <th class="text-right" onclick="sortTable('pending_review')">Chưa duyệt ⇕</th>
+                  <th class="text-right" onclick="sortTable('approved_unpaid')">Duyệt, chưa nộp ⇕</th>
+                  <th class="text-right" onclick="sortTable('approved_paid')">Đã nộp ⇕</th>
+                  <th class="text-right" onclick="sortTable('amount')">Số tiền đã thu ⇕</th>
+                  <th class="text-right" onclick="sortTable('not_declared')">Chưa kê khai ⇕</th>
+                  <th onclick="sortTable('rate')">Tiến độ thực tế ⇕</th>
+                  <th class="text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="unitsTableBody">
+                <!-- Rendered by JS -->
+              </tbody>
+              <tfoot>
+                <tr style="background:#fffbeb; border-top:2px solid var(--rule); font-weight:700;">
+                  <td colspan="8" class="text-right" style="padding:11px 10px; color:var(--ink)">Tổng số tiền các đơn vị đang hiển thị:</td>
+                  <td class="text-right" style="padding:11px 10px; white-space:nowrap; color:#b45309" id="filteredMoneyTotal">0 đ</td>
+                  <td colspan="3"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div style="margin-top:12px; font-size:12.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center;">
+            <span>Hiển thị <b id="filteredCount">50</b> / 50 đơn vị</span>
+            <span>Bấm vào dòng bất kỳ hoặc nút "Chi tiết" để xem thẻ phân tích và tạo tin nhắn gửi Bí thư chi bộ</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: báo cáo BÁO CÁO (REPORT DOC)   -->
+    <!-- ========================================== -->
+    <section class="page-section" id="reports">
+      <div class="wrap" style="padding-top: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h2 style="font-family:var(--serif); font-size:20px; color:var(--son-dd)">Mẫu báo cáo báo cáo chính thức</h2>
+            <p style="font-size:13px; color:var(--muted)">Được định dạng sẵn theo chuẩn văn bản của Đảng, sẵn sàng để in ấn hoặc nộp cấp trên</p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn" onclick="copyDocumentText()">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Sao chép toàn văn
+            </button>
+            <button class="btn solid" onclick="window.print()">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              In báo cáo (Ctrl + P)
+            </button>
+          </div>
+        </div>
+
+        <div class="document-page" id="printableDoc">
+          <div class="doc-header">
+            <div class="doc-header-left">
+              <p>ĐẢNG BỘ TỈNH LÀO CAI</p>
+              <p><b>ĐẢNG BỘ XÃ MẬU A</b></p>
+              <div class="doc-line"></div>
+              <p style="font-size:13px; margin-top:4px;">Số: ....-BC/ĐU</p>
+            </div>
+            <div class="doc-header-right">
+              <p><b>ĐẢNG BỘ XÃ MẬU A</b></p>
+              <div class="doc-line"></div>
+              <p style="font-style:italic; font-size:13px; margin-top:4px;" id="docDateLocation">Mậu A, ngày 20 tháng 10 năm 2026</p>
+            </div>
+          </div>
+
+          <div class="doc-title">
+            <h1>BÁO CÁO TIẾN ĐỘ</h1>
+            <p style="font-size:15px; font-weight:600;">Về việc triển khai thu nộp đảng phí điện tử trên Cổng Dịch vụ công</p>
+            <p>(Kèm theo Công văn số 1085 · Số liệu chốt 20h ngày 20/10/2026)</p>
+          </div>
+
+          <div style="font-size:14.5px; text-align:justify;">
+            <p style="text-indent: 28px; margin-bottom: 12px;">
+              Thực hiện Công văn số 1085 về việc triển khai thu nộp đảng phí qua Cổng Dịch vụ công trực tuyến, Đảng ủy tổng hợp và báo cáo tiến độ thực hiện tính đến thời điểm hiện tại như sau:
+            </p>
+
+            <h3 class="doc-section-title">I. TÌNH HÌNH CHUNG TOÀN ĐẢNG BỘ</h3>
+            <p style="text-indent: 28px; margin-bottom: 8px;">
+              - Toàn Đảng bộ hiện có tổng số <b><span id="docTotMembers">2,538</span> đảng viên</b> sinh hoạt tại <b>50 chi bộ, đảng bộ trực thuộc</b>. Trong đó có <b><span id="docExempt">78</span> đảng viên</b> thuộc diện được miễn giảm đảng phí theo quy định.
+            </p>
+            <p style="text-indent: 28px; margin-bottom: 8px;">
+              - Số đảng viên đã hoàn thành nộp đảng phí trên hệ thống: <b><span id="docPaid">874</span> đồng chí</b> (đạt tỷ lệ <b><span id="docPaidRate">34.44%</span></b>). Tính cả diện miễn giảm, tỷ lệ hoàn thành thực tế toàn Đảng bộ đạt <b><span id="docRealRate">37.51%</span></b>.
+            </p>
+            <p style="text-indent: 28px; margin-bottom: 8px;">
+              - Hồ sơ đã được chi ủy phê duyệt nhưng chưa nộp tiền: <b><span id="docAppUnpaid">148</span> đảng viên</b> (chiếm 5.83%).
+            </p>
+            <p style="text-indent: 28px; margin-bottom: 8px;">
+              - Hồ sơ đảng viên đã kê khai nhưng chi ủy chưa phê duyệt: <b><span id="docPending">119</span> đảng viên</b> (chiếm 4.69%).
+            </p>
+            <p style="text-indent: 28px; margin-bottom: 12px;">
+              - Số lượng đảng viên chưa tiến hành kê khai trên hệ thống DVC: <b><span id="docNotDeclared">1,371</span> đảng viên</b> (chiếm tỷ lệ cao 54.02%).
+            </p>
+
+            <table class="doc-table">
+              <thead>
+                <tr>
+                  <th>Khối trực thuộc</th>
+                  <th>Số đơn vị</th>
+                  <th>Tổng đảng viên</th>
+                  <th>Miễn giảm</th>
+                  <th>Đã nộp</th>
+                  <th>Chưa kê khai</th>
+                  <th>Tỷ lệ hoàn thành</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>I. Khối Cơ quan</b></td>
+                  <td align="center">30</td>
+                  <td align="right">913</td>
+                  <td align="right">0</td>
+                  <td align="right">562</td>
+                  <td align="right">351</td>
+                  <td align="center"><b>61.56%</b></td>
+                </tr>
+                <tr>
+                  <td><b>II. Khối Thôn</b></td>
+                  <td align="center">20</td>
+                  <td align="right">1,625</td>
+                  <td align="right">78</td>
+                  <td align="right">312</td>
+                  <td align="right">1,020</td>
+                  <td align="center"><b>24.00%</b></td>
+                </tr>
+                <tr style="background:#f9f9f9; font-weight:700;">
+                  <td>TOÀN ĐẢNG BỘ</td>
+                  <td align="center">50</td>
+                  <td align="right">2,538</td>
+                  <td align="right">78</td>
+                  <td align="right">874</td>
+                  <td align="right">1,371</td>
+                  <td align="center">37.51%</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-section-title">II. ĐÁNH GIÁ TIẾN ĐỘ THEO CÁC ĐƠN VỊ</h3>
+            <p style="text-indent: 28px; margin-bottom: 8px;">
+              <b>1. Đơn vị tiêu biểu hoàn thành 100%:</b> Biểu dương <b>20 đơn vị</b> đã hoàn thành xuất sắc 100% kế hoạch nộp đảng phí trên Dịch vụ công, tiêu biểu gồm: Đảng bộ Trung tâm GDNN - GDTX Văn Yên (39/39), Đảng bộ TTYT Văn Yên (119/119), Chi bộ thôn Mậu A 1 (179 nộp + 16 miễn giảm = 195/195), Chi bộ thôn Yên Hưng (71 nộp + 9 miễn giảm = 80/80)...
+            </p>
+            <p style="text-indent: 28px; margin-bottom: 8px;">
+              <b>2. Đơn vị cần tập trung đôn đốc:</b> Hiện còn <b>17 đơn vị</b> chưa có đảng viên nộp thành công (tỷ lệ 0%), trong đó có 10 chi bộ thôn (An Thịnh 4, 5, 6, Mậu A 2, Mậu Đông 1, 2, Ngòi A 1, 2, 3, Yên Thái 1) và 7 chi bộ cơ quan trường học/đơn vị sự nghiệp.
+            </p>
+
+            <h3 class="doc-section-title">III. NHIỆM VỤ TRỌNG TÂM TRONG THỜI GIAN TỚI</h3>
+            <p style="text-indent: 28px; margin-bottom: 6px;">
+              1. Đề nghị Bí thư các chi bộ, đảng bộ trực thuộc (đặc biệt là khối thôn) khẩn trương chỉ đạo Tổ công nghệ số cộng đồng và các đồng chí cấp ủy trực tiếp hướng dẫn đảng viên thực hiện kê khai và nộp đảng phí trên Cổng Dịch vụ công.
+            </p>
+            <p style="text-indent: 28px; margin-bottom: 6px;">
+              2. Các chi ủy còn tồn đọng hồ sơ chưa duyệt (<span id="docPendingCount">119</span> hồ sơ) phải hoàn thành phê duyệt ngay trong ngày để đảng viên thực hiện bước chuyển khoản/nộp tiền.
+            </p>
+            <p style="text-indent: 28px; margin-bottom: 6px;">
+              3. Thường trực Đảng ủy sẽ tiếp tục theo dõi, đánh giá mức độ hoàn thành nhiệm vụ của cấp ủy và người đứng đầu chi bộ căn cứ vào kết quả triển khai thực tế.
+            </p>
+          </div>
+
+          <div class="doc-footer">
+            <div class="doc-signer">
+              <p><b>T/M ĐẢNG BỘ</b></p>
+              <p class="pos">BÍ THƯ</p>
+              <p style="font-weight:700; font-size:15px; margin-top:50px;">(Ký và ghi rõ họ tên)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: NHẬP EXCEL (IMPORT DATA)        -->
+    <!-- ========================================== -->
+    <section class="page-section" id="import">
+      <div class="wrap" style="padding-top: 24px;">
+        <div class="panel pad" style="max-width:850px; margin:0 auto;">
+          <div class="panel-header">
+            <div>
+              <h2>Cập nhật dữ liệu từ file Excel</h2>
+              <p class="sub">Tải lên file tiến độ mới nhất (như file "DS TIẾN ĐỘ KÈM THEO CV 1085.xlsx") để cập nhật toàn bộ trang</p>
+            </div>
+          </div>
+
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('excelFileInput').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="12" y2="12"/>
+              <line x1="15" y1="15" x2="12" y2="12"/>
+            </svg>
+            <h3 style="font-size:16px; margin-bottom:6px; color:var(--ink);">Kéo thả tệp Excel (.xlsx, .xls) vào đây</h3>
+            <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">hoặc bấm để chọn tệp từ máy tính của bạn</p>
+            <button type="button" class="btn solid sm">Chọn tệp Excel</button>
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display:none" onchange="handleFileSelect(event)">
+          </div>
+
+          <div id="importInfo" style="display:none; margin-top:20px; padding:14px; background:var(--giay); border-radius:var(--r-s); border:1px solid var(--rule);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <b id="importFileName">filename.xlsx</b>
+                <div style="font-size:12.5px; color:var(--muted)" id="importFileStats">Đã đọc ... dòng dữ liệu</div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn solid sm" onclick="applyImportedData()">Áp dụng dữ liệu mới</button>
+                <button class="btn sm" onclick="cancelImport()">Hủy</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:24px; padding-top:16px; border-top:1px solid var(--rule); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <b style="font-size:13.5px; color:var(--ink)">Dữ liệu mặc định ban đầu</b>
+              <div style="font-size:12.5px; color:var(--muted)">Đang dùng dữ liệu chuẩn Công văn số 1085 (20h ngày 20/10/2026)</div>
+            </div>
+            <button class="btn sm" onclick="resetToDefaultData()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              Khôi phục dữ liệu gốc
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODALS                                     -->
+  <!-- ========================================== -->
+
+  <!-- Modal 1: Chi tiết đơn vị & Soạn tin đôn đốc -->
+  <div class="modal-backdrop" id="unitModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <span style="font-size:11.5px; font-weight:700; color:var(--son); text-transform:uppercase" id="modalUnitGroup">Khối</span>
+          <h3 id="modalUnitName">Tên chi bộ</h3>
+        </div>
+        <button class="modal-close" onclick="closeUnitModal()">✕</button>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+          <span style="font-size:13px; font-weight:600; color:var(--muted)">Tiến độ hoàn thành:</span>
+          <b style="font-size:20px; color:var(--son-d)" id="modalUnitRate">0%</b>
+        </div>
+        <div style="height:10px; background:#e2e8f0; border-radius:999px; overflow:hidden;">
+          <div id="modalUnitBar" style="height:100%; border-radius:999px; background:var(--son);"></div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; font-size:13px;">
+        <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+          <span style="color:var(--muted)">Tổng đảng viên:</span>
+          <b style="display:block; font-size:16px; color:var(--ink)" id="modalUnitTotal">0</b>
+        </div>
+        <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+          <span style="color:var(--muted)">Đã duyệt, đã nộp:</span>
+          <b style="display:block; font-size:16px; color:var(--ngoc-d)" id="modalUnitPaid">0</b>
+        </div>
+        <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+          <span style="color:var(--muted)">Miễn giảm:</span>
+          <b style="display:block; font-size:16px; color:#b45309" id="modalUnitExempt">0</b>
+        </div>
+        <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+          <span style="color:var(--muted)">Đã duyệt, chưa nộp:</span>
+          <b style="display:block; font-size:16px; color:#d97706" id="modalUnitAppUnpaid">0</b>
+        </div>
+        <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+          <span style="color:var(--muted)">Hồ sơ chưa duyệt:</span>
+          <b style="display:block; font-size:16px; color:var(--xanh)" id="modalUnitPending">0</b>
+        </div>
+        <div style="background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+          <span style="color:var(--muted)">Chưa kê khai DVC:</span>
+          <b style="display:block; font-size:16px; color:var(--xam)" id="modalUnitNotDeclared">0</b>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:12.5px; font-weight:700; color:var(--ink-2); margin-bottom:6px;">
+          Mẫu tin nhắn nhắc nhở / đôn đốc gửi Bí thư chi bộ:
+        </label>
+        <textarea id="modalUnitMsg" rows="4" style="width:100%; padding:10px; border:1px solid var(--rule); border-radius:8px; font-family:var(--sans); font-size:13px; line-height:1.5; resize:none;" readonly></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn sm" onclick="copyUnitMessage()">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Sao chép tin nhắn Zalo
+        </button>
+        <button class="btn solid sm" onclick="closeUnitModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Đôn đốc hàng loạt các đơn vị chưa đạt -->
+  <div class="modal-backdrop" id="remindAllModal">
+    <div class="modal-card" style="max-width:620px;">
+      <div class="modal-head">
+        <h3>Thông báo đôn đốc các chi bộ chưa đạt tiến độ</h3>
+        <button class="modal-close" onclick="closeRemindModal()">✕</button>
+      </div>
+
+      <p style="font-size:13px; color:var(--muted); margin-bottom:12px;">
+        Hệ thống tự động lọc các đơn vị có tỷ lệ hoàn thành dưới 50% hoặc còn nhiều đảng viên chưa kê khai:
+      </p>
+
+      <textarea id="remindAllMsg" rows="9" style="width:100%; padding:12px; border:1px solid var(--rule); border-radius:8px; font-family:var(--sans); font-size:13px; line-height:1.5; margin-bottom:14px;" readonly></textarea>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:var(--muted)">Dán vào nhóm Zalo/Telegram cấp ủy Đảng bộ</span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn solid" onclick="copyRemindAllText()">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Sao chép thông báo
+          </button>
+          <button class="btn" onclick="closeRemindModal()">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastBox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toastMsg">Đã sao chép vào bộ nhớ tạm</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="wrap">
+      <p><b>HỆ THỐNG THEO DÕI NỘP ĐẢNG PHÍ TRÊN DỊCH VỤ CÔNG</b></p>
+      <p style="font-size:12px; margin-top:4px;">Cập nhật theo Công văn số 1085 · Thiết kế chuẩn giao diện báo cáo Đảng · Vận hành mượt mà trên mọi thiết bị</p>
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT LOGIC                           -->
+  <!-- ========================================== -->
+  <script>
+    // 1. DATA SOURCE (Dữ liệu gốc từ CV 1085)
+    const DEFAULT_DATA = [
+  {
+    "stt": 1,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ Trung tâm GDNN - GDTX Văn Yên",
+    "total_dv": 39,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 39,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 2,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ Trung tâm Y tế Khu vực Văn Yên",
+    "total_dv": 119,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 119,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 3,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ BQLDA đầu tư xây dựng xã Mậu A",
+    "total_dv": 11,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 11,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 4,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ phòng Kinh tế, Hạ tầng",
+    "total_dv": 6,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 6,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 5,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Trường THPT Nguyễn Lương Bằng",
+    "total_dv": 30,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 30,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 6,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Mặt trận Tổ quốc",
+    "total_dv": 13,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 13,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 7,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Ban Xây dựng Đảng",
+    "total_dv": 12,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 12,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 8,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Trạm Y Tế Mậu A",
+    "total_dv": 26,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 26,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 9,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ VNPT Văn Yên",
+    "total_dv": 7,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 7,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 10,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Văn phòng HĐND và UBND",
+    "total_dv": 17,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 17,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 11,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Văn phòng ĐKĐĐ khu vực Văn Yên",
+    "total_dv": 9,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 9,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 12,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Văn phòng Đảng ủy",
+    "total_dv": 9,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 9,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 13,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ phòng Nông nghiệp và Môi trường",
+    "total_dv": 8,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 8,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 14,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ phòng Văn hóa - Xã hội",
+    "total_dv": 14,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 14,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 15,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ phòng giao dịch NHCSXH Văn Yên",
+    "total_dv": 7,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 7,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 16,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Trung tâm Phục vụ Hành chính công",
+    "total_dv": 5,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 5,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 17,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Trường PTDT Nội trú THCS và THPT VY",
+    "total_dv": 23,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 23,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 18,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Ủy ban Kiểm tra",
+    "total_dv": 5,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 5,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 19,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ Trường THPT Chu Văn An",
+    "total_dv": 63,
+    "exempt": 0,
+    "pending_review": 1,
+    "approved_unpaid": 0,
+    "approved_paid": 62,
+    "not_declared": 0,
+    "rate": 0.9841
+  },
+  {
+    "stt": 20,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ trường Trung học cơ sở Mậu A 1",
+    "total_dv": 64,
+    "exempt": 0,
+    "pending_review": 2,
+    "approved_unpaid": 5,
+    "approved_paid": 51,
+    "not_declared": 6,
+    "rate": 0.7969
+  },
+  {
+    "stt": 21,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ trường Trung học cơ sở Mậu A 2",
+    "total_dv": 50,
+    "exempt": 0,
+    "pending_review": 1,
+    "approved_unpaid": 9,
+    "approved_paid": 29,
+    "not_declared": 10,
+    "rate": 0.58
+  },
+  {
+    "stt": 22,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ trường Tiểu học Mậu A 1",
+    "total_dv": 101,
+    "exempt": 0,
+    "pending_review": 15,
+    "approved_unpaid": 16,
+    "approved_paid": 55,
+    "not_declared": 15,
+    "rate": 0.5445
+  },
+  {
+    "stt": 23,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Đội Quản Lý Thị Trường số 3",
+    "total_dv": 10,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 3,
+    "approved_paid": 5,
+    "not_declared": 2,
+    "rate": 0.5
+  },
+  {
+    "stt": 24,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ trường Mầm non Mậu A 1",
+    "total_dv": 77,
+    "exempt": 0,
+    "pending_review": 7,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 69,
+    "rate": 0.0
+  },
+  {
+    "stt": 25,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ trường Mầm non Mậu A 2",
+    "total_dv": 74,
+    "exempt": 0,
+    "pending_review": 2,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 71,
+    "rate": 0.0
+  },
+  {
+    "stt": 26,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Đảng bộ trường Tiểu học Mậu A 2",
+    "total_dv": 58,
+    "exempt": 0,
+    "pending_review": 8,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 52,
+    "rate": 0.0
+  },
+  {
+    "stt": 27,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Hợp tác xã Huỳnh Phát",
+    "total_dv": 4,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 4,
+    "rate": 0.0
+  },
+  {
+    "stt": 28,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Trung tâm Dịch vụ tổng hợp xã Mậu A",
+    "total_dv": 17,
+    "exempt": 0,
+    "pending_review": 5,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 12,
+    "rate": 0.0
+  },
+  {
+    "stt": 29,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ Trường Mầm non Ban Mai",
+    "total_dv": 9,
+    "exempt": 0,
+    "pending_review": 3,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 6,
+    "rate": 0.0
+  },
+  {
+    "stt": 30,
+    "group": "ĐẢNG BỘ, CHI BỘ CƠ QUAN",
+    "name": "Chi bộ điện lực Văn Yên",
+    "total_dv": 26,
+    "exempt": 0,
+    "pending_review": 4,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 22,
+    "rate": 0.0
+  },
+  {
+    "stt": 1,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Mậu A 1",
+    "total_dv": 195,
+    "exempt": 16,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 179,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 2,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Yên Hưng",
+    "total_dv": 80,
+    "exempt": 9,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 71,
+    "not_declared": 0,
+    "rate": 1.0
+  },
+  {
+    "stt": 3,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn An Thịnh 2",
+    "total_dv": 23,
+    "exempt": 2,
+    "pending_review": 1,
+    "approved_unpaid": 0,
+    "approved_paid": 18,
+    "not_declared": 2,
+    "rate": 0.8696
+  },
+  {
+    "stt": 4,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Yên Thái 2",
+    "total_dv": 65,
+    "exempt": 8,
+    "pending_review": 1,
+    "approved_unpaid": 5,
+    "approved_paid": 9,
+    "not_declared": 51,
+    "rate": 0.2615
+  },
+  {
+    "stt": 5,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Mậu A 6",
+    "total_dv": 69,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 19,
+    "approved_paid": 14,
+    "not_declared": 35,
+    "rate": 0.2029
+  },
+  {
+    "stt": 6,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Mậu A 3",
+    "total_dv": 161,
+    "exempt": 20,
+    "pending_review": 8,
+    "approved_unpaid": 5,
+    "approved_paid": 8,
+    "not_declared": 120,
+    "rate": 0.1739
+  },
+  {
+    "stt": 7,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Mậu A 4",
+    "total_dv": 93,
+    "exempt": 11,
+    "pending_review": 0,
+    "approved_unpaid": 51,
+    "approved_paid": 1,
+    "not_declared": 30,
+    "rate": 0.129
+  },
+  {
+    "stt": 8,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Mậu A 5",
+    "total_dv": 176,
+    "exempt": 0,
+    "pending_review": 1,
+    "approved_unpaid": 34,
+    "approved_paid": 10,
+    "not_declared": 138,
+    "rate": 0.0568
+  },
+  {
+    "stt": 9,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn An Thịnh 1",
+    "total_dv": 49,
+    "exempt": 0,
+    "pending_review": 1,
+    "approved_unpaid": 0,
+    "approved_paid": 1,
+    "not_declared": 48,
+    "rate": 0.0204
+  },
+  {
+    "stt": 10,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn An Thịnh 3",
+    "total_dv": 76,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 1,
+    "not_declared": 75,
+    "rate": 0.0132
+  },
+  {
+    "stt": 11,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn An Thịnh 4",
+    "total_dv": 39,
+    "exempt": 12,
+    "pending_review": 51,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 12,
+    "rate": 0.0
+  },
+  {
+    "stt": 12,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn An Thịnh 5",
+    "total_dv": 39,
+    "exempt": 0,
+    "pending_review": 2,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 37,
+    "rate": 0.0
+  },
+  {
+    "stt": 13,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn An Thịnh 6",
+    "total_dv": 30,
+    "exempt": 0,
+    "pending_review": 1,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 31,
+    "rate": 0.0
+  },
+  {
+    "stt": 14,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Mậu A 2",
+    "total_dv": 159,
+    "exempt": 0,
+    "pending_review": 2,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 154,
+    "rate": 0.0
+  },
+  {
+    "stt": 15,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Mậu Đông 1",
+    "total_dv": 64,
+    "exempt": 0,
+    "pending_review": 1,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 65,
+    "rate": 0.0
+  },
+  {
+    "stt": 16,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ Thôn Mậu Đông 2",
+    "total_dv": 56,
+    "exempt": 0,
+    "pending_review": 1,
+    "approved_unpaid": 1,
+    "approved_paid": 0,
+    "not_declared": 54,
+    "rate": 0.0
+  },
+  {
+    "stt": 17,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Ngòi A 1",
+    "total_dv": 82,
+    "exempt": 0,
+    "pending_review": 1,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 81,
+    "rate": 0.0
+  },
+  {
+    "stt": 18,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Ngòi A 2",
+    "total_dv": 53,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 53,
+    "rate": 0.0
+  },
+  {
+    "stt": 19,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Ngòi A 3",
+    "total_dv": 56,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 56,
+    "rate": 0.0
+  },
+  {
+    "stt": 20,
+    "group": "CHI BỘ THÔN",
+    "name": "Chi bộ thôn Yên Thái 1",
+    "total_dv": 60,
+    "exempt": 0,
+    "pending_review": 0,
+    "approved_unpaid": 0,
+    "approved_paid": 0,
+    "not_declared": 60,
+    "rate": 0.0
+  }
+];
+
+    let currentUnits = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    let pendingImportUnits = null;
+    let activeFilterGroup = 'all';
+    let activeFilterStatus = 'all';
+    let searchQuery = '';
+    let sortColumn = 'stt';
+    let sortAsc = true;
+
+
+    // Smooth Number Count-up Animation
+    function animateCount(elemId, targetVal, duration = 800) {
+      const el = document.getElementById(elemId);
+      if (!el) return;
+      const target = Number(targetVal) || 0;
+      let start = 0;
+      let startTime = null;
+
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        // easeOutQuart
+        const ease = 1 - Math.pow(1 - progress, 4);
+        const current = Math.round(start + (target - start) * ease);
+        el.innerText = nf(current);
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        } else {
+          el.innerText = nf(target);
+        }
+      }
+      window.requestAnimationFrame(step);
+    }
+
+    // Formatters
+    const nf = n => new Intl.NumberFormat('vi-VN').format(n || 0);
+    const pct = val => (val * 100).toFixed(val === 1 || val === 0 ? 0 : (val * 100 % 1 === 0 ? 0 : 2)) + '%';
+
+    // Firebase Config & Init
+    const firebaseConfig = {
+      apiKey: "AIzaSyAv4jc13Dl2PS6gSF-zBfShyXfQov8k-9U",
+      authDomain: "layso-vt.firebaseapp.com",
+      projectId: "layso-vt",
+      storageBucket: "layso-vt.firebasestorage.app",
+      messagingSenderId: "275767284853",
+      appId: "1:275767284853:web:938fa41f7320a4fc94143c"
+    };
+    let firebaseReady = false;
+    let dataSrc = 'default';
+    try {
+      firebase.initializeApp(firebaseConfig);
+      firebaseReady = true;
+    } catch(e) { console.warn('Firebase init failed:', e); }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      initNavigation();
+      checkZalo();
+      renderAll(); // render default data first
+
+      // Then try to load from Firebase (real-time listener)
+      if (firebaseReady) {
+        try {
+          firebase.firestore().collection('dangphi').doc('current')
+            .onSnapshot(snap => {
+              if (snap.exists) {
+                const d = snap.data();
+                if (d.units && d.units.length > 0) {
+                  currentUnits = d.units;
+                  dataSrc = 'firebase';
+                  if (d.updateDate) {
+                    const dateEl = document.getElementById('headerDate');
+                    if (dateEl) dateEl.innerText = 'Cập nhật ' + d.updateDate;
+                    const heroDate = document.getElementById('heroDateBadge');
+                    if (heroDate) heroDate.innerText = 'CẬP NHẬT ' + d.updateDate.toUpperCase();
+                  }
+                  if (d.provRank) {
+                    window.currentProvRank = d.provRank;
+                  }
+                  renderAll();
+                  console.log('Firebase: loaded', d.units.length, 'units');
+                }
+              }
+            }, err => {
+              console.warn('Firebase listener error:', err);
+            });
+        } catch(e) { console.warn('Firestore listen failed:', e); }
+      }
+    });
+
+    function checkZalo() {
+      if (/Zalo/i.test(navigator.userAgent)) {
+        const zb = document.getElementById('zalobar');
+        if (zb) zb.classList.add('on');
+      }
+    }
+
+    // Navigation Tabs
+    function initNavigation() {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.target;
+          tabBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          document.querySelectorAll('.page-section').forEach(sec => {
+            sec.classList.remove('active');
+          });
+          const targetSec = document.getElementById(target);
+          if (targetSec) targetSec.classList.add('active');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+    }
+
+    // Calculate Grand Totals
+    function calculateTotals(data) {
+      const total_dv = data.reduce((s, x) => s + (x.total_dv || 0), 0);
+      const exempt = data.reduce((s, x) => s + (x.exempt || 0), 0);
+      const pending_review = data.reduce((s, x) => s + (x.pending_review || 0), 0);
+      const approved_unpaid = data.reduce((s, x) => s + (x.approved_unpaid || 0), 0);
+      const approved_paid = data.reduce((s, x) => s + (x.approved_paid || 0), 0);
+      const not_declared = data.reduce((s, x) => s + (x.not_declared || 0), 0);
+      const total_amount = data.reduce((s, x) => s + (x.amount || 0), 0);
+      
+      const finished_units = data.filter(x => x.rate >= 0.999).length;
+      const rate = total_dv > 0 ? (approved_paid + exempt) / total_dv : 0;
+
+      // Group totals
+      const g1 = data.filter(x => x.group === 'ĐẢNG BỘ, CHI BỘ CƠ QUAN');
+      const g1_dv = g1.reduce((s, x) => s + (x.total_dv || 0), 0);
+      const g1_paid = g1.reduce((s, x) => s + (x.approved_paid || 0), 0);
+      const g1_exempt = g1.reduce((s, x) => s + (x.exempt || 0), 0);
+      const g1_rate = g1_dv > 0 ? (g1_paid + g1_exempt) / g1_dv : 0;
+      const g1_done = g1.filter(x => x.rate >= 0.999).length;
+
+      const g2 = data.filter(x => x.group === 'CHI BỘ THÔN');
+      const g2_dv = g2.reduce((s, x) => s + (x.total_dv || 0), 0);
+      const g2_paid = g2.reduce((s, x) => s + (x.approved_paid || 0), 0);
+      const g2_exempt = g2.reduce((s, x) => s + (x.exempt || 0), 0);
+      const g2_rate = g2_dv > 0 ? (g2_paid + g2_exempt) / g2_dv : 0;
+      const g2_done = g2.filter(x => x.rate >= 0.999).length;
+
+      return {
+        total_dv, exempt, pending_review, approved_unpaid, approved_paid, not_declared, total_amount,
+        finished_units, rate,
+        g1: { count: g1.length, dv: g1_dv, paid: g1_paid, rate: g1_rate, done: g1_done },
+        g2: { count: g2.length, dv: g2_dv, paid: g2_paid + g2_exempt, rate: g2_rate, done: g2_done }
+      };
+    }
+
+
+    // Render Province Rank & Top 3
+    function renderTop3AndProvinceRank(t) {
+      // 1. Province Rank
+      const rankStr = window.currentProvRank || '45/103';
+      const parts = rankStr.split('/');
+      const rNum = parseInt(parts[0]) || 45;
+      const rDenom = parseInt(parts[1]) || 103;
+      
+      const elNum = document.getElementById('provRankNum');
+      if (elNum) elNum.innerText = rNum;
+      const elDenom = document.getElementById('provRankDenom');
+      if (elDenom) elDenom.innerText = '/' + rDenom;
+
+      const beatCount = Math.max(0, rDenom - rNum);
+      const topPct = ((rNum / rDenom) * 100).toFixed(0);
+      const barFillPct = Math.max(5, Math.min(100, ((rDenom - rNum + 1) / rDenom) * 100));
+
+      const elBar = document.getElementById('provRankBar');
+      if (elBar) elBar.style.width = barFillPct + '%';
+      const elSub = document.getElementById('provRankSub');
+      if (elSub) elSub.innerHTML = `Vượt <b>${beatCount}</b> Đảng bộ trực thuộc tỉnh · Top ${topPct}% toàn tỉnh Lào Cai`;
+
+      // 2. Month Badge
+      const dateText = document.getElementById('headerDate')?.innerText || '';
+      let monthStr = 'Tháng 10/2026';
+      const mMatch = dateText.match(/th[aá]ng\s*(\d+)[\/\s]+(\d{4})/i) || dateText.match(/(\d{1,2})\/(\d{4})/);
+      if (mMatch) {
+        monthStr = `Tháng ${mMatch[1]}/${mMatch[2]}`;
+      }
+      const pBadge = document.getElementById('paidMonthBadge');
+      if (pBadge) pBadge.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${monthStr}`;
+
+      const prBadge = document.getElementById('procMonthBadge');
+      if (prBadge) prBadge.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${monthStr}`;
+
+      // 3. Top 03 Dẫn đầu về triển khai thủ tục
+      // Hồ sơ đã kê khai = total_dv - not_declared. Tỷ lệ = (total_dv - not_declared) / total_dv
+      const procUnits = currentUnits.map(u => {
+        const declared = Math.max(0, u.total_dv - u.not_declared);
+        const pRate = u.total_dv > 0 ? declared / u.total_dv : 0;
+        return { ...u, declared, pRate };
+      });
+      procUnits.sort((a, b) => (b.pRate - a.pRate) || (b.declared - a.declared) || (b.total_dv - a.total_dv));
+      const top3Proc = procUnits.slice(0, 3);
+
+      const elProcList = document.getElementById('top3ProcedureList');
+      if (elProcList) {
+        const medals = ['🥇', '🥈', '🥉'];
+        const mClasses = ['medal-1', 'medal-2', 'medal-3'];
+        elProcList.innerHTML = top3Proc.map((u, i) => `
+          <div class="top3-item" onclick="openUnitModal('${u.name.replace(/'/g, "\'")}')">
+            <div class="medal-badge ${mClasses[i]}">${medals[i]}</div>
+            <div class="top3-details">
+              <div class="top3-name" title="${u.name}">${u.name}</div>
+              <div class="top3-sub">
+                <span><b>${nf(u.declared)}/${nf(u.total_dv)}</b> đảng viên kê khai</span>
+                <span>·</span>
+                <span style="color:${u.not_declared === 0 ? 'var(--ngoc-d)' : 'var(--muted)'}">${u.not_declared === 0 ? '0 tồn đọng' : u.not_declared + ' chưa kê khai'}</span>
+              </div>
+              <div class="top3-progress-row">
+                <div class="top3-bar">
+                  <div class="top3-bar-fill" style="width: ${u.pRate * 100}%; background: var(--xanh);"></div>
+                </div>
+              </div>
+            </div>
+            <div class="top3-score" style="color:var(--xanh)">
+              ${pct(u.pRate)}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 4. Top 03 Đơn vị thu tiền cao nhất
+      // Sắp xếp theo tổng số tiền thu được (amount); phụ: số ĐV đã nộp, tỷ lệ
+      const paidUnits = [...currentUnits];
+      paidUnits.sort((a, b) => ((b.amount || 0) - (a.amount || 0)) || (b.approved_paid - a.approved_paid) || (b.rate - a.rate));
+      const top3Paid = paidUnits.slice(0, 3);
+
+      const elPaidList = document.getElementById('top3PaidList');
+      if (elPaidList) {
+        const medals = ['🥇', '🥈', '🥉'];
+        const mClasses = ['medal-1', 'medal-2', 'medal-3'];
+        elPaidList.innerHTML = top3Paid.map((u, i) => `
+          <div class="top3-item" onclick="openUnitModal('${u.name.replace(/'/g, "\\'")}')">
+            <div class="medal-badge ${mClasses[i]}">${medals[i]}</div>
+            <div class="top3-details">
+              <div class="top3-name" title="${u.name}">${u.name}</div>
+              <div class="top3-sub">
+                <span style="color:var(--ngoc-d)">Đã nộp: <b>${nf(u.approved_paid)}/${nf(u.total_dv)}</b> đảng viên</span>
+                ${u.exempt > 0 ? `<span>· ${u.exempt} miễn giảm</span>` : ''}
+              </div>
+              <div class="top3-progress-row">
+                <div class="top3-bar">
+                  <div class="top3-bar-fill" style="width: ${u.rate * 100}%; background: var(--ngoc);"></div>
+                </div>
+              </div>
+            </div>
+            <div class="top3-score" style="color:var(--ngoc-d); display:flex; flex-direction:column; align-items:flex-end;">
+              <span style="font-size:15px; font-weight:800;">${nf(u.amount || 0)} đ</span>
+              <span style="font-size:11px; font-weight:600; color:var(--muted);">${nf(u.approved_paid)} ĐV · ${pct(u.rate)}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Render All Components
+    function renderAll() {
+      const t = calculateTotals(currentUnits);
+
+      // Hero
+      document.getElementById('heroOverallRate').innerText = pct(t.rate);
+      document.getElementById('heroFinishedUnits').innerText = `${t.finished_units} / ${currentUnits.length}`;
+      document.getElementById('heroPaidMembers').innerText = `${nf(t.approved_paid + t.exempt)} / ${nf(t.total_dv)}`;
+
+      // Donut Widget
+      document.getElementById('donutPctText').innerText = pct(t.rate);
+      const circ = 2 * Math.PI * 54; // ~339.29
+      const offset = circ * (1 - Math.min(1, Math.max(0, t.rate)));
+      const dc = document.getElementById('donutCircle');
+      if (dc) {
+        dc.style.strokeDasharray = circ;
+        dc.style.strokeDashoffset = offset;
+      }
+      document.getElementById('legPaid').innerText = `${nf(t.approved_paid)} (${pct(t.approved_paid / t.total_dv)})`;
+      document.getElementById('legExempt').innerText = `${nf(t.exempt)} (${pct(t.exempt / t.total_dv)})`;
+      document.getElementById('legAppUnpaid').innerText = `${nf(t.approved_unpaid)} (${pct(t.approved_unpaid / t.total_dv)})`;
+      document.getElementById('legPending').innerText = `${nf(t.pending_review)} (${pct(t.pending_review / t.total_dv)})`;
+      document.getElementById('legNotDeclared').innerText = `${nf(t.not_declared)} (${pct(t.not_declared / t.total_dv)})`;
+
+      // KPI Strip with animated count-up
+      animateCount('kpiTotalMembers', t.total_dv);
+      animateCount('kpiPaid', t.approved_paid);
+      document.getElementById('kpiPaidRate').innerText = pct(t.approved_paid / t.total_dv);
+      document.getElementById('kpiPaidBar').style.width = (t.approved_paid / t.total_dv * 100) + '%';
+
+      animateCount('kpiExempt', t.exempt);
+      document.getElementById('kpiExemptRate').innerText = pct(t.exempt / t.total_dv);
+      document.getElementById('kpiExemptBar').style.width = (t.exempt / t.total_dv * 100) + '%';
+
+      animateCount('kpiAppUnpaid', t.approved_unpaid);
+      document.getElementById('kpiAppUnpaidBar').style.width = (t.approved_unpaid / t.total_dv * 100) + '%';
+
+      animateCount('kpiPending', t.pending_review);
+      document.getElementById('kpiPendingBar').style.width = (t.pending_review / t.total_dv * 100) + '%';
+
+      animateCount('kpiNotDeclared', t.not_declared);
+      document.getElementById('kpiNotDeclaredRate').innerText = pct(t.not_declared / t.total_dv);
+      document.getElementById('kpiNotDeclaredBar').style.width = (t.not_declared / t.total_dv * 100) + '%';
+      animateCount('kpiMoney', t.total_amount);
+      const moneyAvgEl = document.getElementById('kpiMoneyAvg');
+      if (moneyAvgEl) moneyAvgEl.innerText = t.approved_paid > 0 ? nf(Math.round(t.total_amount / t.approved_paid)) : '0';
+
+      // Summary text
+      renderSummaryText(t);
+
+      // Funnel
+      renderFunnel(t);
+
+      // Groups comparison
+      document.getElementById('group1Rate').innerText = pct(t.g1.rate);
+      document.getElementById('group1Bar').style.width = (t.g1.rate * 100) + '%';
+      document.getElementById('group1Count').innerText = `${t.g1.count} chi bộ`;
+      document.getElementById('group1DV').innerText = nf(t.g1.dv);
+      document.getElementById('group1Paid').innerText = nf(t.g1.paid);
+      document.getElementById('group1Done').innerText = `${t.g1.done} đơn vị`;
+
+      document.getElementById('group2Rate').innerText = pct(t.g2.rate);
+      document.getElementById('group2Bar').style.width = (t.g2.rate * 100) + '%';
+      document.getElementById('group2Count').innerText = `${t.g2.count} chi bộ`;
+      document.getElementById('group2DV').innerText = nf(t.g2.dv);
+      document.getElementById('group2Paid').innerText = nf(t.g2.paid);
+      document.getElementById('group2Done').innerText = `${t.g2.done} đơn vị`;
+
+      // Leaders & Reminders
+      renderLeadersAndRemind();
+
+      // Column Chart
+      renderColumnChart('all');
+
+      // Table & Count
+      renderTable();
+      document.getElementById('tabUnitCount').innerText = currentUnits.length;
+
+      // Top 3 and Province Rank
+      renderTop3AndProvinceRank(t);
+
+      // Report Document sync
+      renderReportDocument(t);
+    }
+
+    // Summary Text Generator
+    function renderSummaryText(t) {
+      const leadUnits = currentUnits.filter(x => x.rate >= 0.999).map(x => x.name);
+      const zeroUnits = currentUnits.filter(x => x.rate === 0).map(x => x.name);
+
+      const txt = `Tính đến 20h ngày 20/10/2026, toàn Đảng bộ có tổng số ${nf(t.total_dv)} đảng viên (${nf(t.exempt)} đảng viên được miễn giảm). Tổng số hồ sơ đã nộp thành công là ${nf(t.approved_paid)} đồng chí; tỷ lệ hoàn thành thực tế đạt ${pct(t.rate)} toàn Đảng bộ. Có ${t.finished_units}/${currentUnits.length} đơn vị đã hoàn thành 100% chỉ tiêu (trong đó Khối Cơ quan có ${t.g1.done} đơn vị, Khối Thôn có ${t.g2.done} đơn vị tiêu biểu như ${leadUnits.slice(0, 3).join(', ')}). Tuy nhiên, toàn Đảng bộ vẫn còn ${nf(t.not_declared)} đảng viên (${pct(t.not_declared / t.total_dv)}) chưa kê khai trên Cổng Dịch vụ công và ${t.zeroUnits ? t.zeroUnits.length : zeroUnits.length} đơn vị chưa có đảng viên nộp thành công. Yêu cầu chi ủy các chi bộ khẩn trương duyệt ${nf(t.pending_review)} hồ sơ đang chờ và hướng dẫn đảng viên hoàn thành đóng đảng phí trực tuyến đúng tiến độ.`;
+
+      document.getElementById('summaryTextContent').innerText = txt;
+    }
+
+    function copySummaryText() {
+      const txt = document.getElementById('summaryTextContent').innerText;
+      copyToClipboard(txt, 'Đã sao chép tóm tắt báo cáo vào bộ nhớ tạm.');
+    }
+
+    // Funnel Breakdown
+    function renderFunnel(t) {
+      const container = document.getElementById('funnelContainer');
+      const steps = [
+        { name: '1. Chưa kê khai DVC', count: t.not_declared, pct: (t.not_declared / t.total_dv * 100), color: '#94a3b8' },
+        { name: '2. Đã kê khai, chờ duyệt', count: t.pending_review, pct: (t.pending_review / t.total_dv * 100), color: '#3b82f6' },
+        { name: '3. Đã duyệt, chưa nộp tiền', count: t.approved_unpaid, pct: (t.approved_unpaid / t.total_dv * 100), color: '#f59e0b' },
+        { name: '4. Đã hoàn thành (Nộp + Miễn)', count: t.approved_paid + t.exempt, pct: ((t.approved_paid + t.exempt) / t.total_dv * 100), color: '#10b981' }
+      ];
+
+      container.innerHTML = steps.map(s => `
+        <div class="funnel-step">
+          <div class="step-name">
+            <span class="step-badge">${s.name.split('.')[0]}</span>
+            ${s.name.substring(3)}
+          </div>
+          <div class="step-track">
+            <div class="step-fill" style="width: ${s.pct}%; background: ${s.color}"></div>
+          </div>
+          <div class="step-stat">
+            ${nf(s.count)} <small>($${s.pct.toFixed(1)}%)</small>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Leaders & Reminders List
+    function renderLeadersAndRemind() {
+      const leadCont = document.getElementById('podiumLeadContainer');
+      const remindCont = document.getElementById('podiumRemindContainer');
+
+      const finished = currentUnits.filter(x => x.rate >= 0.999);
+      leadCont.innerHTML = finished.map((u, i) => `
+        <div class="leader-item" onclick="openUnitModal('${u.name}')">
+          <div class="item-left">
+            <span class="item-rank gold">★</span>
+            <span class="item-name" title="${u.name}">${u.name}</span>
+          </div>
+          <div class="item-right">
+            <span style="font-size:12px; color:var(--muted)">${u.total_dv} ĐV</span>
+            <span class="rate-pill success">100%</span>
+          </div>
+        </div>
+      `).join('');
+
+      const lowUnits = currentUnits.filter(x => x.rate < 0.5).sort((a,b) => a.rate - b.rate);
+      remindCont.innerHTML = lowUnits.map(u => `
+        <div class="remind-item" onclick="openUnitModal('${u.name}')">
+          <div class="item-left">
+            <span class="item-rank red">!</span>
+            <span class="item-name" title="${u.name}">${u.name}</span>
+          </div>
+          <div class="item-right">
+            <span style="font-size:12px; color:var(--muted)">${u.total_dv} ĐV</span>
+            <span class="rate-pill ${u.rate === 0 ? 'danger' : 'warning'}">${pct(u.rate)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function switchPodiumTab(tab) {
+      const bLead = document.getElementById('tabPodiumBtn');
+      const bRemind = document.getElementById('tabRemindBtn');
+      const cLead = document.getElementById('podiumLeadContainer');
+      const cRemind = document.getElementById('podiumRemindContainer');
+
+      if (tab === 'lead') {
+        bLead.classList.add('active');
+        bRemind.classList.remove('active');
+        cLead.style.display = 'flex';
+        cRemind.style.display = 'none';
+      } else {
+        bRemind.classList.add('active');
+        bLead.classList.remove('active');
+        cLead.style.display = 'none';
+        cRemind.style.display = 'flex';
+      }
+    }
+
+    // Column Chart Rendering
+    function renderColumnChart(filterGroup) {
+      const chartBars = document.getElementById('chartBars');
+      const tooltip = document.getElementById('chartTooltip');
+
+      let list = currentUnits;
+      if (filterGroup && filterGroup !== 'all') {
+        list = currentUnits.filter(x => x.group === filterGroup);
+      }
+
+      // Sort by rate desc for neat presentation
+      const sorted = [...list].sort((a, b) => b.rate - a.rate || b.total_dv - a.total_dv);
+
+      chartBars.innerHTML = sorted.map((u, i) => {
+        let barClass = 'c-100';
+        if (u.rate < 0.001) barClass = 'c-zero';
+        else if (u.rate < 0.5) barClass = 'c-low';
+        else if (u.rate < 0.999) barClass = 'c-med';
+
+        const heightPct = Math.max(3, u.rate * 100);
+
+        return `
+          <div class="col-bar-group" 
+               onmouseenter="showChartTooltip(event, '${u.name.replace(/'/g, "\'")}', '${pct(u.rate)}', ${u.total_dv}, ${u.approved_paid}, ${u.pending_review}, ${u.not_declared})"
+               onmouseleave="hideChartTooltip()"
+               onclick="openUnitModal('${u.name.replace(/'/g, "\'")}')">
+            <div class="col-bar ${barClass}" style="height: ${heightPct}%"></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterChart(group, btn) {
+      if (btn) {
+        btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      renderColumnChart(group);
+    }
+
+    function showChartTooltip(e, name, rate, total, paid, pending, notDec) {
+      const tt = document.getElementById('chartTooltip');
+      tt.innerHTML = `
+        <div style="font-weight:700; margin-bottom:3px; max-width:240px; white-space:normal">${name}</div>
+        <div>Tiến độ: <b style="color:#e9cf7a">${rate}</b> (Tổng ĐV: ${total})</div>
+        <div>Đã nộp: <b>${paid}</b> · Chờ duyệt: <b>${pending}</b> · Chưa kê khai: <b>${notDec}</b></div>
+      `;
+      tt.style.display = 'block';
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const parentRect = document.querySelector('.chart-container').getBoundingClientRect();
+      let left = rect.left - parentRect.left - 60;
+      let top = rect.top - parentRect.top - 65;
+      if (left < 0) left = 10;
+      if (left > parentRect.width - 200) left = parentRect.width - 200;
+
+      tt.style.left = left + 'px';
+      tt.style.top = top + 'px';
+    }
+
+    function hideChartTooltip() {
+      const tt = document.getElementById('chartTooltip');
+      if (tt) tt.style.display = 'none';
+    }
+
+    // Table Rendering & Filters
+    function handleSearch(val) {
+      searchQuery = val.trim().toLowerCase();
+      renderTable();
+    }
+
+    function applyGroupFilter(group, btn) {
+      activeFilterGroup = group;
+      if (btn) {
+        btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      renderTable();
+    }
+
+    function applyStatusFilter(status, btn) {
+      activeFilterStatus = status;
+      if (btn) {
+        btn.parentElement.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      renderTable();
+    }
+
+    function sortTable(col) {
+      if (sortColumn === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortColumn = col;
+        sortAsc = true;
+      }
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('unitsTableBody');
+      let filtered = currentUnits.filter(u => {
+        if (activeFilterGroup !== 'all' && u.group !== activeFilterGroup) return false;
+        if (activeFilterStatus === '100' && u.rate < 0.999) return false;
+        if (activeFilterStatus === 'mid' && (u.rate < 0.5 || u.rate >= 0.999)) return false;
+        if (activeFilterStatus === 'low' && (u.rate >= 0.5 || u.rate <= 0)) return false;
+        if (activeFilterStatus === 'zero' && u.rate > 0) return false;
+        if (searchQuery && !u.name.toLowerCase().includes(searchQuery)) return false;
+        return true;
+      });
+
+      // Sorting
+      filtered.sort((a, b) => {
+        let vA = a[sortColumn];
+        let vB = b[sortColumn];
+        if (typeof vA === 'string') {
+          return sortAsc ? vA.localeCompare(vB, 'vi') : vB.localeCompare(vA, 'vi');
+        }
+        return sortAsc ? (vA - vB) : (vB - vA);
+      });
+
+      document.getElementById('filteredCount').innerText = filtered.length;
+      const moneyTotalEl = document.getElementById('filteredMoneyTotal');
+      if (moneyTotalEl) moneyTotalEl.innerText = nf(filtered.reduce((s, x) => s + (x.amount || 0), 0)) + ' đ';
+
+      tbody.innerHTML = filtered.map(u => {
+        let statusBadge = '';
+        let barColor = 'var(--ngoc)';
+        if (u.rate >= 0.999) {
+          statusBadge = '<span class="rate-pill success">Hoàn thành 100%</span>';
+          barColor = 'var(--ngoc)';
+        } else if (u.rate >= 0.5) {
+          statusBadge = '<span class="rate-pill warning">Đang thực hiện</span>';
+          barColor = 'var(--cam)';
+        } else if (u.rate > 0) {
+          statusBadge = '<span class="rate-pill danger">Tiến độ chậm</span>';
+          barColor = 'var(--son-l)';
+        } else {
+          statusBadge = '<span class="rate-pill" style="background:#f1f5f9; color:#64748b">Chưa nộp (0%)</span>';
+          barColor = '#cbd5e1';
+        }
+
+        return `
+          <tr>
+            <td class="text-center" style="font-weight:600; color:var(--muted)">${u.stt}</td>
+            <td class="unit-name">
+              <a href="javascript:void(0)" onclick="openUnitModal('${u.name.replace(/'/g, "\'")}')" style="color:var(--ink); text-decoration:none; font-weight:600;">
+                ${u.name}
+              </a>
+            </td>
+            <td class="text-center" style="font-size:12px; color:var(--muted)">
+              ${u.group === 'ĐẢNG BỘ, CHI BỘ CƠ QUAN' ? 'Cơ quan' : 'Thôn'}
+            </td>
+            <td class="text-right font-weight-bold" style="font-weight:700">${nf(u.total_dv)}</td>
+            <td class="text-right" style="color:var(--muted)">${u.exempt > 0 ? `<b style="color:#b45309">${u.exempt}</b>` : '0'}</td>
+            <td class="text-right">${u.pending_review > 0 ? `<b style="color:var(--xanh)">${u.pending_review}</b>` : '0'}</td>
+            <td class="text-right">${u.approved_unpaid > 0 ? `<b style="color:var(--cam)">${u.approved_unpaid}</b>` : '0'}</td>
+            <td class="text-right"><b style="color:var(--ngoc-d)">${nf(u.approved_paid)}</b></td>
+            <td class="text-right" style="white-space:nowrap">${(u.amount || 0) > 0 ? `<b style="color:#b45309">${nf(u.amount || 0)} đ</b>` : '<span style="color:var(--muted)">0 đ</span>'}</td>
+            <td class="text-right" style="color:var(--muted)">${u.not_declared > 0 ? `<b style="color:var(--xam)">${nf(u.not_declared)}</b>` : '0'}</td>
+            <td>
+              <div class="mini-progress">
+                <div class="mini-progress-track">
+                  <div class="mini-progress-fill" style="width:${u.rate * 100}%; background:${barColor}"></div>
+                </div>
+                <span class="mini-progress-pct" style="color:${u.rate >= 0.999 ? 'var(--ngoc-d)' : (u.rate > 0 ? 'var(--ink)' : 'var(--muted)')}">
+                  ${pct(u.rate)}
+                </span>
+              </div>
+            </td>
+            <td class="text-center">
+              <button class="btn sm" onclick="openUnitModal('${u.name.replace(/'/g, "\'")}')">Chi tiết</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Unit Modal
+    function openUnitModal(unitName) {
+      const u = currentUnits.find(x => x.name === unitName);
+      if (!u) return;
+
+      document.getElementById('modalUnitGroup').innerText = u.group;
+      document.getElementById('modalUnitName').innerText = u.name;
+      document.getElementById('modalUnitRate').innerText = pct(u.rate);
+      document.getElementById('modalUnitBar').style.width = (u.rate * 100) + '%';
+      document.getElementById('modalUnitBar').style.background = u.rate >= 0.999 ? 'var(--ngoc)' : (u.rate >= 0.5 ? 'var(--cam)' : 'var(--son)');
+
+      document.getElementById('modalUnitTotal').innerText = nf(u.total_dv);
+      document.getElementById('modalUnitPaid').innerText = nf(u.approved_paid);
+      document.getElementById('modalUnitExempt').innerText = nf(u.exempt);
+      document.getElementById('modalUnitAppUnpaid').innerText = nf(u.approved_unpaid);
+      document.getElementById('modalUnitPending').innerText = nf(u.pending_review);
+      document.getElementById('modalUnitNotDeclared').innerText = nf(u.not_declared);
+
+      // Generate customized reminder message
+      let msg = '';
+      if (u.rate >= 0.999) {
+        msg = `[BIỂU DƯƠNG TIẾN ĐỘ]\nKính gửi Chi ủy/Bí thư ${u.name},\nThường trực Đảng ủy nhiệt liệt biểu dương đơn vị đã hoàn thành 100% việc kê khai và nộp đảng phí trên Cổng Dịch vụ công theo Công văn số 1085 (${u.approved_paid}/${u.total_dv} đảng viên hoàn thành). Đề nghị đồng chí tiếp tục phát huy tinh thần trách nhiệm. Trân trọng!`;
+      } else {
+        msg = `[ĐÔN ĐỐC TIẾN ĐỘ NỘP ĐẢNG PHÍ]\nKính gửi Chi ủy/Bí thư ${u.name},\nTheo Công văn số 1085 về nộp đảng phí trên Cổng Dịch vụ công, tính đến 20h ngày 20/10/2026, đơn vị hiện đạt tiến độ ${pct(u.rate)} (${u.approved_paid}/${u.total_dv} đảng viên đã nộp).\n- Còn ${u.pending_review} hồ sơ đang chờ chi ủy phê duyệt.\n- Còn ${u.approved_unpaid} hồ sơ đã duyệt chờ thanh toán.\n- Còn ${u.not_declared} đảng viên chưa thực hiện kê khai trên DVC.\nĐề nghị đồng chí Bí thư khẩn trương chỉ đạo cấp ủy hoàn thành duyệt hồ sơ và đôn đốc các đảng viên hoàn thành nộp đảng phí trực tuyến trong ngày hôm nay. Trân trọng!`;
+      }
+      document.getElementById('modalUnitMsg').value = msg.replace(/\n/g, '\n');
+
+      document.getElementById('unitModal').classList.add('active');
+    }
+
+    function closeUnitModal() {
+      document.getElementById('unitModal').classList.remove('active');
+    }
+
+    function copyUnitMessage() {
+      const txt = document.getElementById('modalUnitMsg').value;
+      copyToClipboard(txt, 'Đã sao chép tin nhắn Zalo gửi Bí thư chi bộ!');
+    }
+
+    // Remind All Modal
+    function openRemindModal() {
+      const lowUnits = currentUnits.filter(x => x.rate < 0.5);
+      const zeroUnits = currentUnits.filter(x => x.rate === 0);
+
+      const msg = `THÔNG BÁO ĐÔN ĐỐC TIẾN ĐỘ NỘP ĐẢNG PHÍ TRÊN DỊCH VỤ CÔNG\n(Theo Công văn số 1085 - Cập nhật 20h ngày 20/10/2026)\n\nThường trực Đảng ủy yêu cầu Bí thư các chi bộ, đảng bộ trực thuộc có tiến độ dưới 50% khẩn trương chỉ đạo:\n1. Các đơn vị chưa có đảng viên nộp (${zeroUnits.length} đơn vị gồm: ${zeroUnits.slice(0, 10).map(x => x.name).join(', ')}${zeroUnits.length > 10 ? ", ..." : ""}) tập trung hướng dẫn đảng viên kê khai ngay trong hôm nay.\n2. Chi ủy các chi bộ có hồ sơ đang chờ duyệt phải duyệt dứt điểm trên hệ thống.\n3. Đôn đốc ${nf(lowUnits.reduce((s,x)=>s+x.approved_unpaid,0))} đảng viên đã được duyệt hoàn tất bước chuyển khoản/thanh toán.\n\nĐề nghị các đồng chí Bí thư chi bộ nêu cao tinh thần trách nhiệm, trực tiếp theo dõi để hoàn thành chỉ tiêu Đảng bộ giao!`;
+
+      document.getElementById('remindAllMsg').value = msg.replace(/\n/g, '\n');
+      document.getElementById('remindAllModal').classList.add('active');
+    }
+
+    function closeRemindModal() {
+      document.getElementById('remindAllModal').classList.remove('active');
+    }
+
+    function copyRemindAllText() {
+      const txt = document.getElementById('remindAllMsg').value;
+      copyToClipboard(txt, 'Đã sao chép nội dung đôn đốc gửi cấp ủy!');
+    }
+
+    // Copy to Clipboard with Toast feedback
+    function copyToClipboard(text, msg) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => fallbackCopy(text, msg));
+      } else {
+        fallbackCopy(text, msg);
+      }
+    }
+
+    function fallbackCopy(text, msg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(msg);
+      } catch (err) {
+        showToast('Không tự sao chép được, vui lòng bôi đen và bấm Ctrl+C.');
+      }
+      ta.remove();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBox');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2600);
+    }
+
+    // Sync Report Document
+    function renderReportDocument(t) {
+      document.getElementById('docTotMembers').innerText = nf(t.total_dv);
+      document.getElementById('docExempt').innerText = nf(t.exempt);
+      document.getElementById('docPaid').innerText = nf(t.approved_paid);
+      document.getElementById('docPaidRate').innerText = pct(t.approved_paid / t.total_dv);
+      document.getElementById('docRealRate').innerText = pct(t.rate);
+      document.getElementById('docAppUnpaid').innerText = nf(t.approved_unpaid);
+      document.getElementById('docPending').innerText = nf(t.pending_review);
+      document.getElementById('docPendingCount').innerText = nf(t.pending_review);
+      document.getElementById('docNotDeclared').innerText = nf(t.not_declared);
+    }
+
+    function copyDocumentText() {
+      const doc = document.getElementById('printableDoc');
+      if (doc) {
+        copyToClipboard(doc.innerText, 'Đã sao chép toàn bộ báo cáo báo cáo!');
+      }
+    }
+
+    // Export Table to Excel using SheetJS
+    function exportToExcel() {
+      try {
+        if (typeof XLSX === 'undefined') {
+          alert('Thư viện XLSX đang được nạp, vui lòng thử lại sau 2 giây.');
+          return;
+        }
+        const exportData = currentUnits.map((u, i) => ({
+          'STT': u.stt,
+          'Khối': u.group,
+          'Tên chi bộ, đảng bộ': u.name,
+          'Tổng số đảng viên': u.total_dv,
+          'Được miễn giảm ĐP': u.exempt,
+          'Chưa duyệt': u.pending_review,
+          'Đã duyệt, chưa nộp': u.approved_unpaid,
+          'Đã duyệt, đã nộp': u.approved_paid,
+          'Số tiền đã thu (đ)': u.amount || 0,
+          'Chưa kê khai trên DVC': u.not_declared,
+          'Tỷ lệ hoàn thành thực tế': (u.rate * 100).toFixed(2) + '%'
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "TienDoDangPhi");
+        XLSX.writeFile(wb, "Tien_do_nop_dang_phi_CV1085.xlsx");
+        showToast('Đã xuất file Excel thành công!');
+      } catch (e) {
+        console.error(e);
+        showToast('Có lỗi khi tạo file Excel: ' + e.message);
+      }
+    }
+
+    // Excel Drag & Drop and File Reader
+    const dropZone = document.getElementById('dropZone');
+    ['dragenter', 'dragover'].forEach(name => {
+      dropZone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+      dropZone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+      });
+    });
+    dropZone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length > 0) processExcelFile(files[0]);
+    });
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) processExcelFile(file);
+    }
+
+    function processExcelFile(file) {
+      if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        alert('Vui lòng chọn file định dạng Excel (.xlsx hoặc .xls)');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          const parsed = parseSheetRows(jsonRows);
+          if (parsed && parsed.length > 0) {
+            pendingImportUnits = parsed;
+            document.getElementById('importFileName').innerText = file.name;
+            document.getElementById('importFileStats').innerText = `Đã phân tích ${parsed.length} đơn vị (Nhóm I: ${parsed.filter(x=>x.group==='ĐẢNG BỘ, CHI BỘ CƠ QUAN').length}, Nhóm II: ${parsed.filter(x=>x.group==='CHI BỘ THÔN').length})`;
+            document.getElementById('importInfo').style.display = 'block';
+            showToast(`Đã nạp file ${file.name}. Bấm "Áp dụng" để cập nhật dashboard!`);
+          } else {
+            alert('Không tìm thấy dữ liệu đơn vị hợp lệ trong sheet đầu tiên của file Excel.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Lỗi đọc file Excel: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseSheetRows(rows) {
+      const items = [];
+      let currentGroup = 'ĐẢNG BỘ, CHI BỘ CƠ QUAN';
+
+      for (let r = 0; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row || row.length === 0) continue;
+
+        const c0 = row[0] ? String(row[0]).trim() : '';
+        const c1 = row[1] ? String(row[1]).trim() : '';
+
+        // Detect Group headers
+        if (c0.match(/^(I|II|I\.|II\.)$/i) || (!c0 && (c1.includes('CƠ QUAN') || c1.includes('THÔN')))) {
+          if (c1.toUpperCase().includes('THÔN')) currentGroup = 'CHI BỘ THÔN';
+          else if (c1.toUpperCase().includes('CƠ QUAN')) currentGroup = 'ĐẢNG BỘ, CHI BỘ CƠ QUAN';
+          continue;
+        }
+
+        // If row is a data unit
+        if (c1 && row[2] !== undefined && (typeof row[2] === 'number' || !isNaN(Number(row[2])))) {
+          const total_dv = parseInt(row[2]) || 0;
+          if (total_dv > 0 || c0.match(/^\d+$/)) {
+            const exempt = parseInt(row[3]) || 0;
+            const pending_review = parseInt(row[4]) || 0;
+            const approved_unpaid = parseInt(row[5]) || 0;
+            const approved_paid = parseInt(row[6]) || 0;
+            const not_declared = parseInt(row[7]) || 0;
+            let rate = row[8] !== undefined ? parseFloat(row[8]) : 0;
+            if (isNaN(rate)) {
+              rate = total_dv > 0 ? (approved_paid + exempt) / total_dv : 0;
+            }
+
+            items.push({
+              stt: parseInt(c0) || (items.length + 1),
+              group: currentGroup,
+              name: c1,
+              total_dv,
+              exempt,
+              pending_review,
+              approved_unpaid,
+              approved_paid,
+              not_declared,
+              rate
+            });
+          }
+        }
+      }
+      return items;
+    }
+
+    function applyImportedData() {
+      if (pendingImportUnits && pendingImportUnits.length > 0) {
+        currentUnits = pendingImportUnits;
+        pendingImportUnits = null;
+        document.getElementById('importInfo').style.display = 'none';
+        renderAll();
+        showToast('Đã cập nhật toàn bộ hệ thống với dữ liệu mới!');
+        // switch to overview tab
+        document.querySelector('.tab-btn[data-target="overview"]').click();
+      }
+    }
+
+    function cancelImport() {
+      pendingImportUnits = null;
+      document.getElementById('importInfo').style.display = 'none';
+      document.getElementById('excelFileInput').value = '';
+    }
+
+    function resetToDefaultData() {
+      currentUnits = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      renderAll();
+      showToast('Đã khôi phục dữ liệu gốc chuẩn Công văn số 1085!');
+    }
+  </script>
+</body>
+</html>
